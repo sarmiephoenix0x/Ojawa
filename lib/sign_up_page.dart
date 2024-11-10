@@ -1,12 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ojawa/sign_in_page.dart';
+import 'package:ojawa/main_app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 
 class SignUpPage extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
   final bool isDarkMode;
-
   const SignUpPage(
       {super.key, required this.onToggleDarkMode, required this.isDarkMode});
 
@@ -16,16 +18,30 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
+  final FocusNode _displayNameFocusNode = FocusNode();
   final FocusNode _userNameFocusNode = FocusNode();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _phoneNumberFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _password2FocusNode = FocusNode();
 
+  final TextEditingController displayNameController = TextEditingController();
   final TextEditingController userNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController password2Controller = TextEditingController();
+
+  bool _isPasswordVisible = false;
+  bool _isPasswordVisible2 = false;
+
+  bool dropDownTapped = false;
+
   final storage = const FlutterSecureStorage();
   late SharedPreferences prefs;
   bool isLoading = false;
-  bool _isPasswordVisible = false;
-  bool _rememberMe = false;
+  String phoneNumber = '';
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -37,107 +53,166 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
     prefs = await SharedPreferences.getInstance();
   }
 
-  Future<void> _submitForm() async {
+  Future<void> _registerUser() async {
     if (prefs == null) {
       await _initializePrefs();
     }
-
-    final String username = userNameController.text.trim();
+    final String email = emailController.text.trim();
     final String password = passwordController.text.trim();
+    final String passwordConfirmation = password2Controller.text.trim();
+    final String name = displayNameController.text.trim();
+    final String username = userNameController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
+    if (name.isEmpty ||
+        username.isEmpty ||
+        email.isEmpty ||
+        phoneNumber.isEmpty ||
+        password.isEmpty ||
+        passwordConfirmation.isEmpty) {
       _showCustomSnackBar(
         context,
         'All fields are required.',
         isError: true,
       );
+
       return;
     }
 
-    // Validate password length
+    final RegExp emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(email)) {
+      _showCustomSnackBar(
+        context,
+        'Please enter a valid email address.',
+        isError: true,
+      );
+
+      return;
+    }
+
     if (password.length < 6) {
       _showCustomSnackBar(
         context,
         'Password must be at least 6 characters.',
         isError: true,
       );
+
       return;
     }
+
+    if (password != passwordConfirmation) {
+      _showCustomSnackBar(
+        context,
+        'Passwords do not match.',
+        isError: true,
+      );
+
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      // Show a message if validation fails
+      _showCustomSnackBar(
+        context,
+        'Please provide a valid phone number.',
+        isError: true,
+      );
+      return;
+    }
+    // if (phoneNumber.length < 11) {
+    //   _showCustomSnackBar(
+    //     context,
+    //     'Phone number must be at least 11 characters.',
+    //     isError: true,
+    //   );
+    //
+    //   return;
+    // }
 
     setState(() {
       isLoading = true;
     });
 
-    setState(() {
-      isLoading = false;
-    });
-    // Send the POST request
-    // final response = await http.post(
-    //   Uri.parse('https://yarnapi-n2dw.onrender.com/api/auth/sign-up'),
-    //   headers: {'Content-Type': 'application/json'},
-    //   body: jsonEncode({
-    //     'username': username,
-    //     'password': password,
-    //   }),
-    // );
-    //
-    // final responseData = json.decode(response.body);
-    //
-    // print('Response Data: $responseData');
-    //
-    // if (response.statusCode == 200) {
-    //   // The response format: {status, data: {userId, token, username}}
-    //   final Map<String, dynamic> data = responseData['data'];
-    //   final String token = data['token'];
-    //   final int userId = data['userId'];
-    //   final String userName = data['username'];
-    //
-    //   // Store the token and user information
-    //   await storage.write(key: 'yarnAccessToken', value: token);
-    //   await prefs.setString('user', jsonEncode({
-    //     'userId': userId,
-    //     'username': userName,
-    //   }));
-    //
-    //   // Show success message
-    //   _showCustomSnackBar(
-    //     context,
-    //     'Account created!',
-    //     isError: false,
-    //   );
-    //
-    //   Navigator.push(
-    //     context,
-    //     MaterialPageRoute(
-    //       builder: (context) =>
-    //           SelectCountry(key: UniqueKey(),
-    //               onToggleDarkMode: widget.onToggleDarkMode,
-    //               isDarkMode: widget.isDarkMode),
-    //     ),
-    //   );
-    // } else if (response.statusCode == 400) {
-    //   setState(() {
-    //     isLoading = false;
-    //   });
-    //   final String message = responseData['message'];
-    //
-    //   // Handle validation error
-    //   _showCustomSnackBar(
-    //     context,
-    //     'Error: $message',
-    //     isError: true,
-    //   );
-    // } else {
-    //   setState(() {
-    //     isLoading = false;
-    //   });
-    //   // Handle other unexpected responses
-    //   _showCustomSnackBar(
-    //     context,
-    //     'An unexpected error occurred.',
-    //     isError: true,
-    //   );
-    // }
+    final response = await http.post(
+      Uri.parse('https://signal.payguru.com.ng/api/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'username': username,
+        'email': email,
+        'phone_number': phoneNumber,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      }),
+    );
+    final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+    print('Response Data: $responseData');
+
+    if (response.statusCode == 201) {
+      // The responseData['user'] is a Map, not a String, so handle it accordingly
+      final Map<String, dynamic> user = responseData['user'];
+      final String accessToken = responseData['access_token'];
+      final String profilePhoto = responseData['profile_photo'];
+
+      user['profile_photo'] = profilePhoto;
+      await storage.write(key: 'accessToken', value: accessToken);
+      await prefs.setString(
+          'user', jsonEncode(user)); // Store user as a JSON string
+
+      // Handle successful response
+      _showCustomSnackBar(
+        context,
+        'Sign up successful! Welcome, ${user['name']}',
+        isError: false,
+      );
+
+      // Navigate to the main app or another page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainApp(
+              key: UniqueKey(),
+              onToggleDarkMode: widget.onToggleDarkMode,
+              isDarkMode: widget.isDarkMode),
+        ),
+      );
+    } else if (response.statusCode == 400) {
+      setState(() {
+        isLoading = false;
+      });
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      final String error = responseData['error'];
+      final List<dynamic> data = responseData['data']['email'];
+
+      // Handle validation error
+      _showCustomSnackBar(
+        context,
+        'Error: $error - $data',
+        isError: true,
+      );
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      // Handle other unexpected responses
+      _showCustomSnackBar(
+        context,
+        'An unexpected error occurred.',
+        isError: true,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controllers when the widget is disposed
+    displayNameController.dispose();
+    userNameController.dispose();
+    emailController.dispose();
+    phoneNumberController.dispose();
+    passwordController.dispose();
+    password2Controller.dispose();
+    super.dispose();
   }
 
   void _showCustomSnackBar(BuildContext context, String message,
@@ -174,69 +249,231 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return OrientationBuilder(
       builder: (context, orientation) {
-        return PopScope(
-          canPop: false,
-          child: Scaffold(
-            body: SingleChildScrollView(
-              child: Center(
-                child: SizedBox(
-                  height: orientation == Orientation.portrait
-                      ? MediaQuery.of(context).size.height * 1.1
-                      : MediaQuery.of(context).size.height * 1.8,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.1),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Text(
-                          'Hello!',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w900,
-                            fontSize: 50.0,
-                            color: Color(0xFF500450),
+        return Scaffold(
+          body: SingleChildScrollView(
+            child: Center(
+              child: SizedBox(
+                height: orientation == Orientation.portrait
+                    ? MediaQuery.of(context).size.height * 1.2
+                    : MediaQuery.of(context).size.height * 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Row(
+                        children: [
+                          const Spacer(),
+                          Text(
+                            'Sign up',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 30.0,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
+                          const Spacer(),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    //   child: Text(
+                    //     'Name',
+                    //     textAlign: TextAlign.start,
+                    //     style: TextStyle(
+                    //       fontFamily: 'Poppins',
+                    //       fontSize: 16.0,
+                    //       color: Theme.of(context).colorScheme.onSurface,
+                    //     ),
+                    //   ),
+                    // ),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    //   child: TextFormField(
+                    //     controller: displayNameController,
+                    //     focusNode: _displayNameFocusNode,
+                    //     style: const TextStyle(
+                    //       fontSize: 16.0,
+                    //       decoration: TextDecoration.none,
+                    //     ),
+                    //     decoration: InputDecoration(
+                    //       border: OutlineInputBorder(
+                    //         borderRadius: BorderRadius.circular(15),
+                    //       ),
+                    //       focusedBorder: OutlineInputBorder(
+                    //         borderRadius: BorderRadius.circular(15),
+                    //         borderSide: BorderSide(
+                    //           color: Theme.of(context).colorScheme.onSurface,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //     cursorColor: Theme.of(context).colorScheme.onSurface,
+                    //   ),
+                    // ),
+                    // SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
+                        'Username',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Text(
-                          "Signup to get Started",
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 17.0,
-                            color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: TextFormField(
+                        controller: userNameController,
+                        focusNode: _userNameFocusNode,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          decoration: TextDecoration.none,
+                        ),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                         ),
+                        cursorColor: Theme.of(context).colorScheme.onSurface,
                       ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.05),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Text(
-                          'Username',
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16.0,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
+                        'Email',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: TextFormField(
-                          controller: userNameController,
-                          focusNode: _userNameFocusNode,
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                            decoration: TextDecoration.none,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: TextFormField(
+                        controller: emailController,
+                        focusNode: _emailFocusNode,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          decoration: TextDecoration.none,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'example@gmail.com',
+                          labelStyle: const TextStyle(
+                            color: Colors.grey,
+                            fontFamily: 'Poppins',
+                            fontSize: 12.0,
                           ),
-                          decoration: InputDecoration(
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        cursorColor: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
+                        'Phone Number',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20.0),
+                            child: IntlPhoneField(
+                              decoration: InputDecoration(
+                                labelText: 'Phone Number',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                  borderSide: BorderSide(),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                  borderSide: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                counterText: '',
+                              ),
+                              initialCountryCode: 'NG',
+                              // Set initial country code
+                              onChanged: (phone) {
+                                setState(() {
+                                  phoneNumber = phone.completeNumber;
+                                });
+                              },
+                              onCountryChanged: (country) {
+                                print('Country changed to: ${country.name}');
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
+                        'New Password',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: TextFormField(
+                        controller: passwordController,
+                        focusNode: _passwordFocusNode,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                        ),
+                        decoration: InputDecoration(
+                            labelText: '*******************',
+                            labelStyle: const TextStyle(
+                              color: Colors.grey,
+                              fontFamily: 'Poppins',
+                              fontSize: 12.0,
+                              decoration: TextDecoration.none,
+                            ),
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                             ),
@@ -246,328 +483,174 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
-                          ),
-                          cursorColor: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Text(
-                          'Password',
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16.0,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: TextFormField(
-                          controller: passwordController,
-                          focusNode: _passwordFocusNode,
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                          ),
-                          decoration: InputDecoration(
-                              labelText: '*******************',
-                              labelStyle: const TextStyle(
-                                color: Colors.grey,
-                                fontFamily: 'Poppins',
-                                fontSize: 12.0,
-                                decoration: TextDecoration.none,
-                              ),
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(_isPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordVisible = !_isPasswordVisible;
-                                  });
-                                },
-                              )),
-                          cursorColor: Theme.of(context).colorScheme.onSurface,
-                          obscureText: !_isPasswordVisible,
-                          obscuringCharacter: "*",
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0, right: 20.0),
-                        child: Row(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Checkbox(
-                                  activeColor: const Color(0xFF500450),
-                                  checkColor: Colors.white,
-                                  value: _rememberMe,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      _rememberMe = value!;
-                                    });
-                                  },
-                                ),
-                                Text(
-                                  "Remember me",
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
-                                    fontFamily: 'Poppins',
-                                    fontSize: 12.0,
-                                    decoration: TextDecoration.none,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02),
-                      Container(
-                        width: double.infinity,
-                        height: (60 / MediaQuery.of(context).size.height) *
-                            MediaQuery.of(context).size.height,
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _submitForm();
-                          },
-                          style: ButtonStyle(
-                            backgroundColor:
-                                WidgetStateProperty.resolveWith<Color>(
-                              (Set<WidgetState> states) {
-                                if (states.contains(WidgetState.pressed)) {
-                                  return Colors.white;
-                                }
-                                return const Color(0xFF500450);
+                            suffixIcon: IconButton(
+                              icon: Icon(_isPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordVisible = !_isPasswordVisible;
+                                });
                               },
-                            ),
-                            foregroundColor:
-                                WidgetStateProperty.resolveWith<Color>(
-                              (Set<WidgetState> states) {
-                                if (states.contains(WidgetState.pressed)) {
-                                  return const Color(0xFF500450);
-                                }
-                                return Colors.white;
-                              },
-                            ),
-                            elevation: WidgetStateProperty.all<double>(4.0),
-                            shape:
-                                WidgetStateProperty.all<RoundedRectangleBorder>(
-                              const RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(15)),
-                              ),
-                            ),
-                          ),
-                          child: isLoading
-                              ? const Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'Sign Up',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                            )),
+                        cursorColor: Theme.of(context).colorScheme.onSurface,
+                        obscureText: !_isPasswordVisible,
+                        obscuringCharacter: "*",
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
+                        'Retype Password',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02),
-                      const Center(
-                        child: Text(
-                          'or continue with',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                          ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: TextFormField(
+                        controller: password2Controller,
+                        focusNode: _password2FocusNode,
+                        style: const TextStyle(
+                          fontSize: 16.0,
                         ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            height: (60 / MediaQuery.of(context).size.height) *
-                                MediaQuery.of(context).size.height,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 20.0),
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                    if (states.contains(WidgetState.pressed)) {
-                                      return Colors.white;
-                                    }
-                                    return const Color(0xFFEEF1F4);
-                                  },
-                                ),
-                                foregroundColor:
-                                    WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                    if (states.contains(WidgetState.pressed)) {
-                                      return Colors.white;
-                                    }
-                                    return Colors.grey;
-                                  },
-                                ),
-                                elevation: WidgetStateProperty.all<double>(0),
-                                shape: WidgetStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                  const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(15)),
-                                  ),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/FacebookIcon.png',
-                                    height: 25,
-                                  ),
-                                  SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.03),
-                                  const Text(
-                                    'Facebook',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Container(
-                            height: (60 / MediaQuery.of(context).size.height) *
-                                MediaQuery.of(context).size.height,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 20.0),
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                    if (states.contains(WidgetState.pressed)) {
-                                      return Colors.white;
-                                    }
-                                    return const Color(0xFFEEF1F4);
-                                  },
-                                ),
-                                foregroundColor:
-                                    WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                    if (states.contains(WidgetState.pressed)) {
-                                      return Colors.white;
-                                    }
-                                    return Colors.grey;
-                                  },
-                                ),
-                                elevation: WidgetStateProperty.all<double>(0),
-                                shape: WidgetStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                  const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(15)),
-                                  ),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/GoogleIcon.png',
-                                    height: 25,
-                                  ),
-                                  SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.03),
-                                  const Text(
-                                    'Google',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Already have an account?",
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.bold,
+                        decoration: InputDecoration(
+                            labelText: '*******************',
+                            labelStyle: const TextStyle(
                               color: Colors.grey,
+                              fontFamily: 'Poppins',
+                              fontSize: 12.0,
+                              decoration: TextDecoration.none,
                             ),
-                          ),
-                          SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.03),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SignInPage(
-                                      key: UniqueKey(),
-                                      onToggleDarkMode: widget.onToggleDarkMode,
-                                      isDarkMode: widget.isDarkMode),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              "Login",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 13.0,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF500450),
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
-                          ),
-                        ],
+                            suffixIcon: IconButton(
+                              icon: Icon(_isPasswordVisible2
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordVisible2 = !_isPasswordVisible2;
+                                });
+                              },
+                            )),
+                        cursorColor: Theme.of(context).colorScheme.onSurface,
+                        obscureText: !_isPasswordVisible2,
+                        obscuringCharacter: "*",
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                    Container(
+                      width: double.infinity,
+                      height: (60 / MediaQuery.of(context).size.height) *
+                          MediaQuery.of(context).size.height,
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MainApp(
+                                  key: UniqueKey(),
+                                  onToggleDarkMode: widget.onToggleDarkMode,
+                                  isDarkMode: widget.isDarkMode),
+                            ),
+                          );
+                          // if (isLoading == false) {
+                          //   _registerUser();
+                          // }
+                        },
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.resolveWith<Color>(
+                            (Set<WidgetState> states) {
+                              if (states.contains(WidgetState.pressed)) {
+                                return Colors.white;
+                              }
+                              return const Color(0xFF008000);
+                            },
+                          ),
+                          foregroundColor:
+                              WidgetStateProperty.resolveWith<Color>(
+                            (Set<WidgetState> states) {
+                              if (states.contains(WidgetState.pressed)) {
+                                return const Color(0xFF008000);
+                              }
+                              return Colors.white;
+                            },
+                          ),
+                          elevation: WidgetStateProperty.all<double>(4.0),
+                          shape:
+                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                            const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15)),
+                            ),
+                          ),
+                        ),
+                        child: isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Next',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                    // SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    // const Center(
+                    //   child: Text(
+                    //     '- Or -',
+                    //     style: TextStyle(
+                    //       fontFamily: 'Poppins',
+                    //       fontSize: 13.0,
+                    //       fontWeight: FontWeight.bold,
+                    //       color: Colors.grey,
+                    //     ),
+                    //   ),
+                    // ),
+                    // SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    //   child: Row(
+                    //     mainAxisAlignment: MainAxisAlignment.center,
+                    //     children: [
+                    //       Image.asset(
+                    //         'images/flat-color-icons_google.png',
+                    //       ),
+                    //       SizedBox(
+                    //           width: MediaQuery.of(context).size.width * 0.05),
+                    //       Image.asset(
+                    //         'images/logos_facebook.png',
+                    //       ),
+                    //       SizedBox(
+                    //           width: MediaQuery.of(context).size.width * 0.05),
+                    //       Image.asset(
+                    //         'images/bi_apple.png',
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                  ],
                 ),
               ),
             ),

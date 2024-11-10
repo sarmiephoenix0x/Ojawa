@@ -28,7 +28,43 @@ class _HomePageState extends State<HomePage>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Column(
-        children: [],
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.menu,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    size: 22,
+                  ),
+                  onPressed: null,
+                ),
+                Text(
+                  'Home',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22.0,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                Image.asset(
+                  'images/notification.png',
+                  height: 22,
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.1),
+                Image.asset(
+                  'images/bag.png',
+                  height: 22,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

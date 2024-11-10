@@ -85,6 +85,22 @@ flutter:
     - images/Categories.png
     - images/Orders.png
     - images/Profile.png
+    - images/Appliances.png
+    - images/bag.png
+    - images/Banner.png
+    - images/Beauty.png
+    - images/Electronics.png
+    - images/Elipses_active.png
+    - images/Elipses.png
+    - images/Fashion.png
+    - images/Furniture.png
+    - images/Img1.png
+    - images/Img2.png
+    - images/Img3.png
+    - images/Img4.png
+    - images/menu.png
+    - images/notification.png
+    - images/Rating Icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
