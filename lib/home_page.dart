@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:ojawa/productDetails.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -1041,144 +1042,155 @@ class _HomePageState extends State<HomePage>
       String discount, String starImg, String rating, String rating2) {
     Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
     bool isLiked = _isLikedMap[img] ?? false;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 40.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: Stack(
-              children: [
-                Image.asset(
-                  img,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 5,
-                  right: MediaQuery.of(context).padding.right + 5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 0.0, horizontal: 0.0),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(55.0),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Productdetails(key: UniqueKey()),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 40.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Stack(
+                children: [
+                  Image.asset(
+                    img,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 5,
+                    right: MediaQuery.of(context).padding.right + 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 0.0, horizontal: 0.0),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(55.0),
+                        ),
                       ),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                          isLiked == true
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color:
-                              isLiked == true ? Colors.red : originalIconColor),
-                      onPressed: () {
-                        setState(() {
-                          _isLikedMap[img] = !isLiked;
-                        });
-                      },
+                      child: IconButton(
+                        icon: Icon(
+                            isLiked == true
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: isLiked == true
+                                ? Colors.red
+                                : originalIconColor),
+                        onPressed: () {
+                          setState(() {
+                            _isLikedMap[img] = !isLiked;
+                          });
+                        },
+                      ),
                     ),
                   ),
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 5,
+                    left: MediaQuery.of(context).padding.left + 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 6.0, horizontal: 10.0),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEA580C),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(5.0),
+                        ),
+                      ),
+                      child: const Text(
+                        "Top Seller",
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            Text(
+              details,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16.0,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            Row(
+              children: [
+                Text(
+                  amount,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 22.0,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 5,
-                  left: MediaQuery.of(context).padding.left + 5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 6.0, horizontal: 10.0),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEA580C),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(5.0),
-                      ),
-                    ),
-                    child: const Text(
-                      "Top Seller",
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16.0,
-                        color: Colors.white,
-                      ),
-                    ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                Text(
+                  slashedPrice,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16.0,
+                    color: Colors.grey,
+                    decoration: TextDecoration.lineThrough,
+                    decorationThickness: 2,
+                    decorationColor: Colors.grey,
+                  ),
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                Text(
+                  discount,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16.0,
+                    color: Color(0xFFEA580C),
                   ),
                 ),
               ],
             ),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-          Text(
-            details,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16.0,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-          Row(
-            children: [
-              Text(
-                amount,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 22.0,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            Row(
+              children: [
+                Image.asset(
+                  starImg,
+                  height: 25,
                 ),
-              ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.04),
-              Text(
-                slashedPrice,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16.0,
-                  color: Colors.grey,
-                  decoration: TextDecoration.lineThrough,
-                  decorationThickness: 2,
-                  decorationColor: Colors.grey,
+                SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                Text(
+                  rating,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 18.0,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.04),
-              Text(
-                discount,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16.0,
-                  color: Color(0xFFEA580C),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                Text(
+                  rating2,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 18.0,
+                    color: Colors.grey,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-          Row(
-            children: [
-              Image.asset(
-                starImg,
-                height: 25,
-              ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.02),
-              Text(
-                rating,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 18.0,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.02),
-              Text(
-                rating2,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 18.0,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          )
-        ],
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
