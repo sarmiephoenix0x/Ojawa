@@ -98,9 +98,17 @@ flutter:
     - images/Img2.png
     - images/Img3.png
     - images/Img4.png
+    - images/Img5.png
+    - images/Img6.png
     - images/menu.png
     - images/notification.png
     - images/Rating Icon.png
+    - images/Back.png
+    - images/Cancel.png
+    - images/NotFound.png
+    - images/star.png
+    - images/Filter.png
+    - images/sort.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
