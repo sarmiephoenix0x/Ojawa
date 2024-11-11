@@ -36,7 +36,10 @@ class _HomePageState extends State<HomePage>
   int _current = 0;
   final CarouselController _controller = CarouselController();
   Map<String, bool> _isLikedMap = {};
+  int? _selectedRadioValue;
   final storage = const FlutterSecureStorage();
+  ValueNotifier<String?> _selectedFilter = ValueNotifier<String?>(null);
+  bool isFilterActive = false;
 
   Future<void> _performSearch(String query) async {
     setState(() {
@@ -582,32 +585,363 @@ class _HomePageState extends State<HomePage>
               ],
             ],
           ),
-          Container(
-            width: MediaQuery.of(context).size.width,
-            padding:
-                const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFFFFF),
-              borderRadius: BorderRadius.all(
-                Radius.circular(0.0),
+          if (searchResults.isNotEmpty)
+            Container(
+              width: MediaQuery.of(context).size.width,
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFFFFF),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(0.0),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        isFilterActive = true;
+                      });
+                    },
+                    child: filter('images/Filter.png', 'Filter'),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      _sortBy();
+                    },
+                    child: filter('images/sort.png', 'Sort By'),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                InkWell(
-                  onTap: () {},
-                  child: filter('images/Filter.png', 'Filter'),
+          if (isFilterActive)
+            Positioned.fill(
+              child: Container(
+                color: const Color(0xFFFFFFFF),
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.03),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            children: [
+                              Row(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        setState(() {
+                                          isFilterActive = false;
+                                        });
+                                      });
+                                    },
+                                    child: Image.asset(
+                                      'images/Cancel.png',
+                                      height: 30,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.05),
+                                  Text(
+                                    'Filter',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 18.0,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              const Text(
+                                'CLEAR ALL',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16.0,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.05),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width:
+                                    (150 / MediaQuery.of(context).size.width) *
+                                        MediaQuery.of(context).size.width,
+                                height:
+                                    (440 / MediaQuery.of(context).size.height) *
+                                        MediaQuery.of(context).size.height,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 16.0, horizontal: 0.0),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF808080),
+                                  borderRadius: BorderRadius.only(
+                                    topRight: Radius.circular(20.0),
+                                  ),
+                                ),
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      list('Brand', 1),
+                                      SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.04),
+                                      list('Size', 2),
+                                      SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.04),
+                                      list('Category', 3),
+                                      SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.04),
+                                      list('Bundles', 4),
+                                      SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.04),
+                                      list('Price Range', 5),
+                                      SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.04),
+                                      list('Discount', 6),
+                                      SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.04),
+                                      list('Rating', 7),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                                width:
+                                    MediaQuery.of(context).size.width * 0.05),
+                            SizedBox(
+                              height:
+                                  (440 / MediaQuery.of(context).size.height) *
+                                      MediaQuery.of(context).size.height,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    filterOption("S"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("ML"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("XL"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("XXL"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("3XL"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("4XL"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("5XL"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("6XL"),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.04),
+                                    filterOption("7XL"),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 20.0),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFFFFF),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(0.0),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            spreadRadius: 5,
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              height:
+                                  (55 / MediaQuery.of(context).size.height) *
+                                      MediaQuery.of(context).size.height,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 0.0),
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      WidgetStateProperty.resolveWith<Color>(
+                                    (Set<WidgetState> states) {
+                                      if (states
+                                          .contains(WidgetState.pressed)) {
+                                        return const Color(0xFF1D4ED8);
+                                      }
+                                      return Colors.white;
+                                    },
+                                  ),
+                                  foregroundColor:
+                                      WidgetStateProperty.resolveWith<Color>(
+                                    (Set<WidgetState> states) {
+                                      if (states
+                                          .contains(WidgetState.pressed)) {
+                                        return Colors.white;
+                                      }
+                                      return const Color(0xFF1D4ED8);
+                                    },
+                                  ),
+                                  elevation:
+                                      WidgetStateProperty.all<double>(4.0),
+                                  shape: WidgetStateProperty.all<
+                                      RoundedRectangleBorder>(
+                                    const RoundedRectangleBorder(
+                                      side: BorderSide(
+                                          width: 3, color: Color(0xFF1D4ED8)),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(15)),
+                                    ),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Clear All',
+                                  style: TextStyle(
+                                    fontSize: 13.0,
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.04),
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              height:
+                                  (55 / MediaQuery.of(context).size.height) *
+                                      MediaQuery.of(context).size.height,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 0.0),
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      WidgetStateProperty.resolveWith<Color>(
+                                    (Set<WidgetState> states) {
+                                      if (states
+                                          .contains(WidgetState.pressed)) {
+                                        return Colors.white;
+                                      }
+                                      return const Color(0xFF1D4ED8);
+                                    },
+                                  ),
+                                  foregroundColor:
+                                      WidgetStateProperty.resolveWith<Color>(
+                                    (Set<WidgetState> states) {
+                                      if (states
+                                          .contains(WidgetState.pressed)) {
+                                        return const Color(0xFF1D4ED8);
+                                      }
+                                      return Colors.white;
+                                    },
+                                  ),
+                                  elevation:
+                                      WidgetStateProperty.all<double>(4.0),
+                                  shape: WidgetStateProperty.all<
+                                      RoundedRectangleBorder>(
+                                    const RoundedRectangleBorder(
+                                      side: BorderSide(
+                                          width: 3, color: Color(0xFF1D4ED8)),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(15)),
+                                    ),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'View 12 Results',
+                                  softWrap: false,
+                                  style: TextStyle(
+                                    fontSize: 13.0,
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                InkWell(
-                  onTap: () {
-                    _sortBy();
-                  },
-                  child: filter('images/sort.png', 'Sort By'),
-                ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -879,8 +1213,8 @@ class _HomePageState extends State<HomePage>
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ListTile(
-              title: const Text(
+          const ListTile(
+              title: Text(
             'Sort By',
             style: TextStyle(fontWeight: FontWeight.bold),
           )),
@@ -916,6 +1250,76 @@ class _HomePageState extends State<HomePage>
           ),
         ],
       ),
+    );
+  }
+
+  Widget list(String text, int value) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedRadioValue = value;
+        });
+      },
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 20.0),
+        decoration: BoxDecoration(
+          color: _selectedRadioValue == value
+              ? const Color(0xFFFFFFFF)
+              : Colors.transparent,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(0.0),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16.0,
+            color: Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget filterOption(String text) {
+    return ValueListenableBuilder<String?>(
+      valueListenable: _selectedFilter,
+      builder: (context, selectedOption, child) {
+        bool isChecked = selectedOption == text;
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Checkbox(
+              activeColor: const Color(0xFF008000),
+              checkColor: Colors.white,
+              value: isChecked,
+              onChanged: (bool? value) {
+                // Toggle the checkbox for the current option
+                if (value == true) {
+                  // Set this option as selected, unchecking others
+                  _selectedFilter.value = text;
+                } else {
+                  // Deselect the option
+                  _selectedFilter.value = null;
+                }
+              },
+            ),
+            Text(
+              text,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontFamily: 'Poppins',
+                fontSize: 15.0,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
