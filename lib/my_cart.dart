@@ -18,6 +18,14 @@ class _MyCartState extends State<MyCart> {
       'slashedPrice': '\$60',
       'discount': '20% off',
     },
+
+    {
+      'img': 'images/Img3.png',
+      'details': 'Calvin Clein Regular fit slim fit shirt',
+      'amount': '\$62',
+      'slashedPrice': '\$60',
+      'discount': '40% off',
+    },
     // You can add more items here
   ];
 
@@ -42,36 +50,210 @@ class _MyCartState extends State<MyCart> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20.0),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Deliver To:",
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20.0,
-                          color: Colors.black,
-                        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Deliver To:",
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 20.0,
+                        color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "[Name of Users]",
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 18.0,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const Text(
+                              "[Address of the recipient of the above]",
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          height: (55 / MediaQuery.of(context).size.height) *
+                              MediaQuery.of(context).size.height,
+                          padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: ButtonStyle(
+                              backgroundColor:
+                                  WidgetStateProperty.resolveWith<Color>(
+                                (Set<WidgetState> states) {
+                                  if (states.contains(WidgetState.pressed)) {
+                                    return const Color(0xFF1D4ED8);
+                                  }
+                                  return Colors.white;
+                                },
+                              ),
+                              foregroundColor:
+                                  WidgetStateProperty.resolveWith<Color>(
+                                (Set<WidgetState> states) {
+                                  if (states.contains(WidgetState.pressed)) {
+                                    return Colors.white;
+                                  }
+                                  return const Color(0xFF1D4ED8);
+                                },
+                              ),
+                              elevation: WidgetStateProperty.all<double>(4.0),
+                              shape: WidgetStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                  side: BorderSide(
+                                      width: 3, color: Color(0xFF1D4ED8)),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(15)),
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              'Change',
+                              softWrap: false,
+                              style: TextStyle(
+                                fontSize: 13.0,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+                  // Wrap ListView.builder with Expanded to let it take available space
+                  SizedBox(
+                    height: (200 / MediaQuery.of(context).size.height) *
+                        MediaQuery.of(context).size.height,
+                    child: ListView.builder(
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        return item(
+                          items[index]['img']!,
+                          items[index]['details']!,
+                          items[index]['amount']!,
+                          items[index]['slashedPrice']!,
+                          items[index]['discount']!,
+                          onRemove: () =>
+                              _removeItem(index), // Pass the remove function
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: InkWell(
+                      onTap: () {},
+                      child: Row(
+                        children: [
+                          Row(
+                            children: [
+                              Image.asset(
+                                'images/Coupon.png',
+                                height: 22,
+                              ),
+                              SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.02),
+                              Text(
+                                'Apply Coupon',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 20.0,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: Icon(
+                              Icons.navigate_next,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              size: 30,
+                            ),
+                            onPressed: null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Text(
+                      'Price Details (2 Items)',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 18.0,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                  priceDetails("Total Price ", "\$87"),
+                  priceDetails("Discount", "\$12"),
+                  priceDetails("Delivery Fee", "\$8"),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Expanded(
-                          flex: 2,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          flex: 4, // Adjust flex for title width distribution
+                          child: Text(
+                            "Total Amount",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18.0,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Expanded(
+                          flex: 4, // Adjust flex for name width distribution
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
-                                "[Name of Users]",
+                                "\$87",
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
@@ -80,99 +262,14 @@ class _MyCartState extends State<MyCart> {
                                       Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
-                              const Text(
-                                "[Address of the recipient of the above]",
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
-                              ),
                             ],
-                          ),
-                        ),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.04),
-                        Expanded(
-                          child: Container(
-                            width: double.infinity,
-                            height: (55 / MediaQuery.of(context).size.height) *
-                                MediaQuery.of(context).size.height,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 0.0),
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                    if (states.contains(WidgetState.pressed)) {
-                                      return const Color(0xFF1D4ED8);
-                                    }
-                                    return Colors.white;
-                                  },
-                                ),
-                                foregroundColor:
-                                    WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                    if (states.contains(WidgetState.pressed)) {
-                                      return Colors.white;
-                                    }
-                                    return const Color(0xFF1D4ED8);
-                                  },
-                                ),
-                                elevation: WidgetStateProperty.all<double>(4.0),
-                                shape: WidgetStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                  const RoundedRectangleBorder(
-                                    side: BorderSide(
-                                        width: 3, color: Color(0xFF1D4ED8)),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(15)),
-                                  ),
-                                ),
-                              ),
-                              child: const Text(
-                                'Change',
-                                softWrap: false,
-                                style: TextStyle(
-                                  fontSize: 13.0,
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                    // Wrap ListView.builder with Expanded to let it take available space
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          return item(
-                            items[index]['img']!,
-                            items[index]['details']!,
-                            items[index]['amount']!,
-                            items[index]['slashedPrice']!,
-                            items[index]['discount']!,
-                            onRemove: () =>
-                                _removeItem(index), // Pass the remove function
-                          );
-                        },
-                      ),
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                    priceDetails("Total Price ", "\$87"),
-                    priceDetails("Discount", "\$12"),
-                    priceDetails("Delivery Fee", "\$8"),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                ],
               ),
             ),
           ),
@@ -449,8 +546,9 @@ class _MyCartState extends State<MyCart> {
 
   Widget priceDetails(String title, String name) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 26.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Expanded(
             flex: 4, // Adjust flex for title width distribution
@@ -459,7 +557,7 @@ class _MyCartState extends State<MyCart> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 20.0,
+                fontSize: 18.0,
                 color: Colors.grey,
               ),
             ),
@@ -467,14 +565,19 @@ class _MyCartState extends State<MyCart> {
           const Spacer(),
           Expanded(
             flex: 4, // Adjust flex for name width distribution
-            child: Text(
-              name,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 20.0,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  name,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 18.0,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
