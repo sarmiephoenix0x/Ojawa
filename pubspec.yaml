@@ -109,6 +109,9 @@ flutter:
     - images/star.png
     - images/Filter.png
     - images/sort.png
+    - images/AddPhoto.png
+    - images/Tick.png
+    - images/Coupon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

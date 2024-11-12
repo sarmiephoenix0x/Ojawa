@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:ojawa/my_cart.dart';
 import 'package:ojawa/write_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -293,7 +294,7 @@ class _ProductdetailsState extends State<Productdetails>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 20.0),
+                  padding: const EdgeInsets.only(right: 20.0, left: 10.0),
                   child: Row(
                     children: [
                       IconButton(
@@ -1213,7 +1214,14 @@ class _ProductdetailsState extends State<Productdetails>
                           MediaQuery.of(context).size.height,
                       padding: const EdgeInsets.symmetric(horizontal: 0.0),
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MyCart(key: UniqueKey()),
+                            ),
+                          );
+                        },
                         style: ButtonStyle(
                           backgroundColor:
                               WidgetStateProperty.resolveWith<Color>(
