@@ -109,8 +109,8 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
           children: [
             Image.asset(
               'images/Tick.png', // Replace with the item's image asset or network path
-              height: 100,
-              width: 100,
+              height: 80,
+              width: 80,
               fit: BoxFit.cover,
             ),
             SizedBox(

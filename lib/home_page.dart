@@ -995,45 +995,55 @@ class _HomePageState extends State<HomePage>
   Widget deal(String img, String text, String text2) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 40.0),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: Image.asset(
-              img,
-              width: double.infinity,
-              fit: BoxFit.cover,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Productdetails(key: UniqueKey()),
             ),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-          Text(
-            text,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16.0,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-          Container(
-            padding:
-                const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
-            decoration: const BoxDecoration(
-              color: Color(0xFFEF4444),
-              borderRadius: BorderRadius.all(
-                Radius.circular(5.0),
+          );
+        },
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Image.asset(
+                img,
+                width: double.infinity,
+                fit: BoxFit.cover,
               ),
             ),
-            child: Text(
-              text2,
-              style: const TextStyle(
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            Text(
+              text,
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 16.0,
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-          ),
-        ],
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEF4444),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(5.0),
+                ),
+              ),
+              child: Text(
+                text2,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16.0,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:ojawa/apply_coupon.dart';
+import 'package:ojawa/new_address.dart';
+import 'package:ojawa/payment_method.dart';
 
 class MyCart extends StatefulWidget {
   const MyCart({super.key});
@@ -9,6 +12,8 @@ class MyCart extends StatefulWidget {
 
 class _MyCartState extends State<MyCart> {
   bool isLoading = false;
+  int? _selectedRadioValue;
+  bool isCouponEnabled = false;
 
   List<Map<String, String>> items = [
     {
@@ -34,6 +39,158 @@ class _MyCartState extends State<MyCart> {
     setState(() {
       items.removeAt(index); // Remove the item from the list
     });
+  }
+
+  void _changeAddress() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Change Address',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
+                      ),
+                    ),
+                    SizedBox(
+                        height: (28 / MediaQuery.of(context).size.height) *
+                            MediaQuery.of(context).size.height),
+                    address(
+                      "Home",
+                      "[Receiver’s Name]",
+                      "2917 Anywhere You Choose, Rd. St. Frestine, State, Country",
+                      1,
+                      setState, // Pass the setState function
+                    ),
+                    address(
+                      "Work",
+                      "[Receiver’s Name]",
+                      "1234 Some Other Place, Rd. City, State, Country",
+                      2,
+                      setState, // Pass the setState function
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const Spacer(),
+                        InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    NewAddress(key: UniqueKey()),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            '+ Add New Address',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 18.0,
+                              color: Color(0xFF1D4ED8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                        height: (28 / MediaQuery.of(context).size.height) *
+                            MediaQuery.of(context).size.height),
+                    Container(
+                      width: double.infinity,
+                      height: (60 / MediaQuery.of(context).size.height) *
+                          MediaQuery.of(context).size.height,
+                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_selectedRadioValue != null) {
+                            Navigator.pop(context);
+                          }
+                        },
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.resolveWith<Color>(
+                            (Set<WidgetState> states) {
+                              if (_selectedRadioValue != null) {
+                                if (states.contains(WidgetState.pressed)) {
+                                  return Colors.white;
+                                }
+                                return const Color(0xFF1D4ED8);
+                              } else {
+                                return Colors.grey;
+                              }
+                            },
+                          ),
+                          foregroundColor:
+                              WidgetStateProperty.resolveWith<Color>(
+                            (Set<WidgetState> states) {
+                              if (_selectedRadioValue != null) {
+                                if (states.contains(WidgetState.pressed)) {
+                                  return const Color(0xFF1D4ED8);
+                                }
+                                return Colors.white;
+                              } else {
+                                return Colors.white;
+                              }
+                            },
+                          ),
+                          elevation: WidgetStateProperty.all<double>(4.0),
+                          shape: WidgetStateProperty.resolveWith<
+                              RoundedRectangleBorder>(
+                            (Set<WidgetState> states) {
+                              final bool isFilled = _selectedRadioValue != null;
+
+                              return RoundedRectangleBorder(
+                                side: BorderSide(
+                                  width: 3,
+                                  color: isFilled
+                                      ? const Color(0xFF1D4ED8)
+                                      : Colors.grey,
+                                ),
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(15)),
+                              );
+                            },
+                          ),
+                        ),
+                        child: isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Continue',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -106,7 +263,9 @@ class _MyCartState extends State<MyCart> {
                               MediaQuery.of(context).size.height,
                           padding: const EdgeInsets.symmetric(horizontal: 0.0),
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              _changeAddress();
+                            },
                             style: ButtonStyle(
                               backgroundColor:
                                   WidgetStateProperty.resolveWith<Color>(
@@ -174,7 +333,14 @@ class _MyCartState extends State<MyCart> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: InkWell(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ApplyCoupon(key: UniqueKey()),
+                          ),
+                        );
+                      },
                       child: Row(
                         children: [
                           Row(
@@ -229,45 +395,105 @@ class _MyCartState extends State<MyCart> {
                   priceDetails("Discount", "\$12"),
                   priceDetails("Delivery Fee", "\$8"),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 4, // Adjust flex for title width distribution
-                          child: Text(
-                            "Total Amount",
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 18.0,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Expanded(
-                          flex: 4, // Adjust flex for name width distribution
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                  if (isCouponEnabled)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Text(
-                                "\$87",
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 18.0,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "FIRST30 [Applied]",
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 18.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              Expanded(
+                                child: IconButton(
+                                  icon: Icon(
+                                    Icons.close,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                    size: 30,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.03),
+                          const Text(
+                            "Get 30% Cashback on your first order. Apply Code to activate... Hurry Now!",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 4, // Adjust flex for title width distribution
+                            child: Text(
+                              "Total Amount",
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 18.0,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          Expanded(
+                            flex: 4, // Adjust flex for name width distribution
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "\$87",
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 18.0,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                 ],
               ),
@@ -323,7 +549,15 @@ class _MyCartState extends State<MyCart> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PaymentMethodPage(key: UniqueKey()),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1D4ED8),
                         foregroundColor: Colors.white,
@@ -581,6 +815,85 @@ class _MyCartState extends State<MyCart> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget address(String type, String name, String address, int value,
+      StateSetter setState) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 40.0),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedRadioValue = value; // Update selected value
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25.0),
+            border: Border.all(
+              width: 0.8,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    type,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16.0,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    height: 30,
+                    width: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(55.0),
+                      border: Border.all(
+                        width: _selectedRadioValue == value ? 3 : 0.8,
+                        color: _selectedRadioValue == value
+                            ? const Color(0xFF1D4ED8)
+                            : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                  height: (28 / MediaQuery.of(context).size.height) *
+                      MediaQuery.of(context).size.height),
+              Text(
+                name,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              SizedBox(
+                  height: (28 / MediaQuery.of(context).size.height) *
+                      MediaQuery.of(context).size.height),
+              Text(
+                address,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16.0,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
