@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'home_page.dart';
+import 'categories_page.dart';
 
 class MainApp extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -14,7 +15,7 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
   final List<bool> _hasNotification = [false, false, false, false];
   DateTime? currentBackPressTime;
 
@@ -85,7 +86,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                 AssetImage('images/Home_active.png'),
                 color: Colors.grey,
               ),
-              label: '',
+              label: 'Home',
               // Add notification dot
               activeIcon: Stack(
                 alignment: Alignment.center,
@@ -111,7 +112,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                 AssetImage('images/Categories.png'),
                 color: Colors.grey,
               ),
-              label: '',
+              label: 'Categories',
               activeIcon: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -136,7 +137,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                 AssetImage('images/Orders.png'),
                 color: Colors.grey,
               ),
-              label: '',
+              label: 'Orders',
               activeIcon: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -161,7 +162,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                 AssetImage('images/Profile.png'),
                 color: Colors.grey,
               ),
-              label: '',
+              label: 'Profile',
               activeIcon: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -205,9 +206,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
             onToggleDarkMode: widget.onToggleDarkMode,
             isDarkMode: widget.isDarkMode);
       case 1:
-      // return SearchPage(
-      //   selectedIndex: _selectedIndex,
-      // );
+        return const CategoriesPage();
       case 2:
       // return LikePage(
       //   selectedIndex: _selectedIndex,

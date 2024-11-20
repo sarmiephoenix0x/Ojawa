@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ojawa/add_new_card.dart';
+import 'package:ojawa/successful_order_page.dart';
 
 class PaymentMethodPage extends StatefulWidget {
   const PaymentMethodPage({super.key});
@@ -13,6 +14,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   bool _isNetBankingExpanded = false;
   bool _isWalletExpanded = false;
   int _selectedPaymentMethod = 0;
+  String buttonText = "Continue";
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,17 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                       child: const Icon(Icons.add, color: Colors.blue),
                     ),
                     title: const Text("Add New Card"),
-                    trailing: const Icon(Icons.navigate_next),
+                    trailing: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  AddNewCard(key: UniqueKey()),
+                            ),
+                          );
+                        },
+                        child: const Icon(Icons.navigate_next)),
                     onTap: () {
                       // Navigate to Add New Card page
                     },
@@ -58,6 +70,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                       onChanged: (value) {
                         setState(() {
                           _selectedPaymentMethod = value!;
+                          buttonText = "Make Payment";
                         });
                       },
                     ),
@@ -112,6 +125,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                   onChanged: (value) {
                     setState(() {
                       _selectedPaymentMethod = value!;
+                      buttonText = "Place Order";
                     });
                   },
                 ),
@@ -169,12 +183,20 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                     height: 55,
                     child: ElevatedButton(
                       onPressed: () {
-                        if (_selectedPaymentMethod != 0) {
+                        if (_selectedPaymentMethod == 1) {
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) =>
+                          //         AddNewCard(key: UniqueKey()),
+                          //   ),
+                          // );
+                        } else if (_selectedPaymentMethod == 2) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  AddNewCard(key: UniqueKey()),
+                                  SuccessfulOrderPage(key: UniqueKey()),
                             ),
                           );
                         }
@@ -195,8 +217,8 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                               const BorderRadius.all(Radius.circular(15)),
                         ),
                       ),
-                      child: const Text(
-                        'Continue',
+                      child: Text(
+                        buttonText,
                         style: TextStyle(
                           fontSize: 13.0,
                           fontFamily: 'Poppins',
