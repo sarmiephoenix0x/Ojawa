@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ojawa/categories_details.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
@@ -122,25 +123,36 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   itemBuilder: (context, index) {
                     return Column(
                       children: [
-                        Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                15), // Rounded edges for the card
-                          ),
-                          elevation: 4, // Shadow effect
-                          child: Container(
-                            // Use a Container to set the height and width of the image
-                            height: 120, // Set the height of the image
-                            width: double
-                                .infinity, // Make the image take the full width
-                            decoration: BoxDecoration(
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    CategoriesDetails(key: UniqueKey()),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
-                                  15), // Ensure the image respects the card's shape
-                              image: DecorationImage(
-                                image: AssetImage(_getImageUrl2(index %
-                                    5)), // Use modulo to cycle through your images
-                                fit: BoxFit
-                                    .cover, // Fit the image within the container
+                                  15), // Rounded edges for the card
+                            ),
+                            elevation: 4, // Shadow effect
+                            child: Container(
+                              // Use a Container to set the height and width of the image
+                              height: 120, // Set the height of the image
+                              width: double
+                                  .infinity, // Make the image take the full width
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                    15), // Ensure the image respects the card's shape
+                                image: DecorationImage(
+                                  image: AssetImage(_getImageUrl2(index %
+                                      5)), // Use modulo to cycle through your images
+                                  fit: BoxFit
+                                      .cover, // Fit the image within the container
+                                ),
                               ),
                             ),
                           ),

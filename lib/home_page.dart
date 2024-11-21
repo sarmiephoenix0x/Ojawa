@@ -119,69 +119,68 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      appBar: AppBar(
+        forceMaterialTransparency: true,
+        automaticallyImplyLeading: false,
+        title: _isSearching
+            ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _isSearching = false;
+                          searchController.clear();
+                        });
+                      },
+                      child: Image.asset(
+                        'images/Back.png',
+                        height: 55,
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+              )
+            : Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.menu,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      size: 30,
+                    ),
+                    onPressed: null,
+                  ),
+                  Text(
+                    'Home',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22.0,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const Spacer(),
+                  Image.asset(
+                    'images/notification.png',
+                    height: 22,
+                  ),
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.1),
+                  Image.asset(
+                    'images/bag.png',
+                    height: 22,
+                  ),
+                ],
+              ),
+      ),
       body: Stack(
         alignment: Alignment.bottomCenter,
         children: [
           Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              if (_isSearching) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            _isSearching = false;
-                            searchController.clear();
-                          });
-                        },
-                        child: Image.asset(
-                          'images/Back.png',
-                          height: 55,
-                        ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.menu,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          size: 30,
-                        ),
-                        onPressed: null,
-                      ),
-                      Text(
-                        'Home',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22.0,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      const Spacer(),
-                      Image.asset(
-                        'images/notification.png',
-                        height: 22,
-                      ),
-                      SizedBox(width: MediaQuery.of(context).size.width * 0.1),
-                      Image.asset(
-                        'images/bag.png',
-                        height: 22,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
               SizedBox(height: MediaQuery.of(context).size.height * 0.03),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
