@@ -114,6 +114,11 @@ flutter:
     - images/Coupon.png
     - images/Delivery-truck.png
     - images/Exchange.png
+    - images/CancelOrder.png
+    - images/NoOrderFound.png
+    - images/OrderCancelled.png
+    - images/OrderDelivered.png
+    - images/OrderReceived.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
