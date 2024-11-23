@@ -197,8 +197,7 @@ class _ApplyCouponState extends State<ApplyCoupon> {
                   ] else ...[
                     Expanded(
                       child: Center(
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height,
+                        child: SingleChildScrollView(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

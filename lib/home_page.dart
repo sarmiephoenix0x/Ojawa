@@ -273,22 +273,25 @@ class _HomePageState extends State<HomePage>
                   ] else ...[
                     Expanded(
                       child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              'images/NotFound.png',
-                              height: 300,
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              'No results to display',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Theme.of(context).colorScheme.onSurface,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'images/NotFound.png',
+                                height: 300,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 20),
+                              Text(
+                                'No results to display',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

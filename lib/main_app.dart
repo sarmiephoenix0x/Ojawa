@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ojawa/orders_page.dart';
 import 'home_page.dart';
 import 'categories_page.dart';
 
@@ -208,9 +209,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
       case 1:
         return const CategoriesPage();
       case 2:
-      // return LikePage(
-      //   selectedIndex: _selectedIndex,
-      // );
+        return const OrdersPage();
       case 3:
       // return ExplorePage(
       //   selectedIndex: _selectedIndex,

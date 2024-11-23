@@ -119,6 +119,10 @@ flutter:
     - images/OrderCancelled.png
     - images/OrderDelivered.png
     - images/OrderReceived.png
+    - images/Help.png
+    - images/OrderBox.png
+    - images/OrderExchange.png
+    - images/OrderReturned.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
