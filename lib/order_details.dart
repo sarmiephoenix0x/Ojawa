@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:ojawa/exchange_order.dart';
 import 'package:ojawa/productDetails.dart';
+import 'package:ojawa/return_order.dart';
 
 class OrderDetails extends StatefulWidget {
-  const OrderDetails({super.key});
+  final Function goToOrdersPage;
+  const OrderDetails({super.key, required this.goToOrdersPage});
 
   @override
   _OrderDetailsState createState() => _OrderDetailsState();
@@ -535,9 +538,35 @@ class _OrderDetailsState extends State<OrderDetails> {
                           child:
                               orderAction('images/OrderBox.png', 'Track Order'),
                         ),
-                        orderAction('images/CancelOrder.png', 'Cancel Order'),
-                        orderAction(
-                            'images/OrderExchange.png', 'Exchange Order'),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ReturnOrder(
+                                    key: UniqueKey(),
+                                    goToOrdersPage: widget.goToOrdersPage),
+                              ),
+                            );
+                          },
+                          child: orderAction(
+                              'images/OrderReturned.png', 'Return Order'),
+                        ),
+                        // orderAction('images/CancelOrder.png', 'Cancel Order'),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ExchangeOrder(
+                                    key: UniqueKey(),
+                                    goToOrdersPage: widget.goToOrdersPage),
+                              ),
+                            );
+                          },
+                          child: orderAction(
+                              'images/OrderExchange.png', 'Exchange Order'),
+                        ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.05),
                         Padding(
@@ -610,11 +639,10 @@ class _OrderDetailsState extends State<OrderDetails> {
           borderRadius: BorderRadius.circular(12), // Smoother corners
           boxShadow: [
             BoxShadow(
-              color: Colors.grey
-                  .withOpacity(0.2), // Softer shadow for a clean look
+              color: Colors.grey.withOpacity(0.2),
               spreadRadius: 2,
               blurRadius: 8,
-              offset: const Offset(0, 2), // Position shadow for depth
+              offset: const Offset(0, 2),
             ),
           ],
         ),

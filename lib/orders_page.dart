@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:ojawa/order_details.dart';
 
 class OrdersPage extends StatefulWidget {
-  const OrdersPage({super.key});
+  final Function goToOrdersPage;
+  const OrdersPage({super.key, required this.goToOrdersPage});
 
   @override
   _OrdersPageState createState() => _OrdersPageState();
@@ -655,7 +656,9 @@ class _OrdersPageState extends State<OrdersPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => OrderDetails(key: UniqueKey()),
+                      builder: (context) => OrderDetails(
+                          key: UniqueKey(),
+                          goToOrdersPage: widget.goToOrdersPage),
                     ),
                   );
                 },
@@ -697,8 +700,9 @@ class _OrdersPageState extends State<OrdersPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                OrderDetails(key: UniqueKey()),
+                            builder: (context) => OrderDetails(
+                                key: UniqueKey(),
+                                goToOrdersPage: widget.goToOrdersPage),
                           ),
                         );
                       },

@@ -25,6 +25,15 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
     super.initState();
   }
 
+  void _goToOrdersPage() {
+    print("Go Too  Orders Page");
+    if (mounted) {
+      setState(() {
+        _selectedIndex = 2;
+      });
+    }
+  }
+
   void _showCustomSnackBar(BuildContext context, String message,
       {bool isError = false}) {
     final snackBar = SnackBar(
@@ -209,7 +218,9 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
       case 1:
         return const CategoriesPage();
       case 2:
-        return const OrdersPage();
+        return OrdersPage(
+          goToOrdersPage: _goToOrdersPage,
+        );
       case 3:
       // return ExplorePage(
       //   selectedIndex: _selectedIndex,
