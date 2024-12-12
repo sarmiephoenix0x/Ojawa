@@ -102,9 +102,10 @@ class _ExchangeOrder2State extends State<ExchangeOrder2> {
               padding: const EdgeInsets.symmetric(horizontal: 0.0),
               child: ElevatedButton(
                 onPressed: () {
-                  setState(() {
-                    widget.goToOrdersPage();
-                  });
+                  // widget.goToOrdersPage(context);
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith<Color>(
@@ -132,7 +133,7 @@ class _ExchangeOrder2State extends State<ExchangeOrder2> {
                   ),
                 ),
                 child: const Text(
-                  'Back to Home',
+                  'Go Back',
                   softWrap: false,
                   style: TextStyle(
                     fontSize: 14.0,

@@ -20,13 +20,14 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
   final List<bool> _hasNotification = [false, false, false, false];
   DateTime? currentBackPressTime;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  void _goToOrdersPage() {
-    print("Go Too  Orders Page");
+  void _goToOrdersPage(BuildContext context) {
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //       builder: (context) => OrdersPage(
+    //             goToOrdersPage: _goToOrdersPage,
+    //           )),
+    // );
     if (mounted) {
       setState(() {
         _selectedIndex = 2;
