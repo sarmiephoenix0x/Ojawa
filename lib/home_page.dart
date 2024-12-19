@@ -41,6 +41,9 @@ class _HomePageState extends State<HomePage>
   final storage = const FlutterSecureStorage();
   ValueNotifier<String?> _selectedFilter = ValueNotifier<String?>(null);
   bool isFilterActive = false;
+  String? userName;
+  String? profileImg;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future<void> _performSearch(String query) async {
     setState(() {
@@ -119,12 +122,13 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         forceMaterialTransparency: true,
         automaticallyImplyLeading: false,
         title: _isSearching
             ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: const EdgeInsets.only(right: 20.0),
                 child: Row(
                   children: [
                     InkWell(
@@ -149,15 +153,15 @@ class _HomePageState extends State<HomePage>
                     icon: Icon(
                       Icons.menu,
                       color: Theme.of(context).colorScheme.onSurface,
-                      size: 30,
                     ),
-                    onPressed: null,
+                    onPressed: () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    },
                   ),
                   Text(
                     'Home',
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontWeight: FontWeight.bold,
                       fontSize: 22.0,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
@@ -174,6 +178,264 @@ class _HomePageState extends State<HomePage>
                   ),
                 ],
               ),
+      ),
+      drawer: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(0),
+          bottomRight: Radius.circular(0),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 0.0),
+            child: Drawer(
+              child: Container(
+                color: Colors.white, // Set your desired background color here
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: <Widget>[
+                    DrawerHeader(
+                      decoration: const BoxDecoration(
+                        color: Color(
+                            0xFFEBEDEE), // Set your desired header color here
+                      ),
+                      padding: const EdgeInsets.fromLTRB(16.0, 36.0, 16.0, 8.0),
+                      child: Row(children: [
+                        if (profileImg == null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(55),
+                            child: Container(
+                              width: (35 / MediaQuery.of(context).size.width) *
+                                  MediaQuery.of(context).size.width,
+                              height:
+                                  (35 / MediaQuery.of(context).size.height) *
+                                      MediaQuery.of(context).size.height,
+                              color: Colors.grey,
+                              child: Image.asset(
+                                'images/Profile.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          )
+                        else if (profileImg != null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(55),
+                            child: Container(
+                              width: (35 / MediaQuery.of(context).size.width) *
+                                  MediaQuery.of(context).size.width,
+                              height:
+                                  (35 / MediaQuery.of(context).size.height) *
+                                      MediaQuery.of(context).size.height,
+                              color: Colors.grey,
+                              child: Image.network(
+                                profileImg!,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.03),
+                        const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // if (userName != null)
+                            //   Text(
+                            //     userName!,
+                            //     style: const TextStyle(
+                            //       fontFamily: 'GolosText',
+                            //       fontSize: 16.0,
+                            //       fontWeight: FontWeight.bold,
+                            //       color:Colors.black
+                            //     ),
+                            //   )
+                            // else
+                            //   const CircularProgressIndicator(color: Colors.black),
+                            Text(
+                              "Philip",
+                              style: TextStyle(
+                                  fontFamily: 'GolosText',
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black),
+                            ),
+                            Text(
+                              "+2349016482578",
+                              style: TextStyle(
+                                  fontFamily: 'GolosText',
+                                  fontSize: 16.0,
+                                  color: Colors.black),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        const IconButton(
+                          icon: Icon(Icons.navigate_next,
+                              size: 30, color: Colors.black),
+                          onPressed: null,
+                        ),
+                      ]),
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/ShopCategories.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'Shop by Categories',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/My Orders.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'My Orders',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/Favorite.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'Favorites',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/FAQ.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'FAQ',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/Address.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'Addresses',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                        // Navigate to home or any action you want
+                      },
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/SavedCard.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'Saved Cards',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/Terms.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'Terms and Conditions',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    ListTile(
+                      leading: Image.asset(
+                        'images/Privacy.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'Privacy Policy',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    ListTile(
+                      contentPadding: const EdgeInsets.only(top: 16, left: 16),
+                      leading: Image.asset(
+                        'images/Logout.png',
+                        height: 25,
+                      ),
+                      title: const Text(
+                        'Log out',
+                        style: TextStyle(
+                          fontFamily: 'GolosText',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: Stack(
         alignment: Alignment.bottomCenter,

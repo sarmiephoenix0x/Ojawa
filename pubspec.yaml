@@ -123,6 +123,15 @@ flutter:
     - images/OrderBox.png
     - images/OrderExchange.png
     - images/OrderReturned.png
+    - images/Address.png
+    - images/FAQ.png
+    - images/Favorite.png
+    - images/Logout.png
+    - images/Privacy.png
+    - images/SavedCard.png
+    - images/Terms.png
+    - images/ShopCategories.png
+    - images/My Orders.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
