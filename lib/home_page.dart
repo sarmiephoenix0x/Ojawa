@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:ojawa/faq_page.dart';
 import 'package:ojawa/productDetails.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,12 +12,18 @@ class HomePage extends StatefulWidget {
   final int selectedIndex;
   final Function(bool) onToggleDarkMode;
   final bool isDarkMode;
+  final Function goToCategoriesPage;
+  final Function goToOrdersPage;
+  final Function goToProfilePage;
 
   const HomePage(
       {super.key,
       required this.selectedIndex,
       required this.onToggleDarkMode,
-      required this.isDarkMode});
+      required this.isDarkMode,
+      required this.goToOrdersPage,
+      required this.goToCategoriesPage,
+      required this.goToProfilePage});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -199,81 +206,89 @@ class _HomePageState extends State<HomePage>
                             0xFFEBEDEE), // Set your desired header color here
                       ),
                       padding: const EdgeInsets.fromLTRB(16.0, 36.0, 16.0, 8.0),
-                      child: Row(children: [
-                        if (profileImg == null)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(55),
-                            child: Container(
-                              width: (35 / MediaQuery.of(context).size.width) *
-                                  MediaQuery.of(context).size.width,
-                              height:
-                                  (35 / MediaQuery.of(context).size.height) *
-                                      MediaQuery.of(context).size.height,
-                              color: Colors.grey,
-                              child: Image.asset(
-                                'images/Profile.png',
-                                fit: BoxFit.cover,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          widget.goToProfilePage(context);
+                        },
+                        child: Row(children: [
+                          if (profileImg == null)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(55),
+                              child: Container(
+                                width:
+                                    (35 / MediaQuery.of(context).size.width) *
+                                        MediaQuery.of(context).size.width,
+                                height:
+                                    (35 / MediaQuery.of(context).size.height) *
+                                        MediaQuery.of(context).size.height,
+                                color: Colors.grey,
+                                child: Image.asset(
+                                  'images/Profile.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            )
+                          else if (profileImg != null)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(55),
+                              child: Container(
+                                width:
+                                    (35 / MediaQuery.of(context).size.width) *
+                                        MediaQuery.of(context).size.width,
+                                height:
+                                    (35 / MediaQuery.of(context).size.height) *
+                                        MediaQuery.of(context).size.height,
+                                color: Colors.grey,
+                                child: Image.network(
+                                  profileImg!,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
-                          )
-                        else if (profileImg != null)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(55),
-                            child: Container(
-                              width: (35 / MediaQuery.of(context).size.width) *
-                                  MediaQuery.of(context).size.width,
-                              height:
-                                  (35 / MediaQuery.of(context).size.height) *
-                                      MediaQuery.of(context).size.height,
-                              color: Colors.grey,
-                              child: Image.network(
-                                profileImg!,
-                                fit: BoxFit.cover,
+                          SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.03),
+                          const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // if (userName != null)
+                              //   Text(
+                              //     userName!,
+                              //     style: const TextStyle(
+                              //       fontFamily: 'GolosText',
+                              //       fontSize: 16.0,
+                              //       fontWeight: FontWeight.bold,
+                              //       color:Colors.black
+                              //     ),
+                              //   )
+                              // else
+                              //   const CircularProgressIndicator(color: Colors.black),
+                              Text(
+                                "Philip",
+                                style: TextStyle(
+                                    fontFamily: 'GolosText',
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black),
                               ),
-                            ),
+                              Text(
+                                "+2349016482578",
+                                style: TextStyle(
+                                    fontFamily: 'GolosText',
+                                    fontSize: 16.0,
+                                    color: Colors.black),
+                              ),
+                            ],
                           ),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.03),
-                        const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // if (userName != null)
-                            //   Text(
-                            //     userName!,
-                            //     style: const TextStyle(
-                            //       fontFamily: 'GolosText',
-                            //       fontSize: 16.0,
-                            //       fontWeight: FontWeight.bold,
-                            //       color:Colors.black
-                            //     ),
-                            //   )
-                            // else
-                            //   const CircularProgressIndicator(color: Colors.black),
-                            Text(
-                              "Philip",
-                              style: TextStyle(
-                                  fontFamily: 'GolosText',
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black),
-                            ),
-                            Text(
-                              "+2349016482578",
-                              style: TextStyle(
-                                  fontFamily: 'GolosText',
-                                  fontSize: 16.0,
-                                  color: Colors.black),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        const IconButton(
-                          icon: Icon(Icons.navigate_next,
-                              size: 30, color: Colors.black),
-                          onPressed: null,
-                        ),
-                      ]),
+                          const Spacer(),
+                          const IconButton(
+                            icon: Icon(Icons.navigate_next,
+                                size: 30, color: Colors.black),
+                            onPressed: null,
+                          ),
+                        ]),
+                      ),
                     ),
                     ListTile(
                       leading: Image.asset(
@@ -289,7 +304,8 @@ class _HomePageState extends State<HomePage>
                         ),
                       ),
                       onTap: () {
-                        Navigator.pop(context); // Close the drawer
+                        Navigator.pop(context);
+                        widget.goToCategoriesPage(context);
                       },
                     ),
                     ListTile(
@@ -306,7 +322,8 @@ class _HomePageState extends State<HomePage>
                         ),
                       ),
                       onTap: () {
-                        Navigator.pop(context); // Close the drawer
+                        Navigator.pop(context);
+                        widget.goToOrdersPage(context);
                       },
                     ),
                     ListTile(
@@ -340,7 +357,15 @@ class _HomePageState extends State<HomePage>
                         ),
                       ),
                       onTap: () {
-                        Navigator.pop(context); // Close the drawer
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FaqPage(
+                              key: UniqueKey(),
+                            ),
+                          ),
+                        );
                       },
                     ),
                     ListTile(

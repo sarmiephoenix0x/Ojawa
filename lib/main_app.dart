@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ojawa/orders_page.dart';
 import 'home_page.dart';
 import 'categories_page.dart';
+import 'profile_page.dart';
 
 class MainApp extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -20,6 +21,14 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
   final List<bool> _hasNotification = [false, false, false, false];
   DateTime? currentBackPressTime;
 
+  void _goToCategoriesPage(BuildContext context) {
+    if (mounted) {
+      setState(() {
+        _selectedIndex = 1;
+      });
+    }
+  }
+
   void _goToOrdersPage(BuildContext context) {
     // Navigator.push(
     //   context,
@@ -31,6 +40,14 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
     if (mounted) {
       setState(() {
         _selectedIndex = 2;
+      });
+    }
+  }
+
+  void _goToProfilePage(BuildContext context) {
+    if (mounted) {
+      setState(() {
+        _selectedIndex = 3;
       });
     }
   }
@@ -213,19 +230,31 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
     switch (index) {
       case 0:
         return HomePage(
-            selectedIndex: _selectedIndex,
-            onToggleDarkMode: widget.onToggleDarkMode,
-            isDarkMode: widget.isDarkMode);
+          selectedIndex: _selectedIndex,
+          onToggleDarkMode: widget.onToggleDarkMode,
+          isDarkMode: widget.isDarkMode,
+          goToCategoriesPage: _goToCategoriesPage,
+          goToOrdersPage: _goToOrdersPage,
+          goToProfilePage: _goToProfilePage,
+        );
       case 1:
-        return const CategoriesPage();
+        return CategoriesPage(
+          goToCategoriesPage: _goToCategoriesPage,
+          goToOrdersPage: _goToOrdersPage,
+          goToProfilePage: _goToProfilePage,
+        );
       case 2:
         return OrdersPage(
+          goToCategoriesPage: _goToCategoriesPage,
           goToOrdersPage: _goToOrdersPage,
+          goToProfilePage: _goToProfilePage,
         );
       case 3:
-      // return ExplorePage(
-      //   selectedIndex: _selectedIndex,
-      // );
+        return ProfilePage(
+          goToCategoriesPage: _goToCategoriesPage,
+          goToOrdersPage: _goToOrdersPage,
+          goToProfilePage: _goToProfilePage,
+        );
       case 4:
       // return AccountPage(
       //     selectedIndex: _selectedIndex,
