@@ -13,6 +13,50 @@ class OrderDetails extends StatefulWidget {
 
 class _OrderDetailsState extends State<OrderDetails> {
   Map<String, bool> _isLikedMap = {};
+  final List<Map<String, String>> products = [
+    {
+      'img': 'images/Img2.png',
+      'details': 'Allen Solly Regular fit cotton shirt',
+      'amount': '\$35',
+      'slashedPrice': '\$40.25',
+      'discount': '15% OFF',
+      'starImg': 'images/Rating Icon.png',
+      'rating': '4.4',
+      'rating2': '(412)',
+    },
+
+    {
+      'img': 'images/Img2.png',
+      'details': 'Allen Solly Regular fit cotton shirt',
+      'amount': '\$35',
+      'slashedPrice': '\$40.25',
+      'discount': '15% OFF',
+      'starImg': 'images/Rating Icon.png',
+      'rating': '4.4',
+      'rating2': '(412)',
+    },
+    {
+      'img': 'images/Img2.png',
+      'details': 'Allen Solly Regular fit cotton shirt',
+      'amount': '\$35',
+      'slashedPrice': '\$40.25',
+      'discount': '15% OFF',
+      'starImg': 'images/Rating Icon.png',
+      'rating': '4.4',
+      'rating2': '(412)',
+    },
+    {
+      'img': 'images/Img2.png',
+      'details': 'Allen Solly Regular fit cotton shirt',
+      'amount': '\$35',
+      'slashedPrice': '\$40.25',
+      'discount': '15% OFF',
+      'starImg': 'images/Rating Icon.png',
+      'rating': '4.4',
+      'rating2': '(412)',
+    },
+    // Add more products here
+  ];
 
   void _trackOrder() {
     showModalBottomSheet(
@@ -599,19 +643,32 @@ class _OrderDetailsState extends State<OrderDetails> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              hot(
-                                  'images/Img2.png',
-                                  'Allen Solly Regular fit cotton shirt',
-                                  '\$35',
-                                  '\$40.25',
-                                  '15% OFF',
-                                  'images/Rating Icon.png',
-                                  '4.4',
-                                  '(412)'),
-                            ],
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.62,
+                            child: ListView.builder(
+                              scrollDirection: Axis
+                                  .horizontal, // Enable horizontal scrolling
+                              itemCount: products.length,
+                              itemBuilder: (context, index) {
+                                final product = products[index];
+                                return Container(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.6, // Set a fixed width for each item
+                                  margin: const EdgeInsets.only(
+                                      right: 20.0), // Space between items
+                                  child: hot(
+                                    product['img']!,
+                                    product['details']!,
+                                    product['amount']!,
+                                    product['slashedPrice']!,
+                                    product['discount']!,
+                                    product['starImg']!,
+                                    product['rating']!,
+                                    product['rating2']!,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
                         SizedBox(
@@ -712,8 +769,8 @@ class _OrderDetailsState extends State<OrderDetails> {
                     fit: BoxFit.cover,
                   ),
                   Positioned(
-                    top: MediaQuery.of(context).padding.top + 5,
-                    right: MediaQuery.of(context).padding.right + 5,
+                    top: 5,
+                    right: 5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 0.0, horizontal: 0.0),
@@ -740,8 +797,8 @@ class _OrderDetailsState extends State<OrderDetails> {
                     ),
                   ),
                   Positioned(
-                    top: MediaQuery.of(context).padding.top + 5,
-                    left: MediaQuery.of(context).padding.left + 5,
+                    top: 5,
+                    left: 5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 6.0, horizontal: 10.0),
@@ -755,7 +812,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                         "Top Seller",
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          fontSize: 16.0,
+                          fontSize: 14.0,
                           color: Colors.white,
                         ),
                       ),
@@ -773,54 +830,54 @@ class _OrderDetailsState extends State<OrderDetails> {
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             Row(
               children: [
                 Text(
                   amount,
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 22.0,
+                    fontSize: 20.0,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
                 Text(
                   slashedPrice,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 16.0,
+                    fontSize: 14.0,
                     color: Colors.grey,
                     decoration: TextDecoration.lineThrough,
                     decorationThickness: 2,
                     decorationColor: Colors.grey,
                   ),
                 ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
                 Text(
                   discount,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 16.0,
+                    fontSize: 14.0,
                     color: Color(0xFFEA580C),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             Row(
               children: [
                 Image.asset(
                   starImg,
-                  height: 25,
+                  height: 23,
                 ),
                 SizedBox(width: MediaQuery.of(context).size.width * 0.02),
                 Text(
                   rating,
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 18.0,
+                    fontSize: 16.0,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -829,7 +886,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                   rating2,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 18.0,
+                    fontSize: 16.0,
                     color: Colors.grey,
                   ),
                 ),

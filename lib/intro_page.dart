@@ -5,6 +5,7 @@ import 'package:carousel_slider/carousel_controller.dart';
 import 'package:ojawa/sign_in_page.dart';
 import 'package:ojawa/sign_up_page.dart';
 import 'package:flutter/services.dart';
+import 'package:ojawa/main_app.dart';
 
 class IntroPage extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -39,6 +40,22 @@ class _IntroPageState extends State<IntroPage> {
   // Use the fully qualified CarouselController from the carousel_slider package
   final CarouselController _controller = CarouselController();
   DateTime? currentBackPressTime;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainApp(
+              key: UniqueKey(),
+              onToggleDarkMode: widget.onToggleDarkMode,
+              isDarkMode: widget.isDarkMode),
+        ),
+      );
+    });
+  }
 
   void _showCustomSnackBar(BuildContext context, String message,
       {bool isError = false}) {
@@ -324,55 +341,55 @@ class _IntroPageState extends State<IntroPage> {
                     //       ),
                     //     ),
                     //   ),
-                    if (_current != 2)
-                      Positioned(
-                        top: MediaQuery.of(context).padding.top + 0,
-                        right: MediaQuery.of(context).padding.right + 0,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.8,
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SignInPage(
-                                        key: UniqueKey(),
-                                        onToggleDarkMode:
-                                            widget.onToggleDarkMode,
-                                        isDarkMode: widget.isDarkMode),
-                                  ),
-                                );
-                              },
-                              child: Row(
-                                children: [
-                                  const Spacer(),
-                                  Text(
-                                    'Skip',
-                                    style: TextStyle(
-                                      fontFamily: 'Inconsolata',
-                                      fontSize: 20,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.navigate_next,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                                    onPressed: null,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    // if (_current != 2)
+                    //   Positioned(
+                    //     top: MediaQuery.of(context).padding.top + 0,
+                    //     right: MediaQuery.of(context).padding.right + 0,
+                    //     child: Padding(
+                    //       padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    //       child: SizedBox(
+                    //         width: MediaQuery.of(context).size.width * 0.8,
+                    //         child: GestureDetector(
+                    //           onTap: () {
+                    //             Navigator.push(
+                    //               context,
+                    //               MaterialPageRoute(
+                    //                 builder: (context) => SignInPage(
+                    //                     key: UniqueKey(),
+                    //                     onToggleDarkMode:
+                    //                         widget.onToggleDarkMode,
+                    //                     isDarkMode: widget.isDarkMode),
+                    //               ),
+                    //             );
+                    //           },
+                    //           child: Row(
+                    //             children: [
+                    //               const Spacer(),
+                    //               Text(
+                    //                 'Skip',
+                    //                 style: TextStyle(
+                    //                   fontFamily: 'Inconsolata',
+                    //                   fontSize: 20,
+                    //                   color: Theme.of(context)
+                    //                       .colorScheme
+                    //                       .onSurface,
+                    //                 ),
+                    //               ),
+                    //               IconButton(
+                    //                 icon: Icon(
+                    //                   Icons.navigate_next,
+                    //                   color: Theme.of(context)
+                    //                       .colorScheme
+                    //                       .onSurface,
+                    //                 ),
+                    //                 onPressed: null,
+                    //               )
+                    //             ],
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
                   ],
                 ),
               ],
