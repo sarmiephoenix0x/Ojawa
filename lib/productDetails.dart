@@ -375,9 +375,19 @@ class _ProductdetailsState extends State<Productdetails>
                         onPressed: null,
                       ),
                       SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                      Image.asset(
-                        'images/bag.png',
-                        height: 22,
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MyCart(key: UniqueKey()),
+                            ),
+                          );
+                        },
+                        child: Image.asset(
+                          'images/bag.png',
+                          height: 22,
+                        ),
                       ),
                     ],
                   ),

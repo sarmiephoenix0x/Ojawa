@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:ojawa/faq_page.dart';
+import 'package:ojawa/my_cart.dart';
 import 'package:ojawa/productDetails.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -223,9 +224,19 @@ class _HomePageState extends State<HomePage>
                     height: 22,
                   ),
                   SizedBox(width: MediaQuery.of(context).size.width * 0.1),
-                  Image.asset(
-                    'images/bag.png',
-                    height: 22,
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyCart(key: UniqueKey()),
+                        ),
+                      );
+                    },
+                    child: Image.asset(
+                      'images/bag.png',
+                      height: 22,
+                    ),
                   ),
                 ],
               ),

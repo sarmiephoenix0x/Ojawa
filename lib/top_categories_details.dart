@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ojawa/my_cart.dart';
 import 'package:ojawa/productDetails.dart';
 
 class TopCategoriesDetails extends StatefulWidget {
@@ -147,7 +148,12 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                 height: 22,
               ),
               onPressed: () {
-                // Add your onPressed code here for the bag
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MyCart(key: UniqueKey()),
+                  ),
+                );
               },
             ),
           ],
