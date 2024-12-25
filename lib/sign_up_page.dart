@@ -22,6 +22,7 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
   final FocusNode _userNameFocusNode = FocusNode();
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _phoneNumberFocusNode = FocusNode();
+  final FocusNode _stateFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
   final FocusNode _password2FocusNode = FocusNode();
 
@@ -29,6 +30,7 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController stateController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController password2Controller = TextEditingController();
 
@@ -60,10 +62,10 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
     final String email = emailController.text.trim();
     final String password = passwordController.text.trim();
     final String passwordConfirmation = password2Controller.text.trim();
-    final String name = displayNameController.text.trim();
+    final String state = stateController.text.trim();
     final String username = userNameController.text.trim();
 
-    if (name.isEmpty ||
+    if (state.isEmpty ||
         username.isEmpty ||
         email.isEmpty ||
         phoneNumber.isEmpty ||
@@ -133,36 +135,36 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
     });
 
     final response = await http.post(
-      Uri.parse('https://signal.payguru.com.ng/api/register'),
+      Uri.parse('https://ojawa-api.onrender.com/api/Auth/sign-up/buyer'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'name': name,
         'username': username,
         'email': email,
-        'phone_number': phoneNumber,
+        'phone': phoneNumber,
+        'state': state,
         'password': password,
-        'password_confirmation': passwordConfirmation,
+        'confirmPassword': passwordConfirmation,
       }),
     );
     final Map<String, dynamic> responseData = jsonDecode(response.body);
 
     print('Response Data: $responseData');
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       // The responseData['user'] is a Map, not a String, so handle it accordingly
-      final Map<String, dynamic> user = responseData['user'];
-      final String accessToken = responseData['access_token'];
-      final String profilePhoto = responseData['profile_photo'];
+      // final Map<String, dynamic> user = responseData['user'];
+      final String accessToken = responseData['token'];
+      // final String profilePhoto = responseData['profile_photo'];
 
-      user['profile_photo'] = profilePhoto;
+      // user['profile_photo'] = profilePhoto;
       await storage.write(key: 'accessToken', value: accessToken);
-      await prefs.setString(
-          'user', jsonEncode(user)); // Store user as a JSON string
+      // await prefs.setString(
+      //     'user', jsonEncode(user)); // Store user as a JSON string
 
       // Handle successful response
       _showCustomSnackBar(
         context,
-        'Sign up successful! Welcome, ${user['name']}',
+        'Sign up successful!',
         isError: false,
       );
 
@@ -181,13 +183,12 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
         isLoading = false;
       });
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      final String error = responseData['error'];
-      final List<dynamic> data = responseData['data']['email'];
+      final String error = responseData['message'];
 
       // Handle validation error
       _showCustomSnackBar(
         context,
-        'Error: $error - $data',
+        'Error: $error',
         isError: true,
       );
     } else {
@@ -448,6 +449,42 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Text(
+                        'State',
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: TextFormField(
+                        controller: stateController,
+                        focusNode: _stateFocusNode,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          decoration: TextDecoration.none,
+                        ),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        cursorColor: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
                         'New Password',
                         textAlign: TextAlign.start,
                         style: TextStyle(
@@ -560,18 +597,18 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MainApp(
-                                  key: UniqueKey(),
-                                  onToggleDarkMode: widget.onToggleDarkMode,
-                                  isDarkMode: widget.isDarkMode),
-                            ),
-                          );
-                          // if (isLoading == false) {
-                          //   _registerUser();
-                          // }
+                          // Navigator.pushReplacement(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => MainApp(
+                          //         key: UniqueKey(),
+                          //         onToggleDarkMode: widget.onToggleDarkMode,
+                          //         isDarkMode: widget.isDarkMode),
+                          //   ),
+                          // );
+                          if (isLoading == false) {
+                            _registerUser();
+                          }
                         },
                         style: ButtonStyle(
                           backgroundColor:

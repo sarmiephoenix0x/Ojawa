@@ -19,11 +19,10 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
-  final FocusNode _emailOrPhoneNumberFocusNode = FocusNode();
+  final FocusNode _userNameFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
 
-  final TextEditingController emailOrPhoneNumberController =
-      TextEditingController();
+  final TextEditingController userNameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final storage = const FlutterSecureStorage();
   late SharedPreferences prefs;
@@ -45,27 +44,14 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
     if (prefs == null) {
       await _initializePrefs();
     }
-    final String emailOrPhoneNumber = emailOrPhoneNumberController.text.trim();
+    final String userName = userNameController.text.trim();
     final String password = passwordController.text.trim();
 
-    if (emailOrPhoneNumber.isEmpty || password.isEmpty) {
+    if (userName.isEmpty || password.isEmpty) {
       // Show an error message if any field is empty
       _showCustomSnackBar(
         context,
         'All fields are required.',
-        isError: true,
-      );
-
-      return;
-    }
-
-    // Validate email format
-    final RegExp emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!emailRegex.hasMatch(emailOrPhoneNumber)) {
-      // Show an error message if email is invalid
-      _showCustomSnackBar(
-        context,
-        'Please enter a valid email address.',
         isError: true,
       );
 
@@ -90,10 +76,10 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
 
     // Send the POST request
     final response = await http.post(
-      Uri.parse('https://signal.payguru.com.ng/api/login'),
+      Uri.parse('https://ojawa-api.onrender.com/api/Auth/sign-in'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'email': emailOrPhoneNumber,
+        'username': userName,
         'password': password,
       }),
     );
@@ -104,14 +90,14 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
 
     if (response.statusCode == 200) {
       // The responseData['user'] is a Map, not a String, so handle it accordingly
-      final Map<String, dynamic> user = responseData['user'];
-      final String accessToken = responseData['access_token'];
-      final String profilePhoto = responseData['profile_photo'];
+      // final Map<String, dynamic> user = responseData['user'];
+      final String accessToken = responseData['token'];
+      // final String profilePhoto = responseData['profile_photo'];
 
-      user['profile_photo'] = profilePhoto;
+      // user['profile_photo'] = profilePhoto;
       await storage.write(key: 'accessToken', value: accessToken);
-      await prefs.setString(
-          'user', jsonEncode(user)); // Store user as a JSON string
+      // await prefs.setString(
+      //     'user', jsonEncode(user)); // Store user as a JSON string
 
       // Handle the successful response here
       _showCustomSnackBar(
@@ -133,20 +119,7 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
       setState(() {
         isLoading = false;
       });
-      final String error = responseData['error'];
-      final String data = responseData['data'];
-
-      // Handle validation error
-      _showCustomSnackBar(
-        context,
-        'Error: $error - $data',
-        isError: true,
-      );
-    } else if (response.statusCode == 401) {
-      setState(() {
-        isLoading = false;
-      });
-      final String error = responseData['error'];
+      final String error = responseData['message'];
 
       // Handle invalid credentials
       _showCustomSnackBar(
@@ -245,7 +218,7 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Text(
-                        'Email / Phone Number',
+                        'Username',
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           fontFamily: 'Poppins',
@@ -257,20 +230,13 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: TextFormField(
-                        controller: emailOrPhoneNumberController,
-                        focusNode: _emailOrPhoneNumberFocusNode,
+                        controller: userNameController,
+                        focusNode: _userNameFocusNode,
                         style: const TextStyle(
                           fontSize: 16.0,
+                          decoration: TextDecoration.none,
                         ),
                         decoration: InputDecoration(
-                          labelText: 'example@gmail.com',
-                          labelStyle: const TextStyle(
-                            color: Colors.grey,
-                            fontFamily: 'Poppins',
-                            fontSize: 12.0,
-                            decoration: TextDecoration.none,
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                           ),
@@ -403,18 +369,18 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MainApp(
-                                  key: UniqueKey(),
-                                  onToggleDarkMode: widget.onToggleDarkMode,
-                                  isDarkMode: widget.isDarkMode),
-                            ),
-                          );
-                          // if (isLoading == false) {
-                          //   _submitForm();
-                          // }
+                          // Navigator.pushReplacement(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => MainApp(
+                          //         key: UniqueKey(),
+                          //         onToggleDarkMode: widget.onToggleDarkMode,
+                          //         isDarkMode: widget.isDarkMode),
+                          //   ),
+                          // );
+                          if (isLoading == false) {
+                            _submitForm();
+                          }
                         },
                         style: ButtonStyle(
                           backgroundColor:

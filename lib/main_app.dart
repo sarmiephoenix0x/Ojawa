@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ojawa/orders_page.dart';
+import 'package:ojawa/sign_in_page.dart';
 import 'home_page.dart';
 import 'categories_page.dart';
 import 'profile_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class MainApp extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -20,6 +22,13 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
   int _selectedIndex = 0;
   final List<bool> _hasNotification = [false, false, false, false];
   DateTime? currentBackPressTime;
+  final storage = const FlutterSecureStorage();
+
+  Future<bool> checkForToken() async {
+    // Read the access token from secure storage
+    final accessToken = await storage.read(key: 'accessToken');
+    return accessToken != null; // Check if token exists
+  }
 
   void _goToCategoriesPage(BuildContext context) {
     if (mounted) {
@@ -214,11 +223,27 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
           currentIndex: _selectedIndex,
           selectedItemColor: Colors.black,
           // Customize the selected item color
-          onTap: (index) {
+          onTap: (index) async {
             if (index != _selectedIndex) {
-              setState(() {
-                _selectedIndex = index;
-              });
+              if (index != 3) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              } else {
+                bool tokenExists = await checkForToken();
+
+                if (tokenExists == false) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SignInPage(
+                          key: UniqueKey(),
+                          onToggleDarkMode: widget.onToggleDarkMode,
+                          isDarkMode: widget.isDarkMode),
+                    ),
+                  );
+                }
+              }
             }
           },
         ),

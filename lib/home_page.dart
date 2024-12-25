@@ -5,8 +5,10 @@ import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:ojawa/faq_page.dart';
+import 'package:ojawa/intro_page.dart';
 import 'package:ojawa/my_cart.dart';
 import 'package:ojawa/productDetails.dart';
+import 'package:ojawa/sign_in_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -96,6 +98,24 @@ class _HomePageState extends State<HomePage>
     },
     // Add more products here
   ];
+  bool isLoading = false;
+  late SharedPreferences prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePrefs();
+  }
+
+  Future<void> _initializePrefs() async {
+    prefs = await SharedPreferences.getInstance();
+  }
+
+  Future<bool> checkForToken() async {
+    // Read the access token from secure storage
+    final accessToken = await storage.read(key: 'accessToken');
+    return accessToken != null; // Check if token exists
+  }
 
   Future<void> _performSearch(String query) async {
     setState(() {
@@ -138,6 +158,113 @@ class _HomePageState extends State<HomePage>
         isError: true,
       );
     }
+  }
+
+  Future<void> _logout() async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    if (accessToken == null) {
+      _showCustomSnackBar(
+        context,
+        'You are not logged in.',
+        isError: true,
+      );
+      // await prefs.remove('user');
+
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => const IntroPage(),
+      //   ),
+      // );
+      setState(() {
+        isLoading = false;
+      });
+      Navigator.pop(context);
+      return;
+    }
+
+    await storage.delete(key: 'accessToken');
+    // await prefs.remove('user');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IntroPage(
+            key: UniqueKey(),
+            onToggleDarkMode: widget.onToggleDarkMode,
+            isDarkMode: widget.isDarkMode),
+      ),
+    );
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  void _showLogoutConfirmationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Confirm Logout'),
+              content: const Text('Are you sure you want to log out?'),
+              actions: <Widget>[
+                Row(
+                  children: [
+                    TextButton(
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontFamily: 'Inter'),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Dismiss the dialog
+                      },
+                    ),
+                    const Spacer(),
+                    if (isLoading)
+                      const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.red,
+                        ),
+                      )
+                    else
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          _logout().then((_) {
+                            // Navigator.of(context)
+                            //     .pop(); // Dismiss dialog after logout
+                          }).catchError((error) {
+                            setState(() {
+                              isLoading = false;
+                            });
+                          });
+                        },
+                        child: Text(
+                          'Logout',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontFamily: 'Inter'),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showCustomSnackBar(BuildContext context, String message,
@@ -262,9 +389,26 @@ class _HomePageState extends State<HomePage>
                       ),
                       padding: const EdgeInsets.fromLTRB(16.0, 36.0, 16.0, 8.0),
                       child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          widget.goToProfilePage(context);
+                        onTap: () async {
+                          // Check for token before navigating
+                          bool tokenExists = await checkForToken();
+                          Navigator.pop(
+                              context); // Optional: Pop the current context if needed
+                          if (tokenExists) {
+                            widget.goToProfilePage(
+                                context); // Navigate to profile page if token exists
+                          } else {
+                            // Navigate to sign-in or sign-up page if token does not exist
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SignInPage(
+                                    key: UniqueKey(),
+                                    onToggleDarkMode: widget.onToggleDarkMode,
+                                    isDarkMode: widget.isDarkMode),
+                              ),
+                            );
+                          }
                         },
                         child: Row(children: [
                           if (profileImg == null)
@@ -303,7 +447,7 @@ class _HomePageState extends State<HomePage>
                             ),
                           SizedBox(
                               width: MediaQuery.of(context).size.width * 0.03),
-                          const Column(
+                          Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -319,20 +463,51 @@ class _HomePageState extends State<HomePage>
                               //   )
                               // else
                               //   const CircularProgressIndicator(color: Colors.black),
-                              Text(
-                                "Philip",
-                                style: TextStyle(
-                                    fontFamily: 'GolosText',
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black),
-                              ),
-                              Text(
-                                "+2349016482578",
-                                style: TextStyle(
-                                    fontFamily: 'GolosText',
-                                    fontSize: 16.0,
-                                    color: Colors.black),
+                              FutureBuilder<bool>(
+                                future:
+                                    checkForToken(), // Function to check for token
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const CircularProgressIndicator(
+                                        color: Colors.black);
+                                  } else if (snapshot.hasData &&
+                                      snapshot.data == true) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Philip",
+                                          style: const TextStyle(
+                                            fontFamily: 'GolosText',
+                                            fontSize: 16.0,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        Text(
+                                          "+2349016482578", // Display phone number only if signed in
+                                          style: TextStyle(
+                                            fontFamily: 'GolosText',
+                                            fontSize: 16.0,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  } else {
+                                    return const Text(
+                                      "Not Signed In",
+                                      style: TextStyle(
+                                        fontFamily: 'GolosText',
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ],
                           ),
@@ -508,6 +683,7 @@ class _HomePageState extends State<HomePage>
                       ),
                       onTap: () {
                         Navigator.pop(context);
+                        _showLogoutConfirmationDialog();
                       },
                     ),
                   ],
