@@ -18,6 +18,7 @@ class HomePage extends StatefulWidget {
   final Function goToCategoriesPage;
   final Function goToOrdersPage;
   final Function goToProfilePage;
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   const HomePage(
       {super.key,
@@ -26,7 +27,8 @@ class HomePage extends StatefulWidget {
       required this.isDarkMode,
       required this.goToOrdersPage,
       required this.goToCategoriesPage,
-      required this.goToProfilePage});
+      required this.goToProfilePage,
+      required this.scaffoldKey});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -51,9 +53,14 @@ class _HomePageState extends State<HomePage>
   final storage = const FlutterSecureStorage();
   ValueNotifier<String?> _selectedFilter = ValueNotifier<String?>(null);
   bool isFilterActive = false;
+  int? userId;
   String? userName;
-  String? profileImg;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String? _profileImage;
+  String? email;
+  String? state;
+  String? phone;
+  String? gender;
+  String? role;
   final List<Map<String, String>> products = [
     {
       'img': 'images/Img2.png',
@@ -105,6 +112,7 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _initializePrefs();
+    fetchUserProfile();
   }
 
   Future<void> _initializePrefs() async {
@@ -115,6 +123,80 @@ class _HomePageState extends State<HomePage>
     // Read the access token from secure storage
     final accessToken = await storage.read(key: 'accessToken');
     return accessToken != null; // Check if token exists
+  }
+
+  Future<int?> getUserId() async {
+    try {
+      // Retrieve the userId from storage
+      String? userIdString =
+          await storage.read(key: 'userId'); // Use the correct key for userId
+      if (userIdString != null) {
+        return int.tryParse(userIdString); // Convert the string to an integer
+      }
+    } catch (error) {
+      print('Error retrieving userId: $error');
+    }
+    return null; // Return null if userId is not found or an error occurs
+  }
+
+  Future<void> fetchUserProfile() async {
+    // Retrieve the userId from storage
+    userId =
+        await getUserId(); // Assuming this retrieves the userId from Flutter Secure Storage
+    final String? accessToken = await storage.read(
+        key: 'accessToken'); // Use the correct key for access token
+    final url =
+        'https://ojawa-api.onrender.com/api/Users/$userId'; // Update the URL to the correct endpoint
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            // Access the user data from the nested "data" key
+            final userData = responseData['data'];
+            userName = userData['username'];
+            email = userData['email'];
+            state = userData['state'];
+            phone = userData['phone'];
+            gender = userData['gender'];
+            role = userData['role'];
+            final profilePictureUrl =
+                userData['profilePictureUrl']?.toString().trim();
+
+            _profileImage =
+                (profilePictureUrl != null && profilePictureUrl.isNotEmpty)
+                    ? '$profilePictureUrl/download?project=66e4476900275deffed4'
+                    : '';
+            isLoading = false; // Set loading to false after data is fetched
+          });
+        }
+        print("Profile Loaded: ${response.body}");
+        print("Profile Image URL: $_profileImage");
+      } else {
+        print('Error fetching profile: ${response.statusCode}');
+        if (mounted) {
+          setState(() {
+            isLoading = false; // Set loading to false on error
+          });
+        }
+      }
+    } catch (error) {
+      print('Error: $error');
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Set loading to false on exception
+        });
+      }
+    }
   }
 
   Future<void> _performSearch(String query) async {
@@ -301,7 +383,6 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         forceMaterialTransparency: true,
         automaticallyImplyLeading: false,
@@ -334,7 +415,7 @@ class _HomePageState extends State<HomePage>
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                     onPressed: () {
-                      _scaffoldKey.currentState?.openDrawer();
+                      widget.scaffoldKey.currentState?.openDrawer();
                     },
                   ),
                   Text(
@@ -367,331 +448,6 @@ class _HomePageState extends State<HomePage>
                   ),
                 ],
               ),
-      ),
-      drawer: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(0),
-          bottomRight: Radius.circular(0),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 0.0),
-            child: Drawer(
-              child: Container(
-                color: Colors.white, // Set your desired background color here
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: <Widget>[
-                    DrawerHeader(
-                      decoration: const BoxDecoration(
-                        color: Color(
-                            0xFFEBEDEE), // Set your desired header color here
-                      ),
-                      padding: const EdgeInsets.fromLTRB(16.0, 36.0, 16.0, 8.0),
-                      child: GestureDetector(
-                        onTap: () async {
-                          // Check for token before navigating
-                          bool tokenExists = await checkForToken();
-                          Navigator.pop(
-                              context); // Optional: Pop the current context if needed
-                          if (tokenExists) {
-                            widget.goToProfilePage(
-                                context); // Navigate to profile page if token exists
-                          } else {
-                            // Navigate to sign-in or sign-up page if token does not exist
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SignInPage(
-                                    key: UniqueKey(),
-                                    onToggleDarkMode: widget.onToggleDarkMode,
-                                    isDarkMode: widget.isDarkMode),
-                              ),
-                            );
-                          }
-                        },
-                        child: Row(children: [
-                          if (profileImg == null)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(55),
-                              child: Container(
-                                width:
-                                    (35 / MediaQuery.of(context).size.width) *
-                                        MediaQuery.of(context).size.width,
-                                height:
-                                    (35 / MediaQuery.of(context).size.height) *
-                                        MediaQuery.of(context).size.height,
-                                color: Colors.grey,
-                                child: Image.asset(
-                                  'images/Profile.png',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            )
-                          else if (profileImg != null)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(55),
-                              child: Container(
-                                width:
-                                    (35 / MediaQuery.of(context).size.width) *
-                                        MediaQuery.of(context).size.width,
-                                height:
-                                    (35 / MediaQuery.of(context).size.height) *
-                                        MediaQuery.of(context).size.height,
-                                color: Colors.grey,
-                                child: Image.network(
-                                  profileImg!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.03),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // if (userName != null)
-                              //   Text(
-                              //     userName!,
-                              //     style: const TextStyle(
-                              //       fontFamily: 'GolosText',
-                              //       fontSize: 16.0,
-                              //       fontWeight: FontWeight.bold,
-                              //       color:Colors.black
-                              //     ),
-                              //   )
-                              // else
-                              //   const CircularProgressIndicator(color: Colors.black),
-                              FutureBuilder<bool>(
-                                future:
-                                    checkForToken(), // Function to check for token
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const CircularProgressIndicator(
-                                        color: Colors.black);
-                                  } else if (snapshot.hasData &&
-                                      snapshot.data == true) {
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Philip",
-                                          style: const TextStyle(
-                                            fontFamily: 'GolosText',
-                                            fontSize: 16.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                        Text(
-                                          "+2349016482578", // Display phone number only if signed in
-                                          style: TextStyle(
-                                            fontFamily: 'GolosText',
-                                            fontSize: 16.0,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  } else {
-                                    return const Text(
-                                      "Not Signed In",
-                                      style: TextStyle(
-                                        fontFamily: 'GolosText',
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          const IconButton(
-                            icon: Icon(Icons.navigate_next,
-                                size: 30, color: Colors.black),
-                            onPressed: null,
-                          ),
-                        ]),
-                      ),
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/ShopCategories.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Shop by Categories',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        widget.goToCategoriesPage(context);
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/My Orders.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'My Orders',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        widget.goToOrdersPage(context);
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Favorite.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Favorites',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/FAQ.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'FAQ',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FaqPage(
-                              key: UniqueKey(),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Address.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Addresses',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                        // Navigate to home or any action you want
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/SavedCard.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Saved Cards',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Terms.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Terms and Conditions',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Privacy.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Privacy Policy',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      contentPadding: const EdgeInsets.only(top: 16, left: 16),
-                      leading: Image.asset(
-                        'images/Logout.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Log out',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showLogoutConfirmationDialog();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
       body: Stack(
         alignment: Alignment.bottomCenter,

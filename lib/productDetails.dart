@@ -1522,8 +1522,8 @@ class _ProductdetailsState extends State<Productdetails>
                     fit: BoxFit.cover,
                   ),
                   Positioned(
-                    top: MediaQuery.of(context).padding.top + 5,
-                    right: MediaQuery.of(context).padding.right + 5,
+                    top: 5,
+                    right: 5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 0.0, horizontal: 0.0),
@@ -1550,8 +1550,8 @@ class _ProductdetailsState extends State<Productdetails>
                     ),
                   ),
                   Positioned(
-                    top: MediaQuery.of(context).padding.top + 5,
-                    left: MediaQuery.of(context).padding.left + 5,
+                    top: 5,
+                    left: 5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 6.0, horizontal: 10.0),

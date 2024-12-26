@@ -5,6 +5,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ojawa/main_app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:path/path.dart' as path;
+import 'package:async/async.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:async';
+import 'dart:io';
 
 class SignUpPage extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -43,8 +49,13 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
   late SharedPreferences prefs;
   bool isLoading = false;
   String phoneNumber = '';
+  String localPhoneNumber = '';
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String selectedGender = 'Male';
+  String _profileImage = '';
+  final double maxWidth = 360;
+  final double maxHeight = 360;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -54,6 +65,46 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
 
   Future<void> _initializePrefs() async {
     prefs = await SharedPreferences.getInstance();
+  }
+
+  Future<void> _selectImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      final decodedImage =
+          await decodeImageFromList(imageFile.readAsBytesSync());
+
+      if (decodedImage.width > maxWidth || decodedImage.height > maxHeight) {
+        var cropper = ImageCropper();
+        CroppedFile? croppedImage = await cropper.cropImage(
+            sourcePath: imageFile.path,
+            aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+            uiSettings: [
+              AndroidUiSettings(
+                toolbarTitle: 'Crop Image',
+                toolbarColor: Colors.black,
+                toolbarWidgetColor: Colors.white,
+                lockAspectRatio: false,
+              ),
+              IOSUiSettings(
+                minimumAspectRatio: 1.0,
+              ),
+            ]);
+
+        if (croppedImage != null) {
+          if (mounted) {
+            setState(() {
+              _profileImage = croppedImage.path;
+            });
+          }
+        }
+      } else {
+        // Image is within the specified resolution, no need to crop
+        setState(() {
+          _profileImage = pickedFile.path;
+        });
+      }
+    }
   }
 
   Future<void> _registerUser() async {
@@ -135,32 +186,52 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
       isLoading = true;
     });
 
-    final response = await http.post(
-      Uri.parse('https://ojawa-api.onrender.com/api/Auth/sign-up/buyer'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': username,
-        'email': email,
-        'phone': phoneNumber,
-        'state': state,
-        'password': password,
-        'confirmPassword': passwordConfirmation,
-      }),
-    );
-    final Map<String, dynamic> responseData = jsonDecode(response.body);
+    final url =
+        Uri.parse('https://ojawa-api.onrender.com/api/Auth/sign-up/buyer');
+    final request = http.MultipartRequest('POST', url)
+      ..fields['username'] = username
+      ..fields['email'] = email
+      ..fields['phone'] = localPhoneNumber
+      ..fields['gender'] = selectedGender
+      ..fields['state'] = state
+      ..fields['password'] = password
+      ..fields['confirmPassword'] = passwordConfirmation;
 
-    print('Response Data: $responseData');
+    // Handling profile picture upload if it's a local file
+    if (_profileImage != null && !_profileImage.startsWith('http')) {
+      File imageFile = File(_profileImage);
+      if (await imageFile.exists()) {
+        var stream =
+            http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
+        var length = await imageFile.length();
+        request.files.add(http.MultipartFile(
+          'profilePicture',
+          stream,
+          length,
+          filename: path.basename(imageFile.path),
+        ));
+      } else {
+        print('Image file not found. Skipping image upload.');
+      }
+    } else {
+      print(
+          'Skipping image upload as the profile image is from an HTTP source.');
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    final responseData = json.decode(response.body);
+    print('Response Status: ${response.statusCode}');
+    print('Response Body: ${response.body}');
 
     if (response.statusCode == 200) {
-      // The responseData['user'] is a Map, not a String, so handle it accordingly
-      // final Map<String, dynamic> user = responseData['user'];
       final String accessToken = responseData['token'];
-      // final String profilePhoto = responseData['profile_photo'];
+      final int userId = responseData['userId']; // Extract userId from response
 
-      // user['profile_photo'] = profilePhoto;
+      // Store the access token and user ID
       await storage.write(key: 'accessToken', value: accessToken);
-      // await prefs.setString(
-      //     'user', jsonEncode(user)); // Store user as a JSON string
+      await storage.write(
+          key: 'userId', value: userId.toString()); // Store userId as a string
 
       // Handle successful response
       _showCustomSnackBar(
@@ -256,8 +327,8 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
             child: Center(
               child: SizedBox(
                 height: orientation == Orientation.portrait
-                    ? MediaQuery.of(context).size.height * 1.2
-                    : MediaQuery.of(context).size.height * 2,
+                    ? MediaQuery.of(context).size.height * 1.4
+                    : MediaQuery.of(context).size.height * 2.2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -436,6 +507,7 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                               onChanged: (phone) {
                                 setState(() {
                                   phoneNumber = phone.completeNumber;
+                                  localPhoneNumber = phone.number;
                                 });
                               },
                               onCountryChanged: (country) {

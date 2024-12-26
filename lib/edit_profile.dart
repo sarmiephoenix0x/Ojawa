@@ -19,16 +19,123 @@ class _EditProfileState extends State<EditProfile> {
   int? _selectedRadioValue = 1;
   final TextEditingController _nameController = TextEditingController();
   final FocusNode _nameFocusNode = FocusNode();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
   final TextEditingController _locationController = TextEditingController();
   final FocusNode _locationFocusNode = FocusNode();
-  String? profileImg;
   String phoneNumber = '';
+  int? userId;
+  String? _profileImage;
+  String? userName;
+  String? email;
+  String? state;
+  String? phone;
+  String? gender;
+  String? role;
   bool isLoading = false;
   final ImagePicker _picker = ImagePicker();
   final double maxWidth = 360;
   final double maxHeight = 360;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserProfile();
+  }
+
+  Future<int?> getUserId() async {
+    try {
+      // Retrieve the userId from storage
+      String? userIdString =
+          await storage.read(key: 'userId'); // Use the correct key for userId
+      if (userIdString != null) {
+        return int.tryParse(userIdString); // Convert the string to an integer
+      }
+    } catch (error) {
+      print('Error retrieving userId: $error');
+    }
+    return null; // Return null if userId is not found or an error occurs
+  }
+
+  Future<void> fetchUserProfile() async {
+    // Retrieve the userId from storage
+    userId =
+        await getUserId(); // Assuming this retrieves the userId from Flutter Secure Storage
+    final String? accessToken = await storage.read(
+        key: 'accessToken'); // Use the correct key for access token
+    final url =
+        'https://ojawa-api.onrender.com/api/Users/$userId'; // Update the URL to the correct endpoint
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            // Access the user data from the nested "data" key
+            final userData = responseData['data'];
+            userName = userData['username'];
+            email = userData['email'];
+            state = userData['state'];
+            phone = userData['phone'];
+            gender = userData['gender'];
+            role = userData['role'];
+            final profilePictureUrl =
+                userData['profilePictureUrl']?.toString().trim();
+
+            _profileImage =
+                (profilePictureUrl != null && profilePictureUrl.isNotEmpty)
+                    ? '$profilePictureUrl/download?project=66e4476900275deffed4'
+                    : '';
+
+            // Set the values of the TextEditingControllers
+            _nameController.text = userName ?? '';
+            _emailController.text = email ?? '';
+            _phoneController.text = phone ?? '';
+            _locationController.text =
+                state ?? ''; // Assuming state is used for location
+
+            // Set the selected gender based on the response
+            if (gender != null) {
+              if (gender!.toLowerCase() == 'male') {
+                _selectedRadioValue = 1;
+              } else if (gender!.toLowerCase() == 'female') {
+                _selectedRadioValue = 2;
+              } else {
+                _selectedRadioValue = 3; // Other
+              }
+            }
+
+            isLoading = false; // Set loading to false after data is fetched
+          });
+        }
+        print("Profile Loaded: ${response.body}");
+        print("Profile Image URL: $_profileImage");
+      } else {
+        print('Error fetching profile: ${response.statusCode}');
+        if (mounted) {
+          setState(() {
+            isLoading = false; // Set loading to false on error
+          });
+        }
+      }
+    } catch (error) {
+      print('Error: $error');
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Set loading to false on exception
+        });
+      }
+    }
+  }
 
   Future<void> _selectImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -56,13 +163,13 @@ class _EditProfileState extends State<EditProfile> {
 
         if (croppedImage != null) {
           setState(() {
-            profileImg = croppedImage.path;
+            _profileImage = croppedImage.path;
           });
         }
       } else {
         // Image is within the specified resolution, no need to crop
         setState(() {
-          profileImg = pickedFile.path;
+          _profileImage = pickedFile.path;
         });
       }
     }
@@ -148,7 +255,9 @@ class _EditProfileState extends State<EditProfile> {
                         Center(
                           child: Stack(
                             children: [
-                              if (profileImg == null)
+                              if (_profileImage == null ||
+                                  _profileImage!
+                                      .isEmpty) // Check if image path is null or empty
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(55),
                                   child: Container(
@@ -161,13 +270,35 @@ class _EditProfileState extends State<EditProfile> {
                                                 .height) *
                                         MediaQuery.of(context).size.height,
                                     color: Colors.grey,
-                                    child: Image.asset(
-                                      'images/Profile.png',
+                                    child: Image.asset('images/Profile.png',
+                                        fit: BoxFit.cover),
+                                  ),
+                                )
+                              else if (_profileImage!.startsWith('http'))
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(55),
+                                  child: Container(
+                                    width: (85 /
+                                            MediaQuery.of(context).size.width) *
+                                        MediaQuery.of(context).size.width,
+                                    height: (85 /
+                                            MediaQuery.of(context)
+                                                .size
+                                                .height) *
+                                        MediaQuery.of(context).size.height,
+                                    color: Colors.grey,
+                                    child: Image.network(
+                                      _profileImage!,
                                       fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Icon(Icons
+                                            .error); // Show an error icon if image fails to load
+                                      },
                                     ),
                                   ),
                                 )
-                              else if (profileImg != null)
+                              else
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(55),
                                   child: Container(
@@ -180,10 +311,8 @@ class _EditProfileState extends State<EditProfile> {
                                                 .height) *
                                         MediaQuery.of(context).size.height,
                                     color: Colors.grey,
-                                    child: Image.file(
-                                      File(profileImg!),
-                                      fit: BoxFit.cover,
-                                    ),
+                                    child: Image.file(File(_profileImage!),
+                                        fit: BoxFit.cover),
                                   ),
                                 ),
                               Positioned(
@@ -275,11 +404,12 @@ class _EditProfileState extends State<EditProfile> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: IntlPhoneField(
+                            controller: _phoneController,
                             decoration: InputDecoration(
                               labelText: 'Phone Number',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide(),
+                                borderSide: const BorderSide(),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),

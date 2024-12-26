@@ -10,11 +10,14 @@ class ProfilePage extends StatefulWidget {
   final Function goToCategoriesPage;
   final Function goToOrdersPage;
   final Function goToProfilePage;
+  final GlobalKey<ScaffoldState> scaffoldKey;
+
   const ProfilePage(
       {super.key,
       required this.goToProfilePage,
       required this.goToCategoriesPage,
-      required this.goToOrdersPage});
+      required this.goToOrdersPage,
+      required this.scaffoldKey});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -36,9 +39,114 @@ class _ProfilePageState extends State<ProfilePage> {
   final FocusNode _emailFocusNode = FocusNode();
   final TextEditingController _locationController = TextEditingController();
   final FocusNode _locationFocusNode = FocusNode();
-  String? profileImg;
+  int? userId;
+  String? _profileImage;
   String? userName;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String? email;
+  String? state;
+  String? phone;
+  String? gender;
+  String? role;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserProfile();
+  }
+
+  Future<int?> getUserId() async {
+    try {
+      // Retrieve the userId from storage
+      String? userIdString =
+          await storage.read(key: 'userId'); // Use the correct key for userId
+      if (userIdString != null) {
+        return int.tryParse(userIdString); // Convert the string to an integer
+      }
+    } catch (error) {
+      print('Error retrieving userId: $error');
+    }
+    return null; // Return null if userId is not found or an error occurs
+  }
+
+  Future<void> fetchUserProfile() async {
+    // Retrieve the userId from storage
+    userId =
+        await getUserId(); // Assuming this retrieves the userId from Flutter Secure Storage
+    final String? accessToken = await storage.read(
+        key: 'accessToken'); // Use the correct key for access token
+    final url =
+        'https://ojawa-api.onrender.com/api/Users/$userId'; // Update the URL to the correct endpoint
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            // Access the user data from the nested "data" key
+            final userData = responseData['data'];
+            userName = userData['username'];
+            email = userData['email'];
+            state = userData['state'];
+            phone = userData['phone'];
+            gender = userData['gender'];
+            role = userData['role'];
+            final profilePictureUrl =
+                userData['profilePictureUrl']?.toString().trim();
+
+            _profileImage =
+                (profilePictureUrl != null && profilePictureUrl.isNotEmpty)
+                    ? '$profilePictureUrl/download?project=66e4476900275deffed4'
+                    : '';
+
+            // Set the values of the TextEditingControllers
+            _nameController.text = userName ?? '';
+            _emailController.text = email ?? '';
+            _phoneNumberController.text = phone ?? '';
+            _locationController.text =
+                state ?? ''; // Assuming state is used for location
+
+            // Set the selected gender based on the response
+            if (gender != null) {
+              if (gender!.toLowerCase() == 'male') {
+                _selectedRadioValue = 1;
+              } else if (gender!.toLowerCase() == 'female') {
+                _selectedRadioValue = 2;
+              } else {
+                _selectedRadioValue = 3; // Other
+              }
+            }
+
+            isLoading = false; // Set loading to false after data is fetched
+          });
+        }
+        print("Profile Loaded: ${response.body}");
+        print("Profile Image URL: $_profileImage");
+      } else {
+        print('Error fetching profile: ${response.statusCode}');
+        if (mounted) {
+          setState(() {
+            isLoading = false; // Set loading to false on error
+          });
+        }
+      }
+    } catch (error) {
+      print('Error: $error');
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Set loading to false on exception
+        });
+      }
+    }
+  }
 
   void _showCustomSnackBar(BuildContext context, String message,
       {bool isError = false}) {
@@ -73,283 +181,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      drawer: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(0),
-          bottomRight: Radius.circular(0),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 0.0),
-            child: Drawer(
-              child: Container(
-                color: Colors.white, // Set your desired background color here
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: <Widget>[
-                    DrawerHeader(
-                      decoration: const BoxDecoration(
-                        color: Color(
-                            0xFFEBEDEE), // Set your desired header color here
-                      ),
-                      padding: const EdgeInsets.fromLTRB(16.0, 36.0, 16.0, 8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          widget.goToProfilePage(context);
-                        },
-                        child: Row(children: [
-                          if (profileImg == null)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(55),
-                              child: Container(
-                                width:
-                                    (35 / MediaQuery.of(context).size.width) *
-                                        MediaQuery.of(context).size.width,
-                                height:
-                                    (35 / MediaQuery.of(context).size.height) *
-                                        MediaQuery.of(context).size.height,
-                                color: Colors.grey,
-                                child: Image.asset(
-                                  'images/Profile.png',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            )
-                          else if (profileImg != null)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(55),
-                              child: Container(
-                                width:
-                                    (35 / MediaQuery.of(context).size.width) *
-                                        MediaQuery.of(context).size.width,
-                                height:
-                                    (35 / MediaQuery.of(context).size.height) *
-                                        MediaQuery.of(context).size.height,
-                                color: Colors.grey,
-                                child: Image.network(
-                                  profileImg!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.03),
-                          const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // if (userName != null)
-                              //   Text(
-                              //     userName!,
-                              //     style: const TextStyle(
-                              //       fontFamily: 'GolosText',
-                              //       fontSize: 16.0,
-                              //       fontWeight: FontWeight.bold,
-                              //       color:Colors.black
-                              //     ),
-                              //   )
-                              // else
-                              //   const CircularProgressIndicator(color: Colors.black),
-                              Text(
-                                "Philip",
-                                style: TextStyle(
-                                    fontFamily: 'GolosText',
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black),
-                              ),
-                              Text(
-                                "+2349016482578",
-                                style: TextStyle(
-                                    fontFamily: 'GolosText',
-                                    fontSize: 16.0,
-                                    color: Colors.black),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          const IconButton(
-                            icon: Icon(Icons.navigate_next,
-                                size: 30, color: Colors.black),
-                            onPressed: null,
-                          ),
-                        ]),
-                      ),
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/ShopCategories.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Shop by Categories',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        widget.goToCategoriesPage(context);
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/My Orders.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'My Orders',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        widget.goToOrdersPage(context);
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Favorite.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Favorites',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/FAQ.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'FAQ',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FaqPage(
-                              key: UniqueKey(),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Address.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Addresses',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                        // Navigate to home or any action you want
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/SavedCard.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Saved Cards',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Terms.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Terms and Conditions',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      leading: Image.asset(
-                        'images/Privacy.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Privacy Policy',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
-                    ListTile(
-                      contentPadding: const EdgeInsets.only(top: 16, left: 16),
-                      leading: Image.asset(
-                        'images/Logout.png',
-                        height: 25,
-                      ),
-                      title: const Text(
-                        'Log out',
-                        style: TextStyle(
-                          fontFamily: 'GolosText',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
       body: Stack(
         children: [
           Column(
@@ -376,7 +207,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         IconButton(
                           icon: const Icon(Icons.menu),
                           onPressed: () {
-                            _scaffoldKey.currentState?.openDrawer();
+                            widget.scaffoldKey.currentState?.openDrawer();
                           },
                         ),
                         const Text('My Profile',
@@ -455,7 +286,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       Center(
                         child: Stack(
                           children: [
-                            if (profileImg == null)
+                            if (_profileImage == null)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(55),
                                 child: Container(
@@ -472,7 +303,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 ),
                               )
-                            else if (profileImg != null)
+                            else if (_profileImage != null)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(55),
                                 child: Container(
@@ -484,8 +315,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                       MediaQuery.of(context).size.height,
                                   color: Colors.grey,
                                   child: Image.network(
-                                    profileImg!,
+                                    _profileImage!,
                                     fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey,
+                                      ); // Fallback if image fails
+                                    },
                                   ),
                                 ),
                               ),

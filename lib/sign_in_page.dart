@@ -89,15 +89,15 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
     print('Response Data: $responseData');
 
     if (response.statusCode == 200) {
-      // The responseData['user'] is a Map, not a String, so handle it accordingly
-      // final Map<String, dynamic> user = responseData['user'];
+      final Map<String, dynamic> responseData =
+          json.decode(response.body); // Decode the response body
       final String accessToken = responseData['token'];
-      // final String profilePhoto = responseData['profile_photo'];
+      final int userId = responseData['userId']; // Extract userId from response
 
-      // user['profile_photo'] = profilePhoto;
+      // Store the access token and user ID
       await storage.write(key: 'accessToken', value: accessToken);
-      // await prefs.setString(
-      //     'user', jsonEncode(user)); // Store user as a JSON string
+      await storage.write(
+          key: 'userId', value: userId.toString()); // Store userId as a string
 
       // Handle the successful response here
       _showCustomSnackBar(
@@ -119,6 +119,7 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
       setState(() {
         isLoading = false;
       });
+      final Map<String, dynamic> responseData = json.decode(response.body);
       final String error = responseData['message'];
 
       // Handle invalid credentials
