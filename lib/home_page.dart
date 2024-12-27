@@ -10,6 +10,7 @@ import 'package:ojawa/my_cart.dart';
 import 'package:ojawa/productDetails.dart';
 import 'package:ojawa/sign_in_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   final int selectedIndex;
@@ -61,58 +62,65 @@ class _HomePageState extends State<HomePage>
   String? phone;
   String? gender;
   String? role;
-  final List<Map<String, String>> products = [
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
+  // final List<Map<String, String>> products = [
+  //   {
+  //     'img': 'images/Img2.png',
+  //     'details': 'Allen Solly Regular fit cotton shirt',
+  //     'amount': '\$35',
+  //     'slashedPrice': '\$40.25',
+  //     'discount': '15% OFF',
+  //     'starImg': 'images/Rating Icon.png',
+  //     'rating': '4.4',
+  //     'rating2': '(412)',
+  //   },
 
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    // Add more products here
-  ];
+  //   {
+  //     'img': 'images/Img2.png',
+  //     'details': 'Allen Solly Regular fit cotton shirt',
+  //     'amount': '\$35',
+  //     'slashedPrice': '\$40.25',
+  //     'discount': '15% OFF',
+  //     'starImg': 'images/Rating Icon.png',
+  //     'rating': '4.4',
+  //     'rating2': '(412)',
+  //   },
+  //   {
+  //     'img': 'images/Img2.png',
+  //     'details': 'Allen Solly Regular fit cotton shirt',
+  //     'amount': '\$35',
+  //     'slashedPrice': '\$40.25',
+  //     'discount': '15% OFF',
+  //     'starImg': 'images/Rating Icon.png',
+  //     'rating': '4.4',
+  //     'rating2': '(412)',
+  //   },
+  //   {
+  //     'img': 'images/Img2.png',
+  //     'details': 'Allen Solly Regular fit cotton shirt',
+  //     'amount': '\$35',
+  //     'slashedPrice': '\$40.25',
+  //     'discount': '15% OFF',
+  //     'starImg': 'images/Rating Icon.png',
+  //     'rating': '4.4',
+  //     'rating2': '(412)',
+  //   },
+  //   // Add more products here
+  // ];
+  List<Map<String, dynamic>> products = [];
   bool isLoading = false;
   late SharedPreferences prefs;
+  Timer? _timer;
+  int _remainingTime = 0;
 
   @override
   void initState() {
     super.initState();
+    _remainingTime =
+        11 * 3600 + 15 * 60 + 4; // Example: 11 hours, 15 minutes, 4 seconds
+    _startTimer();
     _initializePrefs();
     fetchUserProfile();
+    fetchProducts();
   }
 
   Future<void> _initializePrefs() async {
@@ -123,6 +131,73 @@ class _HomePageState extends State<HomePage>
     // Read the access token from secure storage
     final accessToken = await storage.read(key: 'accessToken');
     return accessToken != null; // Check if token exists
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_remainingTime > 0) {
+        setState(() {
+          _remainingTime--;
+        });
+      } else {
+        _timer?.cancel(); // Stop the timer when it reaches zero
+      }
+    });
+  }
+
+  Future<void> fetchProducts() async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://ojawa-api.onrender.com/api/Products';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final responseData = json.decode(response.body);
+
+      print('Response Data: $responseData');
+      // _showCustomSnackBar(
+      //   context,
+      //   'Response Data: $responseData',
+      //   isError: true,
+      // );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+        setState(() {
+          products = responseData.map((product) {
+            return {
+              'img': product['productImageUrl'],
+              'details': product['description'],
+              'amount': '\$${product['price']}',
+              'slashedPrice':
+                  product['hasDiscount'] ? '\$${product['discountPrice']}' : '',
+              'discount': product['hasDiscount']
+                  ? '${product['discountRate']}% OFF'
+                  : '',
+              'starImg':
+                  'images/Rating Icon.png', // Assuming a static image for rating
+              'rating': product['rating'].toString(),
+              'rating2': '(0)', // Placeholder for review count
+            };
+          }).toList();
+        });
+      } else {
+        // _showCustomSnackBar(
+        //   context,
+        //   'Error fetching products: ${response.statusCode}',
+        //   isError: true,
+        // );
+        print('Error fetching products: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
   }
 
   Future<int?> getUserId() async {
@@ -380,7 +455,16 @@ class _HomePageState extends State<HomePage>
   }
 
   @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    int hours = (_remainingTime ~/ 3600);
+    int minutes = (_remainingTime % 3600) ~/ 60;
+    int seconds = _remainingTime % 60;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
@@ -719,23 +803,38 @@ class _HomePageState extends State<HomePage>
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    time('11', 'HRS'),
-                                    SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.04),
-                                    time('15', 'MIN'),
-                                    SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.04),
-                                    time('04', 'SEC')
+                                    time(hours, minutes, seconds),
                                   ],
                                 ),
                               ),
                               SizedBox(
                                   height: MediaQuery.of(context).size.height *
                                       0.04),
+                              // Container(
+                              //   width: MediaQuery.of(context).size.width,
+                              //   padding: const EdgeInsets.symmetric(
+                              //       vertical: 16.0, horizontal: 10.0),
+                              //   decoration: const BoxDecoration(
+                              //     color: Color(0xFFFFFFFF),
+                              //     borderRadius: BorderRadius.all(
+                              //       Radius.circular(5.0),
+                              //     ),
+                              //   ),
+                              //   child: Column(
+                              //     crossAxisAlignment: CrossAxisAlignment.start,
+                              //     children: [
+                              //       deal('images/Img1.png', 'Running shoes',
+                              //           'Upto 40% OFF'),
+                              //       deal('images/Img2.png', 'Sneakers',
+                              //           '40-60% OFF'),
+                              //       deal('images/Img3.png', 'Wrist Watches',
+                              //           'Upto 40% OFF'),
+                              //       deal('images/Img4.png',
+                              //           'Bluetooth Speakers', '40-60% OFF'),
+                              //     ],
+                              //   ),
+                              // ),
+
                               Container(
                                 width: MediaQuery.of(context).size.width,
                                 padding: const EdgeInsets.symmetric(
@@ -748,16 +847,14 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    deal('images/Img1.png', 'Running shoes',
-                                        'Upto 40% OFF'),
-                                    deal('images/Img2.png', 'Sneakers',
-                                        '40-60% OFF'),
-                                    deal('images/Img3.png', 'Wrist Watches',
-                                        'Upto 40% OFF'),
-                                    deal('images/Img4.png',
-                                        'Bluetooth Speakers', '40-60% OFF'),
-                                  ],
+                                  children: products.map((product) {
+                                    return deal(
+                                      product[
+                                          'img'], // Assuming 'img' is the URL of the product image
+                                      product['details'], // Product details
+                                      product['discount'], // Discount text
+                                    );
+                                  }).toList(),
                                 ),
                               ),
                             ],
@@ -1304,11 +1401,11 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget time(String text, String text2) {
+  Widget time(int hours, int minutes, int seconds) {
     return Row(
       children: [
         Text(
-          text,
+          hours.toString().padLeft(2, '0'), // Format to 2 digits
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 19.0,
@@ -1317,7 +1414,43 @@ class _HomePageState extends State<HomePage>
         ),
         SizedBox(width: MediaQuery.of(context).size.width * 0.02),
         Text(
-          text2,
+          'HRS',
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13.0,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+        Text(
+          minutes.toString().padLeft(2, '0'), // Format to 2 digits
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 19.0,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+        Text(
+          'MIN',
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13.0,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+        Text(
+          seconds.toString().padLeft(2, '0'), // Format to 2 digits
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 19.0,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+        Text(
+          'SEC',
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 13.0,
