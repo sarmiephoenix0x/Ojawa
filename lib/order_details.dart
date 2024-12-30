@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:ojawa/exchange_order.dart';
 import 'package:ojawa/productDetails.dart';
 import 'package:ojawa/return_order.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ojawa/top_categories_details.dart';
 
 class OrderDetails extends StatefulWidget {
   final Function goToOrdersPage;
@@ -13,50 +17,66 @@ class OrderDetails extends StatefulWidget {
 
 class _OrderDetailsState extends State<OrderDetails> {
   Map<String, bool> _isLikedMap = {};
-  final List<Map<String, String>> products = [
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
+  List<Map<String, dynamic>> products = [];
+  final storage = const FlutterSecureStorage();
 
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    // Add more products here
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchProducts();
+  }
+
+  Future<void> fetchProducts() async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://ojawa-api.onrender.com/api/Products';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+        setState(() {
+          products = responseData.map((product) {
+            // Calculate discount strings
+            String discount = product['hasDiscount'] == true
+                ? '${product['discountRate']}% OFF'
+                : '';
+
+            String uptoDiscount = product['hasDiscount'] == true
+                ? 'Upto ${product['discountRate']}% OFF'
+                : '';
+
+            return {
+              'name': product['name'],
+              'img': product['productImageUrl'],
+              'details': product['description'],
+              'amount': '\$${product['price']}',
+              'slashedPrice': product['hasDiscount'] == true
+                  ? '\$${product['discountPrice']}'
+                  : '',
+              'discount': discount,
+              'uptoDiscount': uptoDiscount, // New field for "Upto X% OFF"
+              'starImg':
+                  'images/Rating Icon.png', // Assuming a static image for rating
+              'rating': product['rating'].toString(),
+              'rating2': '(0)', // Placeholder for review count
+              'hasDiscount': product['hasDiscount'], // Include hasDiscount
+            };
+          }).toList();
+        });
+      } else {
+        print('Error fetching products: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
 
   void _trackOrder() {
     showModalBottomSheet(
@@ -628,12 +648,26 @@ class _OrderDetailsState extends State<OrderDetails> {
                                 ),
                               ),
                               const Spacer(),
-                              const Text(
-                                'View All',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16.0,
-                                  color: Colors.grey,
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          TopCategoriesDetails(
+                                        key: UniqueKey(),
+                                        discountOnly: true,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'View All',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16.0,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ),
                             ],
@@ -651,13 +685,33 @@ class _OrderDetailsState extends State<OrderDetails> {
                               itemCount: products.length,
                               itemBuilder: (context, index) {
                                 final product = products[index];
+                                List<String> imgList = [];
+
+                                // Check if product['img'] is not null
+                                if (product['img'] != null) {
+                                  if (product['img'] is List<String>) {
+                                    // If it's already a List<String>, use it directly
+                                    imgList = List<String>.from(product['img']);
+                                  } else if (product['img'] is String) {
+                                    // If it's a String, convert it to a List<String>
+                                    imgList = [
+                                      product['img']
+                                    ]; // Create a list with the single image
+                                  }
+                                }
+
+                                // Append the download string to each image URL in imgList
+                                List<String> fullImgList = imgList.map((img) {
+                                  return '$img/download?project=677181a60009f5d039dd';
+                                }).toList();
                                 return Container(
                                   width: MediaQuery.of(context).size.width *
                                       0.6, // Set a fixed width for each item
                                   margin: const EdgeInsets.only(
                                       right: 20.0), // Space between items
                                   child: hot(
-                                    product['img']!,
+                                    product['name']!,
+                                    fullImgList,
                                     product['details']!,
                                     product['amount']!,
                                     product['slashedPrice']!,
@@ -741,16 +795,35 @@ class _OrderDetailsState extends State<OrderDetails> {
     );
   }
 
-  Widget hot(String img, String details, String amount, String slashedPrice,
-      String discount, String starImg, String rating, String rating2) {
+  Widget hot(
+      String name,
+      List<String> img,
+      String details,
+      String amount,
+      String slashedPrice,
+      String discount,
+      String starImg,
+      String rating,
+      String rating2) {
     Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
-    bool isLiked = _isLikedMap[img] ?? false;
+    bool isLiked = _isLikedMap[img[0]] ?? false;
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Productdetails(key: UniqueKey()),
+            builder: (context) => Productdetails(
+              key: UniqueKey(),
+              name: name,
+              details: details,
+              amount: amount,
+              slashedPrice: slashedPrice,
+              rating: rating,
+              rating2: rating2,
+              img: img,
+              discount: discount,
+              starImg: starImg,
+            ),
           ),
         );
       },
@@ -763,14 +836,18 @@ class _OrderDetailsState extends State<OrderDetails> {
               borderRadius: BorderRadius.circular(5),
               child: Stack(
                 children: [
-                  Image.asset(
-                    img,
-                    width: double.infinity,
+                  Image.network(
+                    img[0],
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey,
+                      ); // Fallback if image fails
+                    },
                   ),
                   Positioned(
-                    top: 5,
-                    right: 5,
+                    top: MediaQuery.of(context).padding.top + 5,
+                    right: MediaQuery.of(context).padding.right + 5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 0.0, horizontal: 0.0),
@@ -790,7 +867,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                                 : originalIconColor),
                         onPressed: () {
                           setState(() {
-                            _isLikedMap[img] = !isLiked;
+                            _isLikedMap[img[0]] = !isLiked;
                           });
                         },
                       ),

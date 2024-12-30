@@ -9,6 +9,7 @@ import 'package:ojawa/intro_page.dart';
 import 'package:ojawa/my_cart.dart';
 import 'package:ojawa/productDetails.dart';
 import 'package:ojawa/sign_in_page.dart';
+import 'package:ojawa/top_categories_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
@@ -158,41 +159,38 @@ class _HomePageState extends State<HomePage>
         },
       );
 
-      final responseData = json.decode(response.body);
-
-      print('Response Data: $responseData');
-      // _showCustomSnackBar(
-      //   context,
-      //   'Response Data: $responseData',
-      //   isError: true,
-      // );
-
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
         setState(() {
           products = responseData.map((product) {
+            // Calculate discount strings
+            String discount = product['hasDiscount'] == true
+                ? '${product['discountRate']}% OFF'
+                : '';
+
+            String uptoDiscount = product['hasDiscount'] == true
+                ? 'Upto ${product['discountRate']}% OFF'
+                : '';
+
             return {
+              'name': product['name'],
               'img': product['productImageUrl'],
               'details': product['description'],
               'amount': '\$${product['price']}',
-              'slashedPrice':
-                  product['hasDiscount'] ? '\$${product['discountPrice']}' : '',
-              'discount': product['hasDiscount']
-                  ? '${product['discountRate']}% OFF'
+              'slashedPrice': product['hasDiscount'] == true
+                  ? '\$${product['discountPrice']}'
                   : '',
+              'discount': discount,
+              'uptoDiscount': uptoDiscount, // New field for "Upto X% OFF"
               'starImg':
                   'images/Rating Icon.png', // Assuming a static image for rating
               'rating': product['rating'].toString(),
               'rating2': '(0)', // Placeholder for review count
+              'hasDiscount': product['hasDiscount'], // Include hasDiscount
             };
           }).toList();
         });
       } else {
-        // _showCustomSnackBar(
-        //   context,
-        //   'Error fetching products: ${response.statusCode}',
-        //   isError: true,
-        // );
         print('Error fetching products: ${response.statusCode}');
       }
     } catch (error) {
@@ -675,12 +673,17 @@ class _HomePageState extends State<HomePage>
                               ),
                             ),
                             const Spacer(),
-                            const Text(
-                              'View All',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 16.0,
-                                color: Colors.grey,
+                            InkWell(
+                              onTap: () {
+                                widget.goToCategoriesPage(context);
+                              },
+                              child: const Text(
+                                'View All',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16.0,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ],
@@ -693,10 +696,32 @@ class _HomePageState extends State<HomePage>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            category('images/Fashion.png', 'Fashion'),
-                            category('images/Electronics.png', 'Electronics'),
-                            category('images/Appliances.png', 'Appliances'),
-                            category('images/Beauty.png', 'Beauty'),
+                            InkWell(
+                              onTap: () {
+                                widget.goToCategoriesPage(context);
+                              },
+                              child: category('images/Fashion.png', 'Fashion'),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                widget.goToCategoriesPage(context);
+                              },
+                              child: category(
+                                  'images/Electronics.png', 'Electronics'),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                widget.goToCategoriesPage(context);
+                              },
+                              child: category(
+                                  'images/Appliances.png', 'Appliances'),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                widget.goToCategoriesPage(context);
+                              },
+                              child: category('images/Beauty.png', 'Beauty'),
+                            ),
                             // category('images/Furniture.png', 'Furniture'),
                           ],
                         ),
@@ -778,12 +803,26 @@ class _HomePageState extends State<HomePage>
                                     ),
                                   ),
                                   const Spacer(),
-                                  const Text(
-                                    'View All',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 14.0,
-                                      color: Colors.grey,
+                                  InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              TopCategoriesDetails(
+                                            key: UniqueKey(),
+                                            discountOnly: true,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      'View All',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 14.0,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -841,18 +880,48 @@ class _HomePageState extends State<HomePage>
                                     vertical: 16.0, horizontal: 10.0),
                                 decoration: const BoxDecoration(
                                   color: Color(0xFFFFFFFF),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(5.0),
-                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(5.0)),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: products.map((product) {
+                                  children: products
+                                      .where((product) =>
+                                          product['hasDiscount'] ==
+                                          true) // Keep this line
+                                      .map((product) {
+                                    List<String> imgList = [];
+
+                                    // Check if product['img'] is not null
+                                    if (product['img'] != null) {
+                                      if (product['img'] is List<String>) {
+                                        // If it's already a List<String>, use it directly
+                                        imgList =
+                                            List<String>.from(product['img']);
+                                      } else if (product['img'] is String) {
+                                        // If it's a String, convert it to a List<String>
+                                        imgList = [
+                                          product['img']
+                                        ]; // Create a list with the single image
+                                      }
+                                    }
+
+                                    // Append the download string to each image URL in imgList
+                                    List<String> fullImgList =
+                                        imgList.map((img) {
+                                      return '$img/download?project=677181a60009f5d039dd';
+                                    }).toList();
                                     return deal(
-                                      product[
-                                          'img'], // Assuming 'img' is the URL of the product image
-                                      product['details'], // Product details
-                                      product['discount'], // Discount text
+                                      product['name']!,
+                                      fullImgList,
+                                      product['details']!,
+                                      product['amount']!,
+                                      product['slashedPrice']!,
+                                      product['discount']!,
+                                      product['starImg']!,
+                                      product['rating']!,
+                                      product['rating2']!,
+                                      product['uptoDiscount'], // Discount text
                                     );
                                   }).toList(),
                                 ),
@@ -877,12 +946,25 @@ class _HomePageState extends State<HomePage>
                               ),
                             ),
                             const Spacer(),
-                            const Text(
-                              'View All',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 16.0,
-                                color: Colors.grey,
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TopCategoriesDetails(
+                                      key: UniqueKey(),
+                                      discountOnly: false,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'View All',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16.0,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ],
@@ -917,13 +999,33 @@ class _HomePageState extends State<HomePage>
                             itemCount: products.length,
                             itemBuilder: (context, index) {
                               final product = products[index];
+                              List<String> imgList = [];
+
+                              // Check if product['img'] is not null
+                              if (product['img'] != null) {
+                                if (product['img'] is List<String>) {
+                                  // If it's already a List<String>, use it directly
+                                  imgList = List<String>.from(product['img']);
+                                } else if (product['img'] is String) {
+                                  // If it's a String, convert it to a List<String>
+                                  imgList = [
+                                    product['img']
+                                  ]; // Create a list with the single image
+                                }
+                              }
+
+                              // Append the download string to each image URL in imgList
+                              List<String> fullImgList = imgList.map((img) {
+                                return '$img/download?project=677181a60009f5d039dd';
+                              }).toList();
                               return Container(
                                 width: MediaQuery.of(context).size.width *
                                     0.6, // Set a fixed width for each item
                                 margin: const EdgeInsets.only(
                                     right: 20.0), // Space between items
                                 child: hot(
-                                  product['img']!,
+                                  product['name']!,
+                                  fullImgList,
                                   product['details']!,
                                   product['amount']!,
                                   product['slashedPrice']!,
@@ -953,12 +1055,25 @@ class _HomePageState extends State<HomePage>
                               ),
                             ),
                             const Spacer(),
-                            const Text(
-                              'View All',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 16.0,
-                                color: Colors.grey,
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TopCategoriesDetails(
+                                      key: UniqueKey(),
+                                      discountOnly: false,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'View All',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16.0,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ],
@@ -993,13 +1108,33 @@ class _HomePageState extends State<HomePage>
                             itemCount: products.length,
                             itemBuilder: (context, index) {
                               final product = products[index];
+                              List<String> imgList = [];
+
+                              // Check if product['img'] is not null
+                              if (product['img'] != null) {
+                                if (product['img'] is List<String>) {
+                                  // If it's already a List<String>, use it directly
+                                  imgList = List<String>.from(product['img']);
+                                } else if (product['img'] is String) {
+                                  // If it's a String, convert it to a List<String>
+                                  imgList = [
+                                    product['img']
+                                  ]; // Create a list with the single image
+                                }
+                              }
+
+                              // Append the download string to each image URL in imgList
+                              List<String> fullImgList = imgList.map((img) {
+                                return '$img/download?project=677181a60009f5d039dd';
+                              }).toList();
                               return Container(
                                 width: MediaQuery.of(context).size.width *
                                     0.6, // Set a fixed width for each item
                                 margin: const EdgeInsets.only(
                                     right: 20.0), // Space between items
                                 child: hot(
-                                  product['img']!,
+                                  product['name']!,
+                                  fullImgList,
                                   product['details']!,
                                   product['amount']!,
                                   product['slashedPrice']!,
@@ -1461,7 +1596,17 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget deal(String img, String text, String text2) {
+  Widget deal(
+      String name,
+      List<String> img,
+      String details,
+      String amount,
+      String slashedPrice,
+      String discount,
+      String starImg,
+      String rating,
+      String rating2,
+      String text2) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 40.0),
       child: InkWell(
@@ -1469,7 +1614,18 @@ class _HomePageState extends State<HomePage>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => Productdetails(key: UniqueKey()),
+              builder: (context) => Productdetails(
+                key: UniqueKey(),
+                name: name,
+                details: details,
+                amount: amount,
+                slashedPrice: slashedPrice,
+                rating: rating,
+                rating2: rating2,
+                img: img,
+                discount: discount,
+                starImg: starImg,
+              ),
             ),
           );
         },
@@ -1477,15 +1633,19 @@ class _HomePageState extends State<HomePage>
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(5),
-              child: Image.asset(
-                img,
-                width: double.infinity,
+              child: Image.network(
+                img[0],
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey,
+                  ); // Fallback if image fails
+                },
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.02),
             Text(
-              text,
+              details,
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 16.0,
@@ -1517,16 +1677,35 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget hot(String img, String details, String amount, String slashedPrice,
-      String discount, String starImg, String rating, String rating2) {
+  Widget hot(
+      String name,
+      List<String> img,
+      String details,
+      String amount,
+      String slashedPrice,
+      String discount,
+      String starImg,
+      String rating,
+      String rating2) {
     Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
-    bool isLiked = _isLikedMap[img] ?? false;
+    bool isLiked = _isLikedMap[img[0]] ?? false;
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Productdetails(key: UniqueKey()),
+            builder: (context) => Productdetails(
+              key: UniqueKey(),
+              name: name,
+              details: details,
+              amount: amount,
+              slashedPrice: slashedPrice,
+              rating: rating,
+              rating2: rating2,
+              img: img,
+              discount: discount,
+              starImg: starImg,
+            ),
           ),
         );
       },
@@ -1539,10 +1718,14 @@ class _HomePageState extends State<HomePage>
               borderRadius: BorderRadius.circular(5),
               child: Stack(
                 children: [
-                  Image.asset(
-                    img,
-                    width: double.infinity,
+                  Image.network(
+                    img[0],
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey,
+                      ); // Fallback if image fails
+                    },
                   ),
                   Positioned(
                     top: MediaQuery.of(context).padding.top + 5,
@@ -1566,7 +1749,7 @@ class _HomePageState extends State<HomePage>
                                 : originalIconColor),
                         onPressed: () {
                           setState(() {
-                            _isLikedMap[img] = !isLiked;
+                            _isLikedMap[img[0]] = !isLiked;
                           });
                         },
                       ),

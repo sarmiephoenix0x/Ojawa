@@ -2,6 +2,9 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:ojawa/productDetails.dart';
 import 'package:ojawa/top_categories_details.dart';
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class CategoriesDetails extends StatefulWidget {
   const CategoriesDetails({super.key});
@@ -19,6 +22,51 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
   int _current = 0;
   final CarouselController _controller = CarouselController();
   Map<String, bool> _isLikedMap = {};
+  final storage = const FlutterSecureStorage();
+  List<Map<String, dynamic>> products = [];
+  List<Map<String, dynamic>> categories = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProducts();
+    fetchCategories();
+  }
+
+  Future<void> fetchCategories() async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url =
+        'https://ojawa-api.onrender.com/api/Products/categories'; // Update with your categories endpoint
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+        setState(() {
+          categories = responseData.map((category) {
+            return {
+              'id': category['id'],
+              'name': category['name'],
+              'description': category['description'],
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      } else {
+        print('Error fetching categories: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
 
   String _getImageUrl(int index) {
     switch (index) {
@@ -55,6 +103,58 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
         return 'Accessories';
       default:
         return '';
+    }
+  }
+
+  Future<void> fetchProducts() async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://ojawa-api.onrender.com/api/Products';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+        setState(() {
+          products = responseData.map((product) {
+            // Calculate discount strings
+            String discount = product['hasDiscount'] == true
+                ? '${product['discountRate']}% OFF'
+                : '';
+
+            String uptoDiscount = product['hasDiscount'] == true
+                ? 'Upto ${product['discountRate']}% OFF'
+                : '';
+
+            return {
+              'name': product['name'],
+              'img': product['productImageUrl'],
+              'details': product['description'],
+              'amount': '\$${product['price']}',
+              'slashedPrice': product['hasDiscount'] == true
+                  ? '\$${product['discountPrice']}'
+                  : '',
+              'discount': discount,
+              'uptoDiscount': uptoDiscount, // New field for "Upto X% OFF"
+              'starImg':
+                  'images/Rating Icon.png', // Assuming a static image for rating
+              'rating': product['rating'].toString(),
+              'rating2': '(0)', // Placeholder for review count
+              'hasDiscount': product['hasDiscount'], // Include hasDiscount
+            };
+          }).toList();
+        });
+      } else {
+        print('Error fetching products: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
     }
   }
 
@@ -133,70 +233,83 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                   SizedBox(
                     height: (350 / MediaQuery.of(context).size.height) *
                         MediaQuery.of(context).size.height,
-                    child: GridView.builder(
-                      padding: const EdgeInsets.only(top: 20.0),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of columns in the grid
-                        childAspectRatio: 1, // Aspect ratio of each item
-                        crossAxisSpacing: 8.0, // Space between columns
-                        mainAxisSpacing: 8.0, // Space between rows
-                      ),
-                      itemCount:
-                          4, // Total number of images/items you want to display
-                      itemBuilder: (context, index) {
-                        return Column(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        TopCategoriesDetails(key: UniqueKey()),
-                                  ),
-                                );
-                              },
-                              child: Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      15), // Rounded edges for the card
-                                ),
-                                elevation: 4, // Shadow effect
-                                child: Container(
-                                  // Use a Container to set the height and width of the image
-                                  height: 108, // Set the height of the image
-                                  width: double
-                                      .infinity, // Make the image take the full width
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(
-                                        15), // Ensure the image respects the card's shape
-                                    image: DecorationImage(
-                                      image: AssetImage(_getImageUrl(index %
-                                          5)), // Use modulo to cycle through your images
-                                      fit: BoxFit
-                                          .cover, // Fit the image within the container
+                    child: _isLoading // Check if loading
+                        ? Center(
+                            child: CircularProgressIndicator(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ) // Show loader while loading
+                        : GridView.builder(
+                            padding: const EdgeInsets.only(top: 20.0),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount:
+                                  2, // Number of columns in the grid
+                              childAspectRatio: 1, // Aspect ratio of each item
+                              crossAxisSpacing: 8.0, // Space between columns
+                              mainAxisSpacing: 8.0, // Space between rows
+                            ),
+                            itemCount: categories
+                                .length, // Use the length of categories
+                            itemBuilder: (context, index) {
+                              final category =
+                                  categories[index]; // Get the category
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              TopCategoriesDetails(
+                                            key: UniqueKey(),
+                                            id: category['id'],
+                                            discountOnly: false,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Card(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            15), // Rounded edges for the card
+                                      ),
+                                      elevation: 4, // Shadow effect
+                                      child: Container(
+                                        height:
+                                            108, // Set the height of the image
+                                        width: double
+                                            .infinity, // Make the image take the full width
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                              15), // Ensure the image respects the card's shape
+                                          image: DecorationImage(
+                                            image: AssetImage(_getImageUrl(index %
+                                                5)), // Use modulo to cycle through your images
+                                            fit: BoxFit
+                                                .cover, // Fit the image within the container
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                                height: 4), // Space between card and text
-                            Padding(
-                              padding: const EdgeInsets.all(
-                                  8.0), // Padding around the text
-                              child: Text(
-                                _getImageLabel(index %
-                                    5), // Use modulo to cycle through your labels
-                                style: const TextStyle(fontSize: 14),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                                  const SizedBox(
+                                      height: 4), // Space between card and text
+                                  Padding(
+                                    padding: const EdgeInsets.all(
+                                        8.0), // Padding around the text
+                                    child: Text(
+                                      category[
+                                          'name'], // Display the category name
+                                      style: const TextStyle(fontSize: 14),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                   Row(
@@ -211,30 +324,76 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                         ),
                       ),
                       const Spacer(),
-                      const Text(
-                        'View All',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16.0,
-                          color: Colors.grey,
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TopCategoriesDetails(
+                                key: UniqueKey(),
+                                discountOnly: false,
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'View All',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16.0,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      hot(
-                          'images/Img2.png',
-                          'Allen Solly Regular fit cotton shirt',
-                          '\$35',
-                          '\$40.25',
-                          '15% OFF',
-                          'images/Rating Icon.png',
-                          '4.4',
-                          '(412)'),
-                    ],
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.62,
+                    child: ListView.builder(
+                      scrollDirection:
+                          Axis.horizontal, // Enable horizontal scrolling
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        List<String> imgList = [];
+
+                        // Check if product['img'] is not null
+                        if (product['img'] != null) {
+                          if (product['img'] is List<String>) {
+                            // If it's already a List<String>, use it directly
+                            imgList = List<String>.from(product['img']);
+                          } else if (product['img'] is String) {
+                            // If it's a String, convert it to a List<String>
+                            imgList = [
+                              product['img']
+                            ]; // Create a list with the single image
+                          }
+                        }
+
+                        // Append the download string to each image URL in imgList
+                        List<String> fullImgList = imgList.map((img) {
+                          return '$img/download?project=677181a60009f5d039dd';
+                        }).toList();
+                        return Container(
+                          width: MediaQuery.of(context).size.width *
+                              0.6, // Set a fixed width for each item
+                          margin: const EdgeInsets.only(
+                              right: 20.0), // Space between items
+                          child: hot(
+                            product['name']!,
+                            fullImgList,
+                            product['details']!,
+                            product['amount']!,
+                            product['slashedPrice']!,
+                            product['discount']!,
+                            product['starImg']!,
+                            product['rating']!,
+                            product['rating2']!,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -245,16 +404,35 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
     );
   }
 
-  Widget hot(String img, String details, String amount, String slashedPrice,
-      String discount, String starImg, String rating, String rating2) {
+  Widget hot(
+      String name,
+      List<String> img,
+      String details,
+      String amount,
+      String slashedPrice,
+      String discount,
+      String starImg,
+      String rating,
+      String rating2) {
     Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
-    bool isLiked = _isLikedMap[img] ?? false;
+    bool isLiked = _isLikedMap[img[0]] ?? false;
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Productdetails(key: UniqueKey()),
+            builder: (context) => Productdetails(
+              key: UniqueKey(),
+              name: name,
+              details: details,
+              amount: amount,
+              slashedPrice: slashedPrice,
+              rating: rating,
+              rating2: rating2,
+              img: img,
+              discount: discount,
+              starImg: starImg,
+            ),
           ),
         );
       },
@@ -267,13 +445,17 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
               borderRadius: BorderRadius.circular(5),
               child: Stack(
                 children: [
-                  Image.asset(
-                    img,
-                    width: double.infinity,
+                  Image.network(
+                    img[0],
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey,
+                      ); // Fallback if image fails
+                    },
                   ),
                   Positioned(
-                    top: 5,
+                    top: MediaQuery.of(context).padding.top + 5,
                     right: MediaQuery.of(context).padding.right + 5,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -294,7 +476,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                 : originalIconColor),
                         onPressed: () {
                           setState(() {
-                            _isLikedMap[img] = !isLiked;
+                            _isLikedMap[img[0]] = !isLiked;
                           });
                         },
                       ),
@@ -316,7 +498,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                         "Top Seller",
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          fontSize: 16.0,
+                          fontSize: 14.0,
                           color: Colors.white,
                         ),
                       ),
@@ -334,54 +516,54 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             Row(
               children: [
                 Text(
                   amount,
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 22.0,
+                    fontSize: 20.0,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
                 Text(
                   slashedPrice,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 16.0,
+                    fontSize: 14.0,
                     color: Colors.grey,
                     decoration: TextDecoration.lineThrough,
                     decorationThickness: 2,
                     decorationColor: Colors.grey,
                   ),
                 ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.04),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
                 Text(
                   discount,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 16.0,
+                    fontSize: 14.0,
                     color: Color(0xFFEA580C),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             Row(
               children: [
                 Image.asset(
                   starImg,
-                  height: 25,
+                  height: 23,
                 ),
                 SizedBox(width: MediaQuery.of(context).size.width * 0.02),
                 Text(
                   rating,
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 18.0,
+                    fontSize: 16.0,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -390,7 +572,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                   rating2,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 18.0,
+                    fontSize: 16.0,
                     color: Colors.grey,
                   ),
                 ),

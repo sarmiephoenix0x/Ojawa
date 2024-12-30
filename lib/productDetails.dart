@@ -9,7 +9,27 @@ import 'package:ojawa/write_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Productdetails extends StatefulWidget {
-  const Productdetails({super.key});
+  final List<String> img;
+  final String name;
+  final String details;
+  final String amount;
+  final String slashedPrice;
+  final String rating;
+  final String rating2;
+  final String discount;
+  final String starImg;
+
+  const Productdetails(
+      {super.key,
+      required this.name,
+      required this.details,
+      required this.amount,
+      required this.slashedPrice,
+      required this.rating,
+      required this.rating2,
+      required this.img,
+      required this.discount,
+      required this.starImg});
 
   @override
   State<Productdetails> createState() => _ProductdetailsState();
@@ -411,11 +431,16 @@ class _ProductdetailsState extends State<Productdetails>
                           },
                         ),
                         carouselController: _controller,
-                        items: imagePaths.map((item) {
-                          return Image.asset(
+                        items: widget.img.map((item) {
+                          return Image.network(
                             item,
                             width: double.infinity,
                             fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey,
+                              ); // Fallback if image fails
+                            },
                           );
                         }).toList(),
                       ),
@@ -424,7 +449,7 @@ class _ProductdetailsState extends State<Productdetails>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(
-                          imagePaths.length,
+                          widget.img.length,
                           (index) => Padding(
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 5.0),
@@ -446,8 +471,8 @@ class _ProductdetailsState extends State<Productdetails>
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: Text(
-                          "Calvin Clein",
-                          style: TextStyle(
+                          widget.name,
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 16.0,
                             color: Colors.grey,
@@ -459,7 +484,7 @@ class _ProductdetailsState extends State<Productdetails>
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: Text(
-                          "Calvin Clein Regular fit slim fit shirt",
+                          widget.details,
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 18.0,
@@ -481,7 +506,7 @@ class _ProductdetailsState extends State<Productdetails>
                                 width:
                                     MediaQuery.of(context).size.width * 0.02),
                             Text(
-                              '4.4',
+                              widget.rating,
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 18.0,
@@ -492,7 +517,7 @@ class _ProductdetailsState extends State<Productdetails>
                                 width:
                                     MediaQuery.of(context).size.width * 0.02),
                             Text(
-                              '87 Reviews',
+                              widget.rating2,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 16.0,
@@ -509,7 +534,7 @@ class _ProductdetailsState extends State<Productdetails>
                         child: Row(
                           children: [
                             Text(
-                              '\$35',
+                              widget.amount,
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 22.0,
@@ -521,7 +546,7 @@ class _ProductdetailsState extends State<Productdetails>
                                 width:
                                     MediaQuery.of(context).size.width * 0.04),
                             Text(
-                              '\$40.25',
+                              widget.slashedPrice,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 16.0,
@@ -535,7 +560,7 @@ class _ProductdetailsState extends State<Productdetails>
                                 width:
                                     MediaQuery.of(context).size.width * 0.04),
                             Text(
-                              '15% OFF',
+                              widget.slashedPrice,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 16.0,
@@ -1233,14 +1258,15 @@ class _ProductdetailsState extends State<Productdetails>
                                 margin: const EdgeInsets.only(
                                     right: 20.0), // Space between items
                                 child: hot(
-                                  product['img']!,
-                                  product['details']!,
-                                  product['amount']!,
-                                  product['slashedPrice']!,
-                                  product['discount']!,
-                                  product['starImg']!,
-                                  product['rating']!,
-                                  product['rating2']!,
+                                  widget.name,
+                                  widget.img,
+                                  widget.details,
+                                  widget.amount,
+                                  widget.slashedPrice,
+                                  widget.discount,
+                                  widget.starImg,
+                                  widget.rating,
+                                  widget.rating2,
                                 ),
                               );
                             },
@@ -1494,16 +1520,35 @@ class _ProductdetailsState extends State<Productdetails>
     );
   }
 
-  Widget hot(String img, String details, String amount, String slashedPrice,
-      String discount, String starImg, String rating, String rating2) {
+  Widget hot(
+      String name,
+      List<String> img,
+      String details,
+      String amount,
+      String slashedPrice,
+      String discount,
+      String starImg,
+      String rating,
+      String rating2) {
     Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
-    bool isLiked = _isLikedMap[img] ?? false;
+    bool isLiked = _isLikedMap[img[0]] ?? false;
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Productdetails(key: UniqueKey()),
+            builder: (context) => Productdetails(
+              key: UniqueKey(),
+              name: name,
+              details: details,
+              amount: amount,
+              slashedPrice: slashedPrice,
+              rating: rating,
+              rating2: rating2,
+              img: img,
+              discount: discount,
+              starImg: starImg,
+            ),
           ),
         );
       },
@@ -1517,7 +1562,7 @@ class _ProductdetailsState extends State<Productdetails>
               child: Stack(
                 children: [
                   Image.asset(
-                    img,
+                    img[0],
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
@@ -1543,7 +1588,7 @@ class _ProductdetailsState extends State<Productdetails>
                                 : originalIconColor),
                         onPressed: () {
                           setState(() {
-                            _isLikedMap[img] = !isLiked;
+                            _isLikedMap[img[0]] = !isLiked;
                           });
                         },
                       ),
