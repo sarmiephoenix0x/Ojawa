@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ojawa/my_cart.dart';
 import 'package:ojawa/productDetails.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class TopCategoriesDetails extends StatefulWidget {
   final int? id;
@@ -25,10 +28,18 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
   List<Map<String, dynamic>> searchResults = []; // To store the search results
   final TextEditingController searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  StreamSubscription<ConnectivityResult>? connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      if (result != ConnectivityResult.none) {
+        fetchProducts();
+      }
+    });
     fetchProducts();
   }
 
@@ -121,15 +132,19 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
         });
       } else {
         print('Error fetching products: ${response.statusCode}');
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Set loading to false on error
+          });
+        }
+      }
+    } catch (error) {
+      print('Error: $error');
+      if (mounted) {
         setState(() {
           _isLoading = false; // Set loading to false on error
         });
       }
-    } catch (error) {
-      print('Error: $error');
-      setState(() {
-        _isLoading = false; // Set loading to false on error
-      });
     }
   }
 
@@ -508,48 +523,54 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: SizedBox(
                       height: MediaQuery.of(context).size.height * 0.67,
-                      child: ListView.builder(
-                        itemCount: displayedProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = products[index];
-                          List<String> imgList = [];
+                      child: _isLoading // Check if loading
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ) // Show loader while loading
+                          : ListView.builder(
+                              itemCount: displayedProducts.length,
+                              itemBuilder: (context, index) {
+                                final product = products[index];
+                                List<String> imgList = [];
 
-                          // Check if product['img'] is not null
-                          if (product['img'] != null) {
-                            if (product['img'] is List<String>) {
-                              // If it's already a List<String>, use it directly
-                              imgList = List<String>.from(product['img']);
-                            } else if (product['img'] is String) {
-                              // If it's a String, convert it to a List<String>
-                              imgList = [
-                                product['img']
-                              ]; // Create a list with the single image
-                            }
-                          }
+                                // Check if product['img'] is not null
+                                if (product['img'] != null) {
+                                  if (product['img'] is List<String>) {
+                                    // If it's already a List<String>, use it directly
+                                    imgList = List<String>.from(product['img']);
+                                  } else if (product['img'] is String) {
+                                    // If it's a String, convert it to a List<String>
+                                    imgList = [
+                                      product['img']
+                                    ]; // Create a list with the single image
+                                  }
+                                }
 
-                          // Append the download string to each image URL in imgList
-                          List<String> fullImgList = imgList.map((img) {
-                            return '$img/download?project=677181a60009f5d039dd';
-                          }).toList();
-                          return Container(
-                            width: MediaQuery.of(context).size.width *
-                                0.6, // Set a fixed width for each item
-                            margin: const EdgeInsets.only(
-                                bottom: 20.0), // Space between items
-                            child: hot(
-                              product['name']!,
-                              fullImgList,
-                              product['details']!,
-                              product['amount']!,
-                              product['slashedPrice']!,
-                              product['discount']!,
-                              product['starImg']!,
-                              product['rating']!,
-                              product['rating2']!,
+                                // Append the download string to each image URL in imgList
+                                List<String> fullImgList = imgList.map((img) {
+                                  return '$img/download?project=677181a60009f5d039dd';
+                                }).toList();
+                                return Container(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.6, // Set a fixed width for each item
+                                  margin: const EdgeInsets.only(
+                                      bottom: 20.0), // Space between items
+                                  child: hot(
+                                    product['name']!,
+                                    fullImgList,
+                                    product['details']!,
+                                    product['amount']!,
+                                    product['slashedPrice']!,
+                                    product['discount']!,
+                                    product['starImg']!,
+                                    product['rating']!,
+                                    product['rating2']!,
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                   ),
                 ],

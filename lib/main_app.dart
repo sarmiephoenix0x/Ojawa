@@ -10,6 +10,8 @@ import 'profile_page.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:async';
 
 class MainApp extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -37,10 +39,18 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
   String? role;
   bool isLoading = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  StreamSubscription<ConnectivityResult>? connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      if (result != ConnectivityResult.none) {
+        fetchUserProfile();
+      }
+    });
     fetchUserProfile();
   }
 

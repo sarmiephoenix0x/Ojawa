@@ -1,12 +1,14 @@
 import 'dart:convert';
-
+import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:ojawa/my_cart.dart';
+import 'package:ojawa/top_categories_details.dart';
 import 'package:ojawa/write_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class Productdetails extends StatefulWidget {
   final List<String> img;
@@ -49,50 +51,86 @@ class _ProductdetailsState extends State<Productdetails>
   final FocusNode _pinFocusNode = FocusNode();
   final TextEditingController pinController = TextEditingController();
   Map<String, bool> _isLikedMap = {};
-  final List<Map<String, String>> products = [
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
+  final storage = const FlutterSecureStorage();
+  List<Map<String, dynamic>> products = [];
+  bool _isLoading = true;
+  StreamSubscription<ConnectivityResult>? connectivitySubscription;
 
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    {
-      'img': 'images/Img2.png',
-      'details': 'Allen Solly Regular fit cotton shirt',
-      'amount': '\$35',
-      'slashedPrice': '\$40.25',
-      'discount': '15% OFF',
-      'starImg': 'images/Rating Icon.png',
-      'rating': '4.4',
-      'rating2': '(412)',
-    },
-    // Add more products here
-  ];
+  @override
+  void initState() {
+    super.initState();
+    connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      if (result != ConnectivityResult.none) {
+        fetchProducts();
+      }
+    });
+    fetchProducts();
+  }
+
+  Future<void> fetchProducts() async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://ojawa-api.onrender.com/api/Products';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+        setState(() {
+          products = responseData.map((product) {
+            // Calculate discount strings
+            String discount = product['hasDiscount'] == true
+                ? '${product['discountRate']}% OFF'
+                : '';
+
+            String uptoDiscount = product['hasDiscount'] == true
+                ? 'Upto ${product['discountRate']}% OFF'
+                : '';
+
+            return {
+              'name': product['name'],
+              'img': product['productImageUrl'],
+              'details': product['description'],
+              'amount': '\$${product['price']}',
+              'slashedPrice': product['hasDiscount'] == true
+                  ? '\$${product['discountPrice']}'
+                  : '',
+              'discount': discount,
+              'uptoDiscount': uptoDiscount, // New field for "Upto X% OFF"
+              'starImg':
+                  'images/Rating Icon.png', // Assuming a static image for rating
+              'rating': product['rating'].toString(),
+              'rating2': '(0)', // Placeholder for review count
+              'hasDiscount': product['hasDiscount'], // Include hasDiscount
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      } else {
+        print('Error fetching products: ${response.statusCode}');
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Set loading to false on error
+          });
+        }
+      }
+    } catch (error) {
+      print('Error: $error');
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Set loading to false on error
+        });
+      }
+    }
+  }
 
   void _showDetailsSheet() {
     showModalBottomSheet(
@@ -619,7 +657,7 @@ class _ProductdetailsState extends State<Productdetails>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            imgList('images/Img5.png'),
+                            imgList(widget.img[0]),
                           ],
                         ),
                       ),
@@ -1229,12 +1267,25 @@ class _ProductdetailsState extends State<Productdetails>
                               ),
                             ),
                             const Spacer(),
-                            const Text(
-                              'View All',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 16.0,
-                                color: Colors.grey,
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TopCategoriesDetails(
+                                      key: UniqueKey(),
+                                      discountOnly: true,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'View All',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16.0,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ],
@@ -1246,31 +1297,59 @@ class _ProductdetailsState extends State<Productdetails>
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: SizedBox(
                           height: MediaQuery.of(context).size.height * 0.62,
-                          child: ListView.builder(
-                            scrollDirection:
-                                Axis.horizontal, // Enable horizontal scrolling
-                            itemCount: products.length,
-                            itemBuilder: (context, index) {
-                              final product = products[index];
-                              return Container(
-                                width: MediaQuery.of(context).size.width *
-                                    0.6, // Set a fixed width for each item
-                                margin: const EdgeInsets.only(
-                                    right: 20.0), // Space between items
-                                child: hot(
-                                  widget.name,
-                                  widget.img,
-                                  widget.details,
-                                  widget.amount,
-                                  widget.slashedPrice,
-                                  widget.discount,
-                                  widget.starImg,
-                                  widget.rating,
-                                  widget.rating2,
+                          child: _isLoading // Check if loading
+                              ? Center(
+                                  child: CircularProgressIndicator(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ) // Show loader while loading
+                              : ListView.builder(
+                                  scrollDirection: Axis
+                                      .horizontal, // Enable horizontal scrolling
+                                  itemCount: products.length,
+                                  itemBuilder: (context, index) {
+                                    final product = products[index];
+                                    List<String> imgList = [];
+
+                                    // Check if product['img'] is not null
+                                    if (product['img'] != null) {
+                                      if (product['img'] is List<String>) {
+                                        // If it's already a List<String>, use it directly
+                                        imgList =
+                                            List<String>.from(product['img']);
+                                      } else if (product['img'] is String) {
+                                        // If it's a String, convert it to a List<String>
+                                        imgList = [
+                                          product['img']
+                                        ]; // Create a list with the single image
+                                      }
+                                    }
+
+                                    // Append the download string to each image URL in imgList
+                                    List<String> fullImgList =
+                                        imgList.map((img) {
+                                      return '$img/download?project=677181a60009f5d039dd';
+                                    }).toList();
+                                    return Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.6, // Set a fixed width for each item
+                                      margin: const EdgeInsets.only(
+                                          right: 20.0), // Space between items
+                                      child: hot(
+                                        product['name']!,
+                                        fullImgList,
+                                        product['details']!,
+                                        product['amount']!,
+                                        product['slashedPrice']!,
+                                        product['discount']!,
+                                        product['starImg']!,
+                                        product['rating']!,
+                                        product['rating2']!,
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                          ),
                         ),
                       ),
                       SizedBox(
@@ -1418,11 +1497,16 @@ class _ProductdetailsState extends State<Productdetails>
   }
 
   Widget imgList(String img) {
-    return Image.asset(
+    return Image.network(
       img,
       height: 100,
       width: 100,
       fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey,
+        ); // Fallback if image fails
+      },
     );
   }
 
@@ -1561,10 +1645,14 @@ class _ProductdetailsState extends State<Productdetails>
               borderRadius: BorderRadius.circular(5),
               child: Stack(
                 children: [
-                  Image.asset(
+                  Image.network(
                     img[0],
-                    width: double.infinity,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey,
+                      ); // Fallback if image fails
+                    },
                   ),
                   Positioned(
                     top: 5,

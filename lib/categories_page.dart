@@ -111,10 +111,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     IconButton(
                       icon: const Icon(Icons.menu),
                       onPressed: () {
-                        widget.scaffoldKey.currentState?.openDrawer();
-                        // setState(() {
-                        //   _isSidebarOpen = !_isSidebarOpen;
-                        // });
+                        // widget.scaffoldKey.currentState?.openDrawer();
+                        setState(() {
+                          _isSidebarOpen = !_isSidebarOpen;
+                        });
                       },
                     ),
                     const Text('Categories', style: TextStyle(fontSize: 20)),
@@ -124,11 +124,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
               // Main content area
               Expanded(
                 child: GridView.builder(
-                  padding:
-                      const EdgeInsets.only(top: 20.0, left: 120.0, right: 8.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  padding: EdgeInsets.only(
+                      top: 20.0,
+                      left: _isSidebarOpen ? 120.0 : 8.0,
+                      right: 8.0),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2, // Number of columns in the grid
-                    childAspectRatio: 0.6, // Aspect ratio of each item
+                    childAspectRatio:
+                        _isSidebarOpen ? 0.6 : 1, // Aspect ratio of each item
                     crossAxisSpacing: 8.0, // Space between columns
                     mainAxisSpacing: 8.0, // Space between rows
                   ),

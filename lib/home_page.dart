@@ -12,6 +12,7 @@ import 'package:ojawa/sign_in_page.dart';
 import 'package:ojawa/top_categories_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class HomePage extends StatefulWidget {
   final int selectedIndex;
@@ -112,10 +113,21 @@ class _HomePageState extends State<HomePage>
   late SharedPreferences prefs;
   Timer? _timer;
   int _remainingTime = 0;
+  bool _isLoading = true;
+  bool _isRefreshing = false;
+  StreamSubscription<ConnectivityResult>? connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      if (result != ConnectivityResult.none) {
+        fetchUserProfile();
+        fetchProducts();
+      }
+    });
     _remainingTime =
         11 * 3600 + 15 * 60 + 4; // Example: 11 hours, 15 minutes, 4 seconds
     _startTimer();
@@ -189,12 +201,23 @@ class _HomePageState extends State<HomePage>
               'hasDiscount': product['hasDiscount'], // Include hasDiscount
             };
           }).toList();
+          _isLoading = false;
         });
       } else {
         print('Error fetching products: ${response.statusCode}');
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Set loading to false on error
+          });
+        }
       }
     } catch (error) {
       print('Error: $error');
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Set loading to false on error
+        });
+      }
     }
   }
 
@@ -417,6 +440,123 @@ class _HomePageState extends State<HomePage>
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        _showNoInternetDialog(context);
+        setState(() {
+          _isRefreshing = false;
+        });
+        return;
+      }
+
+      await Future.any([
+        Future.delayed(const Duration(seconds: 15), () {
+          throw TimeoutException('The operation took too long.');
+        }),
+        fetchProducts(),
+      ]);
+    } catch (e) {
+      if (e is TimeoutException) {
+        _showTimeoutDialog(context);
+      } else {
+        _showErrorDialog(context, e.toString());
+      }
+    } finally {
+      setState(() {
+        _isRefreshing = false;
+      });
+    }
+  }
+
+  void _showNoInternetDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('No Internet Connection'),
+          content: const Text(
+            'It looks like you are not connected to the internet. Please check your connection and try again.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Retry', style: TextStyle(color: Colors.blue)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _refreshData();
+              },
+            ),
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showTimeoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Request Timed Out'),
+          content: const Text(
+            'The operation took too long to complete. Please try again later.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Retry', style: TextStyle(color: Colors.blue)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _refreshData();
+              },
+            ),
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String error) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(
+            'An error occurred: $error',
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Close', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
         );
       },
     );
@@ -655,500 +795,546 @@ class _HomePageState extends State<HomePage>
                 ]
               ] else ...[
                 Flexible(
-                  child: ListView(
-                    children: [
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.03),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Categories',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18.0,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                            const Spacer(),
-                            InkWell(
-                              onTap: () {
-                                widget.goToCategoriesPage(context);
-                              },
-                              child: const Text(
-                                'View All',
+                  child: RefreshIndicator(
+                    onRefresh: _refreshData,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    child: ListView(
+                      children: [
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.03),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Categories',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
-                                  fontSize: 16.0,
-                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18.0,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.03),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                widget.goToCategoriesPage(context);
-                              },
-                              child: category('images/Fashion.png', 'Fashion'),
-                            ),
-                            InkWell(
-                              onTap: () {
-                                widget.goToCategoriesPage(context);
-                              },
-                              child: category(
-                                  'images/Electronics.png', 'Electronics'),
-                            ),
-                            InkWell(
-                              onTap: () {
-                                widget.goToCategoriesPage(context);
-                              },
-                              child: category(
-                                  'images/Appliances.png', 'Appliances'),
-                            ),
-                            InkWell(
-                              onTap: () {
-                                widget.goToCategoriesPage(context);
-                              },
-                              child: category('images/Beauty.png', 'Beauty'),
-                            ),
-                            // category('images/Furniture.png', 'Furniture'),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.03),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: CarouselSlider(
-                          options: CarouselOptions(
-                            enlargeCenterPage: false,
-                            viewportFraction: 1.0,
-                            enableInfiniteScroll: false,
-                            initialPage: 0,
-                            onPageChanged: (index, reason) {
-                              setState(() {
-                                _current = index;
-                              });
-                            },
-                          ),
-                          carouselController: _controller,
-                          items: imagePaths.map((item) {
-                            return Image.asset(
-                              item,
-                              width: double.infinity,
-                              fit: BoxFit.contain,
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          imagePaths.length,
-                          (index) => Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 5.0),
-                            child: Image.asset(
-                              _current == index
-                                  ? "images/Elipses_active.png"
-                                  : "images/Elipses.png",
-                              width: (10 / MediaQuery.of(context).size.width) *
-                                  MediaQuery.of(context).size.width,
-                              height:
-                                  (10 / MediaQuery.of(context).size.height) *
-                                      MediaQuery.of(context).size.height,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.04),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 16.0, horizontal: 10.0),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEBEDEE),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(0.0),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Deal of the day',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16.0,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
+                              const Spacer(),
+                              InkWell(
+                                onTap: () {
+                                  widget.goToCategoriesPage(context);
+                                },
+                                child: const Text(
+                                  'View All',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16.0,
+                                    color: Colors.grey,
                                   ),
-                                  const Spacer(),
-                                  InkWell(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              TopCategoriesDetails(
-                                            key: UniqueKey(),
-                                            discountOnly: true,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text(
-                                      'View All',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 14.0,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.02),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 6.0, horizontal: 10.0),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFEF4444),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(5.0),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    time(hours, minutes, seconds),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.04),
-                              // Container(
-                              //   width: MediaQuery.of(context).size.width,
-                              //   padding: const EdgeInsets.symmetric(
-                              //       vertical: 16.0, horizontal: 10.0),
-                              //   decoration: const BoxDecoration(
-                              //     color: Color(0xFFFFFFFF),
-                              //     borderRadius: BorderRadius.all(
-                              //       Radius.circular(5.0),
-                              //     ),
-                              //   ),
-                              //   child: Column(
-                              //     crossAxisAlignment: CrossAxisAlignment.start,
-                              //     children: [
-                              //       deal('images/Img1.png', 'Running shoes',
-                              //           'Upto 40% OFF'),
-                              //       deal('images/Img2.png', 'Sneakers',
-                              //           '40-60% OFF'),
-                              //       deal('images/Img3.png', 'Wrist Watches',
-                              //           'Upto 40% OFF'),
-                              //       deal('images/Img4.png',
-                              //           'Bluetooth Speakers', '40-60% OFF'),
-                              //     ],
-                              //   ),
-                              // ),
-
-                              Container(
-                                width: MediaQuery.of(context).size.width,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 16.0, horizontal: 10.0),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFFFFFF),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(5.0)),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: products
-                                      .where((product) =>
-                                          product['hasDiscount'] ==
-                                          true) // Keep this line
-                                      .map((product) {
-                                    List<String> imgList = [];
-
-                                    // Check if product['img'] is not null
-                                    if (product['img'] != null) {
-                                      if (product['img'] is List<String>) {
-                                        // If it's already a List<String>, use it directly
-                                        imgList =
-                                            List<String>.from(product['img']);
-                                      } else if (product['img'] is String) {
-                                        // If it's a String, convert it to a List<String>
-                                        imgList = [
-                                          product['img']
-                                        ]; // Create a list with the single image
-                                      }
-                                    }
-
-                                    // Append the download string to each image URL in imgList
-                                    List<String> fullImgList =
-                                        imgList.map((img) {
-                                      return '$img/download?project=677181a60009f5d039dd';
-                                    }).toList();
-                                    return deal(
-                                      product['name']!,
-                                      fullImgList,
-                                      product['details']!,
-                                      product['amount']!,
-                                      product['slashedPrice']!,
-                                      product['discount']!,
-                                      product['starImg']!,
-                                      product['rating']!,
-                                      product['rating2']!,
-                                      product['uptoDiscount'], // Discount text
-                                    );
-                                  }).toList(),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.05),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Hot Selling Footwear',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18.0,
-                                color: Theme.of(context).colorScheme.onSurface,
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.03),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  widget.goToCategoriesPage(context);
+                                },
+                                child:
+                                    category('images/Fashion.png', 'Fashion'),
                               ),
-                            ),
-                            const Spacer(),
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TopCategoriesDetails(
-                                      key: UniqueKey(),
-                                      discountOnly: false,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'View All',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16.0,
-                                  color: Colors.grey,
-                                ),
+                              InkWell(
+                                onTap: () {
+                                  widget.goToCategoriesPage(context);
+                                },
+                                child: category(
+                                    'images/Electronics.png', 'Electronics'),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.03),
-                      // Padding(
-                      //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      //   child: Column(
-                      //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //     children: [
-                      //       hot(
-                      //           'images/Img1.png',
-                      //           'Adidas white sneakers for men',
-                      //           '\$68',
-                      //           '\$136',
-                      //           '50% OFF',
-                      //           'images/Rating Icon.png',
-                      //           '4.8',
-                      //           '(692)'),
-                      //     ],
-                      //   ),
-                      // ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.62,
-                          child: ListView.builder(
-                            scrollDirection:
-                                Axis.horizontal, // Enable horizontal scrolling
-                            itemCount: products.length,
-                            itemBuilder: (context, index) {
-                              final product = products[index];
-                              List<String> imgList = [];
-
-                              // Check if product['img'] is not null
-                              if (product['img'] != null) {
-                                if (product['img'] is List<String>) {
-                                  // If it's already a List<String>, use it directly
-                                  imgList = List<String>.from(product['img']);
-                                } else if (product['img'] is String) {
-                                  // If it's a String, convert it to a List<String>
-                                  imgList = [
-                                    product['img']
-                                  ]; // Create a list with the single image
-                                }
-                              }
-
-                              // Append the download string to each image URL in imgList
-                              List<String> fullImgList = imgList.map((img) {
-                                return '$img/download?project=677181a60009f5d039dd';
-                              }).toList();
-                              return Container(
-                                width: MediaQuery.of(context).size.width *
-                                    0.6, // Set a fixed width for each item
-                                margin: const EdgeInsets.only(
-                                    right: 20.0), // Space between items
-                                child: hot(
-                                  product['name']!,
-                                  fullImgList,
-                                  product['details']!,
-                                  product['amount']!,
-                                  product['slashedPrice']!,
-                                  product['discount']!,
-                                  product['starImg']!,
-                                  product['rating']!,
-                                  product['rating2']!,
-                                ),
-                              );
-                            },
+                              InkWell(
+                                onTap: () {
+                                  widget.goToCategoriesPage(context);
+                                },
+                                child: category(
+                                    'images/Appliances.png', 'Appliances'),
+                              ),
+                              InkWell(
+                                onTap: () {
+                                  widget.goToCategoriesPage(context);
+                                },
+                                child: category('images/Beauty.png', 'Beauty'),
+                              ),
+                              // category('images/Furniture.png', 'Furniture'),
+                            ],
                           ),
                         ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.05),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Recommended for you',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18.0,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                            const Spacer(),
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TopCategoriesDetails(
-                                      key: UniqueKey(),
-                                      discountOnly: false,
-                                    ),
-                                  ),
-                                );
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.03),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: CarouselSlider(
+                            options: CarouselOptions(
+                              enlargeCenterPage: false,
+                              viewportFraction: 1.0,
+                              enableInfiniteScroll: false,
+                              initialPage: 0,
+                              onPageChanged: (index, reason) {
+                                setState(() {
+                                  _current = index;
+                                });
                               },
-                              child: const Text(
-                                'View All',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16.0,
-                                  color: Colors.grey,
-                                ),
-                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.03),
-                      // Padding(
-                      //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      //   child: Column(
-                      //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //     children: [
-                      //       hot(
-                      //           'images/Img2.png',
-                      //           'Allen Solly Regular fit cotton shirt',
-                      //           '\$35',
-                      //           '\$40.25',
-                      //           '15% OFF',
-                      //           'images/Rating Icon.png',
-                      //           '4.4',
-                      //           '(412)'),
-                      //     ],
-                      //   ),
-                      // ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.62,
-                          child: ListView.builder(
-                            scrollDirection:
-                                Axis.horizontal, // Enable horizontal scrolling
-                            itemCount: products.length,
-                            itemBuilder: (context, index) {
-                              final product = products[index];
-                              List<String> imgList = [];
-
-                              // Check if product['img'] is not null
-                              if (product['img'] != null) {
-                                if (product['img'] is List<String>) {
-                                  // If it's already a List<String>, use it directly
-                                  imgList = List<String>.from(product['img']);
-                                } else if (product['img'] is String) {
-                                  // If it's a String, convert it to a List<String>
-                                  imgList = [
-                                    product['img']
-                                  ]; // Create a list with the single image
-                                }
-                              }
-
-                              // Append the download string to each image URL in imgList
-                              List<String> fullImgList = imgList.map((img) {
-                                return '$img/download?project=677181a60009f5d039dd';
-                              }).toList();
-                              return Container(
-                                width: MediaQuery.of(context).size.width *
-                                    0.6, // Set a fixed width for each item
-                                margin: const EdgeInsets.only(
-                                    right: 20.0), // Space between items
-                                child: hot(
-                                  product['name']!,
-                                  fullImgList,
-                                  product['details']!,
-                                  product['amount']!,
-                                  product['slashedPrice']!,
-                                  product['discount']!,
-                                  product['starImg']!,
-                                  product['rating']!,
-                                  product['rating2']!,
-                                ),
+                            carouselController: _controller,
+                            items: imagePaths.map((item) {
+                              return Image.asset(
+                                item,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
                               );
-                            },
+                            }).toList(),
                           ),
                         ),
-                      ),
-                    ],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            imagePaths.length,
+                            (index) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 5.0),
+                              child: Image.asset(
+                                _current == index
+                                    ? "images/Elipses_active.png"
+                                    : "images/Elipses.png",
+                                width:
+                                    (10 / MediaQuery.of(context).size.width) *
+                                        MediaQuery.of(context).size.width,
+                                height:
+                                    (10 / MediaQuery.of(context).size.height) *
+                                        MediaQuery.of(context).size.height,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.04),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 16.0, horizontal: 10.0),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEBEDEE),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(0.0),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Deal of the day',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 16.0,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                TopCategoriesDetails(
+                                              key: UniqueKey(),
+                                              discountOnly: true,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text(
+                                        'View All',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 14.0,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.02),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 6.0, horizontal: 10.0),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFEF4444),
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(5.0),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      time(hours, minutes, seconds),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.04),
+                                // Container(
+                                //   width: MediaQuery.of(context).size.width,
+                                //   padding: const EdgeInsets.symmetric(
+                                //       vertical: 16.0, horizontal: 10.0),
+                                //   decoration: const BoxDecoration(
+                                //     color: Color(0xFFFFFFFF),
+                                //     borderRadius: BorderRadius.all(
+                                //       Radius.circular(5.0),
+                                //     ),
+                                //   ),
+                                //   child: Column(
+                                //     crossAxisAlignment: CrossAxisAlignment.start,
+                                //     children: [
+                                //       deal('images/Img1.png', 'Running shoes',
+                                //           'Upto 40% OFF'),
+                                //       deal('images/Img2.png', 'Sneakers',
+                                //           '40-60% OFF'),
+                                //       deal('images/Img3.png', 'Wrist Watches',
+                                //           'Upto 40% OFF'),
+                                //       deal('images/Img4.png',
+                                //           'Bluetooth Speakers', '40-60% OFF'),
+                                //     ],
+                                //   ),
+                                // ),
+
+                                Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16.0, horizontal: 10.0),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFFFFFFF),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(5.0)),
+                                  ),
+                                  child: _isLoading // Check if loading
+                                      ? Center(
+                                          child: CircularProgressIndicator(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                        ) // Show loader while loading
+                                      : Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: products
+                                              .where((product) =>
+                                                  product['hasDiscount'] ==
+                                                  true) // Keep this line
+                                              .map((product) {
+                                            List<String> imgList = [];
+
+                                            // Check if product['img'] is not null
+                                            if (product['img'] != null) {
+                                              if (product['img']
+                                                  is List<String>) {
+                                                // If it's already a List<String>, use it directly
+                                                imgList = List<String>.from(
+                                                    product['img']);
+                                              } else if (product['img']
+                                                  is String) {
+                                                // If it's a String, convert it to a List<String>
+                                                imgList = [
+                                                  product['img']
+                                                ]; // Create a list with the single image
+                                              }
+                                            }
+
+                                            // Append the download string to each image URL in imgList
+                                            List<String> fullImgList =
+                                                imgList.map((img) {
+                                              return '$img/download?project=677181a60009f5d039dd';
+                                            }).toList();
+                                            return deal(
+                                              product['name']!,
+                                              fullImgList,
+                                              product['details']!,
+                                              product['amount']!,
+                                              product['slashedPrice']!,
+                                              product['discount']!,
+                                              product['starImg']!,
+                                              product['rating']!,
+                                              product['rating2']!,
+                                              product[
+                                                  'uptoDiscount'], // Discount text
+                                            );
+                                          }).toList(),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.05),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Hot Selling Footwear',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18.0,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              const Spacer(),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          TopCategoriesDetails(
+                                        key: UniqueKey(),
+                                        discountOnly: false,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'View All',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16.0,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.03),
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        //   child: Column(
+                        //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        //     children: [
+                        //       hot(
+                        //           'images/Img1.png',
+                        //           'Adidas white sneakers for men',
+                        //           '\$68',
+                        //           '\$136',
+                        //           '50% OFF',
+                        //           'images/Rating Icon.png',
+                        //           '4.8',
+                        //           '(692)'),
+                        //     ],
+                        //   ),
+                        // ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.62,
+                            child: _isLoading // Check if loading
+                                ? Center(
+                                    child: CircularProgressIndicator(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                  ) // Show loader while loading
+                                : ListView.builder(
+                                    scrollDirection: Axis
+                                        .horizontal, // Enable horizontal scrolling
+                                    itemCount: products.length,
+                                    itemBuilder: (context, index) {
+                                      final product = products[index];
+                                      List<String> imgList = [];
+
+                                      // Check if product['img'] is not null
+                                      if (product['img'] != null) {
+                                        if (product['img'] is List<String>) {
+                                          // If it's already a List<String>, use it directly
+                                          imgList =
+                                              List<String>.from(product['img']);
+                                        } else if (product['img'] is String) {
+                                          // If it's a String, convert it to a List<String>
+                                          imgList = [
+                                            product['img']
+                                          ]; // Create a list with the single image
+                                        }
+                                      }
+
+                                      // Append the download string to each image URL in imgList
+                                      List<String> fullImgList =
+                                          imgList.map((img) {
+                                        return '$img/download?project=677181a60009f5d039dd';
+                                      }).toList();
+                                      return Container(
+                                        width: MediaQuery.of(context)
+                                                .size
+                                                .width *
+                                            0.6, // Set a fixed width for each item
+                                        margin: const EdgeInsets.only(
+                                            right: 20.0), // Space between items
+                                        child: hot(
+                                          product['name']!,
+                                          fullImgList,
+                                          product['details']!,
+                                          product['amount']!,
+                                          product['slashedPrice']!,
+                                          product['discount']!,
+                                          product['starImg']!,
+                                          product['rating']!,
+                                          product['rating2']!,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Recommended for you',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18.0,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              const Spacer(),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          TopCategoriesDetails(
+                                        key: UniqueKey(),
+                                        discountOnly: false,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'View All',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16.0,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.03),
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        //   child: Column(
+                        //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        //     children: [
+                        //       hot(
+                        //           'images/Img2.png',
+                        //           'Allen Solly Regular fit cotton shirt',
+                        //           '\$35',
+                        //           '\$40.25',
+                        //           '15% OFF',
+                        //           'images/Rating Icon.png',
+                        //           '4.4',
+                        //           '(412)'),
+                        //     ],
+                        //   ),
+                        // ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.62,
+                            child: _isLoading // Check if loading
+                                ? Center(
+                                    child: CircularProgressIndicator(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                  ) // Show loader while loading
+                                : ListView.builder(
+                                    scrollDirection: Axis
+                                        .horizontal, // Enable horizontal scrolling
+                                    itemCount: products.length,
+                                    itemBuilder: (context, index) {
+                                      final product = products[index];
+                                      List<String> imgList = [];
+
+                                      // Check if product['img'] is not null
+                                      if (product['img'] != null) {
+                                        if (product['img'] is List<String>) {
+                                          // If it's already a List<String>, use it directly
+                                          imgList =
+                                              List<String>.from(product['img']);
+                                        } else if (product['img'] is String) {
+                                          // If it's a String, convert it to a List<String>
+                                          imgList = [
+                                            product['img']
+                                          ]; // Create a list with the single image
+                                        }
+                                      }
+
+                                      // Append the download string to each image URL in imgList
+                                      List<String> fullImgList =
+                                          imgList.map((img) {
+                                        return '$img/download?project=677181a60009f5d039dd';
+                                      }).toList();
+                                      return Container(
+                                        width: MediaQuery.of(context)
+                                                .size
+                                                .width *
+                                            0.6, // Set a fixed width for each item
+                                        margin: const EdgeInsets.only(
+                                            right: 20.0), // Space between items
+                                        child: hot(
+                                          product['name']!,
+                                          fullImgList,
+                                          product['details']!,
+                                          product['amount']!,
+                                          product['slashedPrice']!,
+                                          product['discount']!,
+                                          product['starImg']!,
+                                          product['rating']!,
+                                          product['rating2']!,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
