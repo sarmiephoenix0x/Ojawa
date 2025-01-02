@@ -7,13 +7,15 @@ class CategoriesPage extends StatefulWidget {
   final Function goToOrdersPage;
   final Function goToProfilePage;
   final GlobalKey<ScaffoldState> scaffoldKey;
+  final int selectedImageIndex;
 
   const CategoriesPage(
       {super.key,
       required this.goToCategoriesPage,
       required this.goToOrdersPage,
       required this.goToProfilePage,
-      required this.scaffoldKey});
+      required this.scaffoldKey,
+      required this.selectedImageIndex});
 
   @override
   _CategoriesPageState createState() => _CategoriesPageState();
@@ -83,6 +85,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
       default:
         return '';
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedImageIndex = widget.selectedImageIndex;
   }
 
   @override

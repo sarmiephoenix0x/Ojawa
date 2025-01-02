@@ -40,6 +40,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
   bool isLoading = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   StreamSubscription<ConnectivityResult>? connectivitySubscription;
+  int _selectedImageIndex = 0;
 
   @override
   void initState() {
@@ -126,10 +127,11 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
     return accessToken != null;
   }
 
-  void _goToCategoriesPage(BuildContext context) {
+  void _goToCategoriesPage(BuildContext context, int selectedImageIndex) {
     if (mounted) {
       setState(() {
         _selectedIndex = 1;
+        _selectedImageIndex = selectedImageIndex;
       });
     }
   }
@@ -365,7 +367,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                         ),
                         onTap: () {
                           Navigator.pop(context);
-                          _goToCategoriesPage(context);
+                          _goToCategoriesPage(context, 0);
                         },
                       ),
                       ListTile(
@@ -542,6 +544,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                 goToOrdersPage: _goToOrdersPage,
                 goToProfilePage: _goToProfilePage,
                 scaffoldKey: _scaffoldKey,
+                selectedImageIndex: _selectedImageIndex,
               ),
               OrdersPage(
                 goToCategoriesPage: _goToCategoriesPage,

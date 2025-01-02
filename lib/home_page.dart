@@ -819,7 +819,7 @@ class _HomePageState extends State<HomePage>
                               const Spacer(),
                               InkWell(
                                 onTap: () {
-                                  widget.goToCategoriesPage(context);
+                                  widget.goToCategoriesPage(context, 0);
                                 },
                                 child: const Text(
                                   'View All',
@@ -842,28 +842,28 @@ class _HomePageState extends State<HomePage>
                             children: [
                               InkWell(
                                 onTap: () {
-                                  widget.goToCategoriesPage(context);
+                                  widget.goToCategoriesPage(context, 0);
                                 },
                                 child:
                                     category('images/Fashion.png', 'Fashion'),
                               ),
                               InkWell(
                                 onTap: () {
-                                  widget.goToCategoriesPage(context);
+                                  widget.goToCategoriesPage(context, 1);
                                 },
                                 child: category(
                                     'images/Electronics.png', 'Electronics'),
                               ),
                               InkWell(
                                 onTap: () {
-                                  widget.goToCategoriesPage(context);
+                                  widget.goToCategoriesPage(context, 2);
                                 },
                                 child: category(
                                     'images/Appliances.png', 'Appliances'),
                               ),
                               InkWell(
                                 onTap: () {
-                                  widget.goToCategoriesPage(context);
+                                  widget.goToCategoriesPage(context, 3);
                                 },
                                 child: category('images/Beauty.png', 'Beauty'),
                               ),
