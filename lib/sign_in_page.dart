@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ojawa/main_app.dart';
 import 'package:ojawa/sign_up_page.dart';
+import 'package:ojawa/verify_email.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'forgot_password_page.dart';
 
@@ -122,7 +123,6 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
       final Map<String, dynamic> responseData = json.decode(response.body);
       final String error = responseData['message'];
 
-      // Handle invalid credentials
       _showCustomSnackBar(
         context,
         'Error: $error',
@@ -132,7 +132,7 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
       setState(() {
         isLoading = false;
       });
-      // Handle other unexpected responses
+
       _showCustomSnackBar(
         context,
         'An unexpected error occurred.',
@@ -336,15 +336,15 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: InkWell(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ForgotPassword(
-                                      key: UniqueKey(),
-                                      onToggleDarkMode: widget.onToggleDarkMode,
-                                      isDarkMode: widget.isDarkMode),
-                                ),
-                              );
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder: (context) => ForgotPassword(
+                              //         key: UniqueKey(),
+                              //         onToggleDarkMode: widget.onToggleDarkMode,
+                              //         isDarkMode: widget.isDarkMode),
+                              //   ),
+                              // );
                             },
                             child: const Text(
                               'Forgot password?',
@@ -427,18 +427,18 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                       ),
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                    const Center(
-                      child: Text(
-                        '- Or -',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    // const Center(
+                    //   child: Text(
+                    //     '- Or -',
+                    //     style: TextStyle(
+                    //       fontFamily: 'Poppins',
+                    //       fontSize: 16.0,
+                    //       fontWeight: FontWeight.bold,
+                    //       color: Colors.grey,
+                    //     ),
+                    //   ),
+                    // ),
+                    // SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     // Padding(
                     //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     //   child: Row(
@@ -480,7 +480,7 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SignUpPage(
+                                builder: (context) => VerifyEmail(
                                     key: UniqueKey(),
                                     onToggleDarkMode: widget.onToggleDarkMode,
                                     isDarkMode: widget.isDarkMode),

@@ -116,10 +116,15 @@ class _HomePageState extends State<HomePage>
   bool _isLoading = true;
   bool _isRefreshing = false;
   StreamSubscription<ConnectivityResult>? connectivitySubscription;
+  late ScrollController _scrollController;
+  int pageNum = 1;
+  bool _isFetchingMore = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     connectivitySubscription = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
@@ -158,9 +163,39 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent &&
+        !_isLoading &&
+        !_isFetchingMore) {
+      fetchMoreProducts(); // Trigger fetching more products
+    }
+  }
+
   Future<void> fetchProducts() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await _fetchProductsForPage(pageNum);
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> fetchMoreProducts() async {
+    setState(() {
+      _isFetchingMore = true;
+    });
+    pageNum++; // Increment the page number for the next set of products
+    await _fetchProductsForPage(pageNum);
+    setState(() {
+      _isFetchingMore = false;
+    });
+  }
+
+  Future<void> _fetchProductsForPage(int page) async {
     final String? accessToken = await storage.read(key: 'accessToken');
-    final url = 'https://ojawa-api.onrender.com/api/Products';
+    final url = 'https://ojawa-api.onrender.com/api/Products?page=$page';
 
     try {
       final response = await http.get(
@@ -171,19 +206,20 @@ class _HomePageState extends State<HomePage>
         },
       );
 
+      final responseData = json.decode(response.body);
+
+      print('Response Data: $responseData');
+
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
         setState(() {
-          products = responseData.map((product) {
-            // Calculate discount strings
+          products.addAll(responseData.map((product) {
             String discount = product['hasDiscount'] == true
                 ? '${product['discountRate']}% OFF'
                 : '';
-
             String uptoDiscount = product['hasDiscount'] == true
                 ? 'Upto ${product['discountRate']}% OFF'
                 : '';
-
             return {
               'name': product['name'],
               'img': product['productImageUrl'],
@@ -193,31 +229,19 @@ class _HomePageState extends State<HomePage>
                   ? '\$${product['discountPrice']}'
                   : '',
               'discount': discount,
-              'uptoDiscount': uptoDiscount, // New field for "Upto X% OFF"
-              'starImg':
-                  'images/Rating Icon.png', // Assuming a static image for rating
+              'uptoDiscount': uptoDiscount,
+              'starImg': 'images/Rating Icon.png',
               'rating': product['rating'].toString(),
-              'rating2': '(0)', // Placeholder for review count
-              'hasDiscount': product['hasDiscount'], // Include hasDiscount
+              'rating2': '(0)',
+              'hasDiscount': product['hasDiscount'],
             };
-          }).toList();
-          _isLoading = false;
+          }).toList());
         });
       } else {
         print('Error fetching products: ${response.statusCode}');
-        if (mounted) {
-          setState(() {
-            _isLoading = false; // Set loading to false on error
-          });
-        }
       }
     } catch (error) {
       print('Error: $error');
-      if (mounted) {
-        setState(() {
-          _isLoading = false; // Set loading to false on error
-        });
-      }
     }
   }
 
@@ -1153,61 +1177,88 @@ class _HomePageState extends State<HomePage>
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: SizedBox(
                             height: MediaQuery.of(context).size.height * 0.62,
-                            child: _isLoading // Check if loading
+                            child: _isLoading
                                 ? Center(
                                     child: CircularProgressIndicator(
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface,
                                     ),
-                                  ) // Show loader while loading
-                                : ListView.builder(
-                                    scrollDirection: Axis
-                                        .horizontal, // Enable horizontal scrolling
-                                    itemCount: products.length,
-                                    itemBuilder: (context, index) {
-                                      final product = products[index];
-                                      List<String> imgList = [];
-
-                                      // Check if product['img'] is not null
-                                      if (product['img'] != null) {
-                                        if (product['img'] is List<String>) {
-                                          // If it's already a List<String>, use it directly
-                                          imgList =
-                                              List<String>.from(product['img']);
-                                        } else if (product['img'] is String) {
-                                          // If it's a String, convert it to a List<String>
-                                          imgList = [
-                                            product['img']
-                                          ]; // Create a list with the single image
-                                        }
+                                  )
+                                : NotificationListener<ScrollNotification>(
+                                    onNotification:
+                                        (ScrollNotification scrollInfo) {
+                                      if (!_isFetchingMore &&
+                                          scrollInfo.metrics.pixels ==
+                                              scrollInfo
+                                                  .metrics.maxScrollExtent) {
+                                        // Trigger loading more products
+                                        fetchMoreProducts();
+                                        return true;
                                       }
-
-                                      // Append the download string to each image URL in imgList
-                                      List<String> fullImgList =
-                                          imgList.map((img) {
-                                        return '$img/download?project=677181a60009f5d039dd';
-                                      }).toList();
-                                      return Container(
-                                        width: MediaQuery.of(context)
-                                                .size
-                                                .width *
-                                            0.6, // Set a fixed width for each item
-                                        margin: const EdgeInsets.only(
-                                            right: 20.0), // Space between items
-                                        child: hot(
-                                          product['name']!,
-                                          fullImgList,
-                                          product['details']!,
-                                          product['amount']!,
-                                          product['slashedPrice']!,
-                                          product['discount']!,
-                                          product['starImg']!,
-                                          product['rating']!,
-                                          product['rating2']!,
-                                        ),
-                                      );
+                                      return false;
                                     },
+                                    child: ListView.builder(
+                                      controller:
+                                          _scrollController, // Attach the scroll controller
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: products.length +
+                                          1, // Add one for the loader
+                                      itemBuilder: (context, index) {
+                                        if (index == products.length) {
+                                          // Show loader at the end
+                                          return Container(
+                                            alignment: Alignment.center,
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.6, // Same width as items
+                                            child: _isFetchingMore
+                                                ? CircularProgressIndicator(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                  )
+                                                : const SizedBox
+                                                    .shrink(), // Empty space when not loading
+                                          );
+                                        }
+
+                                        final product = products[index];
+                                        List<String> imgList = [];
+                                        if (product['img'] != null) {
+                                          if (product['img'] is List<String>) {
+                                            imgList = List<String>.from(
+                                                product['img']);
+                                          } else if (product['img'] is String) {
+                                            imgList = [product['img']];
+                                          }
+                                        }
+                                        List<String> fullImgList =
+                                            imgList.map((img) {
+                                          return '$img/download?project=677181a60009f5d039dd';
+                                        }).toList();
+                                        return Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.6,
+                                          margin: const EdgeInsets.only(
+                                              right: 20.0),
+                                          child: hot(
+                                            product['name']!,
+                                            fullImgList,
+                                            product['details']!,
+                                            product['amount']!,
+                                            product['slashedPrice']!,
+                                            product['discount']!,
+                                            product['starImg']!,
+                                            product['rating']!,
+                                            product['rating2']!,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                           ),
                         ),
@@ -1275,61 +1326,88 @@ class _HomePageState extends State<HomePage>
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: SizedBox(
                             height: MediaQuery.of(context).size.height * 0.62,
-                            child: _isLoading // Check if loading
+                            child: _isLoading
                                 ? Center(
                                     child: CircularProgressIndicator(
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface,
                                     ),
-                                  ) // Show loader while loading
-                                : ListView.builder(
-                                    scrollDirection: Axis
-                                        .horizontal, // Enable horizontal scrolling
-                                    itemCount: products.length,
-                                    itemBuilder: (context, index) {
-                                      final product = products[index];
-                                      List<String> imgList = [];
-
-                                      // Check if product['img'] is not null
-                                      if (product['img'] != null) {
-                                        if (product['img'] is List<String>) {
-                                          // If it's already a List<String>, use it directly
-                                          imgList =
-                                              List<String>.from(product['img']);
-                                        } else if (product['img'] is String) {
-                                          // If it's a String, convert it to a List<String>
-                                          imgList = [
-                                            product['img']
-                                          ]; // Create a list with the single image
-                                        }
+                                  )
+                                : NotificationListener<ScrollNotification>(
+                                    onNotification:
+                                        (ScrollNotification scrollInfo) {
+                                      if (!_isFetchingMore &&
+                                          scrollInfo.metrics.pixels ==
+                                              scrollInfo
+                                                  .metrics.maxScrollExtent) {
+                                        // Trigger loading more products
+                                        fetchMoreProducts();
+                                        return true;
                                       }
-
-                                      // Append the download string to each image URL in imgList
-                                      List<String> fullImgList =
-                                          imgList.map((img) {
-                                        return '$img/download?project=677181a60009f5d039dd';
-                                      }).toList();
-                                      return Container(
-                                        width: MediaQuery.of(context)
-                                                .size
-                                                .width *
-                                            0.6, // Set a fixed width for each item
-                                        margin: const EdgeInsets.only(
-                                            right: 20.0), // Space between items
-                                        child: hot(
-                                          product['name']!,
-                                          fullImgList,
-                                          product['details']!,
-                                          product['amount']!,
-                                          product['slashedPrice']!,
-                                          product['discount']!,
-                                          product['starImg']!,
-                                          product['rating']!,
-                                          product['rating2']!,
-                                        ),
-                                      );
+                                      return false;
                                     },
+                                    child: ListView.builder(
+                                      controller:
+                                          _scrollController, // Attach the scroll controller
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: products.length +
+                                          1, // Add one for the loader
+                                      itemBuilder: (context, index) {
+                                        if (index == products.length) {
+                                          // Show loader at the end
+                                          return Container(
+                                            alignment: Alignment.center,
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.6, // Same width as items
+                                            child: _isFetchingMore
+                                                ? CircularProgressIndicator(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                  )
+                                                : const SizedBox
+                                                    .shrink(), // Empty space when not loading
+                                          );
+                                        }
+
+                                        final product = products[index];
+                                        List<String> imgList = [];
+                                        if (product['img'] != null) {
+                                          if (product['img'] is List<String>) {
+                                            imgList = List<String>.from(
+                                                product['img']);
+                                          } else if (product['img'] is String) {
+                                            imgList = [product['img']];
+                                          }
+                                        }
+                                        List<String> fullImgList =
+                                            imgList.map((img) {
+                                          return '$img/download?project=677181a60009f5d039dd';
+                                        }).toList();
+                                        return Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.6,
+                                          margin: const EdgeInsets.only(
+                                              right: 20.0),
+                                          child: hot(
+                                            product['name']!,
+                                            fullImgList,
+                                            product['details']!,
+                                            product['amount']!,
+                                            product['slashedPrice']!,
+                                            product['discount']!,
+                                            product['starImg']!,
+                                            product['rating']!,
+                                            product['rating2']!,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                           ),
                         ),

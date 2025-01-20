@@ -226,7 +226,7 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
 
     if (response.statusCode == 200) {
       final String accessToken = responseData['token'];
-      final int userId = responseData['userId']; // Extract userId from response
+      final int userId = responseData['value']; // Extract userId from response
 
       // Store the access token and user ID
       await storage.write(key: 'accessToken', value: accessToken);

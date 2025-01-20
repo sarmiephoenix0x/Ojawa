@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:ojawa/apply_coupon.dart';
 import 'package:ojawa/new_address.dart';
 import 'package:ojawa/payment_method.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class MyCart extends StatefulWidget {
   const MyCart({super.key});
@@ -15,30 +18,194 @@ class _MyCartState extends State<MyCart> {
   int? _selectedRadioValue;
   bool isCouponEnabled = false;
 
-  List<Map<String, String>> items = [
-    {
-      'img': 'images/Img2.png',
-      'details': 'Calvin Clein Regular fit slim fit shirt',
-      'amount': '\$52',
-      'slashedPrice': '\$60',
-      'discount': '20% off',
-    },
+  // List<Map<String, String>> items = [
+  //   {
+  //     'img': 'images/Img2.png',
+  //     'details': 'Calvin Clein Regular fit slim fit shirt',
+  //     'amount': '\$52',
+  //     'slashedPrice': '\$60',
+  //     'discount': '20% off',
+  //   },
 
-    {
-      'img': 'images/Img3.png',
-      'details': 'Calvin Clein Regular fit slim fit shirt',
-      'amount': '\$62',
-      'slashedPrice': '\$60',
-      'discount': '40% off',
-    },
-    // You can add more items here
-  ];
+  //   {
+  //     'img': 'images/Img3.png',
+  //     'details': 'Calvin Clein Regular fit slim fit shirt',
+  //     'amount': '\$62',
+  //     'slashedPrice': '\$60',
+  //     'discount': '40% off',
+  //   },
+  //   // You can add more items here
+  // ];
+
+  List<Map<String, dynamic>> cartItems = [];
+  final storage = const FlutterSecureStorage();
 
   // Method to remove an item from the list
-  void _removeItem(int index) {
-    setState(() {
-      items.removeAt(index); // Remove the item from the list
-    });
+  // void _removeItem(int index) {
+  //   setState(() {
+  //     items.removeAt(index); // Remove the item from the list
+  //   });
+  // }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCartItems();
+  }
+
+  Future<void> fetchCartItems() async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    const String url = 'https://ojawa-api.onrender.com/api/Carts';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final responseData = json.decode(response.body);
+      print('Response Data: $responseData');
+
+      if (response.statusCode == 200) {
+        // Extract `cartItems` from the `data` field
+        final cartItemsData = responseData['data']['cartItems'] as List;
+        setState(() {
+          cartItems = cartItemsData
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList();
+          isLoading = false;
+        });
+      } else {
+        _showCustomSnackBar(
+          context,
+          'Failed to load cart items.',
+          isError: true,
+        );
+      }
+    } catch (error) {
+      print('An error occurred: $error');
+      _showCustomSnackBar(
+        context,
+        'An error occurred',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> removeCartItem(String cartItemId) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final String url = 'https://ojawa-api.onrender.com/api/Carts/$cartItemId';
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          cartItems.removeWhere((item) => item['id'] == cartItemId);
+        });
+        _showCustomSnackBar(
+          context,
+          'Item removed from cart',
+          isError: false,
+        );
+      } else {
+        _showCustomSnackBar(
+          context,
+          'Failed to remove item from cart.',
+          isError: true,
+        );
+      }
+    } catch (error) {
+      print('An error occurred: $error');
+      _showCustomSnackBar(
+        context,
+        'An error occurred',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> updateQuantity(String productId, int newQuantity) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    const String url = 'https://ojawa-api.onrender.com/api/Carts';
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'productId': productId,
+          'quantity': newQuantity,
+        }),
+      );
+      if (response.statusCode == 200) {
+        // Update the quantity in the local list
+        setState(() {
+          final index =
+              cartItems.indexWhere((item) => item['productId'] == productId);
+          if (index != -1) {
+            cartItems[index]['quantity'] = newQuantity;
+          }
+        });
+        _showCustomSnackBar(
+          context,
+          'Quantity updated successfully',
+          isError: false,
+        );
+      } else {
+        _showCustomSnackBar(
+          context,
+          'Failed to update quantity.',
+          isError: true,
+        );
+      }
+    } catch (error) {
+      print('An error occurred: $error');
+      _showCustomSnackBar(
+        context,
+        'An error occurred',
+        isError: true,
+      );
+    }
+  }
+
+  void _showCustomSnackBar(BuildContext context, String message,
+      {bool isError = false}) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle_outline,
+            color: isError ? Colors.red : Colors.green,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(10),
+      duration: const Duration(seconds: 3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   void _changeAddress() {
@@ -315,20 +482,28 @@ class _MyCartState extends State<MyCart> {
                   SizedBox(
                     height: (200 / MediaQuery.of(context).size.height) *
                         MediaQuery.of(context).size.height,
-                    child: ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        return item(
-                          items[index]['img']!,
-                          items[index]['details']!,
-                          items[index]['amount']!,
-                          items[index]['slashedPrice']!,
-                          items[index]['discount']!,
-                          onRemove: () =>
-                              _removeItem(index), // Pass the remove function
-                        );
-                      },
-                    ),
+                    child: isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : cartItems.isEmpty
+                            ? const Center(child: Text('Your cart is empty'))
+                            : ListView.builder(
+                                itemCount: cartItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = cartItems[index];
+                                  return itemWidget(
+                                    img: item['img'] ?? '',
+                                    details: item['details'] ?? '',
+                                    amount: item['amount'] ?? '',
+                                    slashedPrice: item['slashedPrice'] ?? '',
+                                    discount: item['discount'] ?? '',
+                                    quantity: item['quantity'] ?? 1,
+                                    onRemove: () => removeCartItem(item['id']),
+                                    onUpdateQuantity: (newQuantity) =>
+                                        updateQuantity(
+                                            item['productId'], newQuantity),
+                                  );
+                                },
+                              ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -586,195 +761,107 @@ class _MyCartState extends State<MyCart> {
     );
   }
 
-  Widget item(
-    String img,
-    String details,
-    String amount,
-    String slashedPrice,
-    String discount, {
-    required VoidCallback onRemove, // Callback to remove the item
+  Widget itemWidget({
+    required String img,
+    required String details,
+    required String amount,
+    required String slashedPrice,
+    required String discount,
+    required int quantity,
+    required VoidCallback onRemove,
+    required Function(int) onUpdateQuantity,
   }) {
-    final ValueNotifier<String> selectedSizeNotifier =
-        ValueNotifier<String>("L");
-    final ValueNotifier<int> quantityNotifier = ValueNotifier<int>(1);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Left-side Image with Remove button below
-            Column(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image with dynamic height based on content
-                Image.asset(
+                // Image
+                Image.network(
                   img,
                   width: 100,
-                  height: MediaQuery.of(context).size.height * 0.2,
+                  height: 100,
                   fit: BoxFit.cover,
+                ),
+                const SizedBox(width: 10),
+                // Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(details, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(height: 8),
+                      Text(
+                        '\$$amount',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            '\$$slashedPrice',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$discount% off',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            SizedBox(
-                width: (16.0 / MediaQuery.of(context).size.width) *
-                    MediaQuery.of(context).size.width),
-            // Right-side Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    details,
-                    style: TextStyle(fontSize: 16.0),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+            // Quantity Selector
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      onPressed: () {
+                        if (quantity > 1) {
+                          onUpdateQuantity(quantity - 1);
+                        }
+                      },
+                    ),
+                    Text('$quantity', style: const TextStyle(fontSize: 18)),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        onUpdateQuantity(quantity + 1);
+                      },
+                    ),
+                  ],
+                ),
+                // Remove Button
+                TextButton.icon(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  label: const Text(
+                    'Remove',
+                    style: TextStyle(color: Colors.red),
                   ),
-                  SizedBox(
-                      height: (10.0 / MediaQuery.of(context).size.height) *
-                          MediaQuery.of(context).size.height),
-                  Row(
-                    children: [
-                      Text(
-                        amount,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 22.0,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      SizedBox(
-                          width: (16.0 / MediaQuery.of(context).size.width) *
-                              MediaQuery.of(context).size.width),
-                      Text(
-                        slashedPrice,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16.0,
-                          color: Colors.grey,
-                          decoration: TextDecoration.lineThrough,
-                          decorationThickness: 2,
-                          decorationColor: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(
-                          width: (16.0 / MediaQuery.of(context).size.width) *
-                              MediaQuery.of(context).size.width),
-                      Text(
-                        discount,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16.0,
-                          color: Color(0xFFEA580C),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                      height: (10.0 / MediaQuery.of(context).size.height) *
-                          MediaQuery.of(context).size.height),
-                  // Size Dropdown and Quantity Selector
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Size Dropdown
-                      ValueListenableBuilder<String>(
-                        valueListenable: selectedSizeNotifier,
-                        builder: (context, selectedSize, child) {
-                          return Container(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(20, 0, 0, 0),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Row(
-                              children: [
-                                DropdownButton<String>(
-                                  value: selectedSize,
-                                  underline:
-                                      SizedBox(), // Remove default underline
-                                  items: ['S', 'M', 'L', 'XL', 'XXL']
-                                      .map((String size) {
-                                    return DropdownMenuItem<String>(
-                                      value: size,
-                                      child: Text(size),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? newSize) {
-                                    if (newSize != null) {
-                                      selectedSizeNotifier.value =
-                                          newSize; // Update size
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                      // Quantity Selector
-                      ValueListenableBuilder<int>(
-                        valueListenable: quantityNotifier,
-                        builder: (context, quantity, child) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(20, 0, 0, 0),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove),
-                                  onPressed: () {
-                                    if (quantity > 1) {
-                                      quantityNotifier.value =
-                                          quantity - 1; // Decrease quantity
-                                    }
-                                  },
-                                ),
-                                Text('$quantity',
-                                    style: const TextStyle(fontSize: 18)),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () {
-                                    quantityNotifier.value =
-                                        quantity + 1; // Increase quantity
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end, // Align Remove to the right
-          children: [
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: onRemove, // Call the callback on press
-            ),
-            const Text(
-              "Remove",
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
