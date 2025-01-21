@@ -70,28 +70,39 @@ class _MyCartState extends State<MyCart> {
       print('Response Data: $responseData');
 
       if (response.statusCode == 200) {
-        // Extract `cartItems` from the `data` field
-        final cartItemsData = responseData['data']['cartItems'] as List;
+        // Extract `cartItems` from the response
+        final cartItemsData = responseData['cardItems'] as List;
         setState(() {
-          cartItems = cartItemsData
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList();
+          cartItems = cartItemsData.map((item) {
+            return {
+              'id': item['cardItemId'],
+              'quantity': item['quantity'],
+              'discount': item['discountRate'],
+              'details': item['productName'],
+              'amount': item['price'],
+              'slashedPrice': item['discountPrice'],
+              'img': item['imageUrl'] ??
+                  '', // Add this if the API provides image URLs
+            };
+          }).toList();
           isLoading = false;
         });
       } else {
         _showCustomSnackBar(
           context,
-          'Failed to load cart items.',
+          'Failed to load cart items. (${response.statusCode})',
           isError: true,
         );
       }
     } catch (error) {
       print('An error occurred: $error');
-      _showCustomSnackBar(
-        context,
-        'An error occurred',
-        isError: true,
-      );
+      if (mounted) {
+        _showCustomSnackBar(
+          context,
+          'An error occurred',
+          isError: true,
+        );
+      }
     }
   }
 
@@ -491,16 +502,16 @@ class _MyCartState extends State<MyCart> {
                                 itemBuilder: (context, index) {
                                   final item = cartItems[index];
                                   return itemWidget(
-                                    img: item['img'] ?? '',
-                                    details: item['details'] ?? '',
-                                    amount: item['amount'] ?? '',
-                                    slashedPrice: item['slashedPrice'] ?? '',
-                                    discount: item['discount'] ?? '',
-                                    quantity: item['quantity'] ?? 1,
+                                    img: item['img'],
+                                    details: item['details'],
+                                    amount: item['amount'].toDouble(),
+                                    slashedPrice:
+                                        item['slashedPrice'].toDouble(),
+                                    discount: item['discount'].toInt(),
+                                    quantity: item['quantity'],
                                     onRemove: () => removeCartItem(item['id']),
                                     onUpdateQuantity: (newQuantity) =>
-                                        updateQuantity(
-                                            item['productId'], newQuantity),
+                                        updateQuantity(item['id'], newQuantity),
                                   );
                                 },
                               ),
@@ -764,9 +775,9 @@ class _MyCartState extends State<MyCart> {
   Widget itemWidget({
     required String img,
     required String details,
-    required String amount,
-    required String slashedPrice,
-    required String discount,
+    required double amount,
+    required double slashedPrice,
+    required int discount,
     required int quantity,
     required VoidCallback onRemove,
     required Function(int) onUpdateQuantity,
@@ -782,7 +793,9 @@ class _MyCartState extends State<MyCart> {
               children: [
                 // Image
                 Image.network(
-                  img,
+                  img.isNotEmpty
+                      ? img
+                      : 'https://via.placeholder.com/100', // Placeholder if no image
                   width: 100,
                   height: 100,
                   fit: BoxFit.cover,

@@ -73,6 +73,8 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
               'id': category['id'],
               'name': category['name'],
               'description': category['description'],
+              'categoryImageUrl':
+                  category['categoryImageUrl'], // Add the image URL
             };
           }).toList();
           _isLoading = false;
@@ -128,7 +130,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
             _scrollController.position.maxScrollExtent &&
         !_isLoading &&
         !_isFetchingMore) {
-      fetchMoreProducts(); // Trigger fetching more products
+      //fetchMoreProducts(); // Trigger fetching more products
     }
   }
 
@@ -177,6 +179,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                 ? 'Upto ${product['discountRate']}% OFF'
                 : '';
             return {
+              'id': product['id'],
               'name': product['name'],
               'img': product['productImageUrl'],
               'details': product['description'],
@@ -276,27 +279,44 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                   SizedBox(
                     height: (350 / MediaQuery.of(context).size.height) *
                         MediaQuery.of(context).size.height,
-                    child: _isLoading // Check if loading
+                    child: _isLoading
                         ? Center(
                             child: CircularProgressIndicator(
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
-                          ) // Show loader while loading
+                          )
                         : GridView.builder(
                             padding: const EdgeInsets.only(top: 20.0),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount:
-                                  2, // Number of columns in the grid
-                              childAspectRatio: 1, // Aspect ratio of each item
-                              crossAxisSpacing: 8.0, // Space between columns
-                              mainAxisSpacing: 8.0, // Space between rows
+                              crossAxisCount: 2,
+                              childAspectRatio: 1,
+                              crossAxisSpacing: 8.0,
+                              mainAxisSpacing: 8.0,
                             ),
-                            itemCount: categories
-                                .length, // Use the length of categories
+                            itemCount: categories.length,
                             itemBuilder: (context, index) {
-                              final category =
-                                  categories[index]; // Get the category
+                              final category = categories[index];
+                              List<String> imgList = [];
+                              if (category['categoryImageUrl'] != null) {
+                                if (category['categoryImageUrl']
+                                    is List<String>) {
+                                  imgList = List<String>.from(
+                                      category['categoryImageUrl']);
+                                } else if (category['categoryImageUrl']
+                                    is String) {
+                                  imgList = [category['categoryImageUrl']];
+                                }
+                              }
+                              List<String> fullImgList = imgList.map((img) {
+                                return '$img/download?project=677181a60009f5d039dd';
+                              }).toList();
+
+                              // Ensure the image URL is not empty
+                              final imageUrl = fullImgList.isNotEmpty
+                                  ? fullImgList[0]
+                                  : null;
+
                               return Column(
                                 children: [
                                   InkWell(
@@ -315,36 +335,34 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                     },
                                     child: Card(
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            15), // Rounded edges for the card
+                                        borderRadius: BorderRadius.circular(15),
                                       ),
-                                      elevation: 4, // Shadow effect
+                                      elevation: 4,
                                       child: Container(
-                                        height:
-                                            108, // Set the height of the image
-                                        width: double
-                                            .infinity, // Make the image take the full width
+                                        height: 108,
+                                        width: double.infinity,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                              15), // Ensure the image respects the card's shape
-                                          image: DecorationImage(
-                                            image: AssetImage(_getImageUrl(index %
-                                                5)), // Use modulo to cycle through your images
-                                            fit: BoxFit
-                                                .cover, // Fit the image within the container
-                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          image: imageUrl != null
+                                              ? DecorationImage(
+                                                  image: NetworkImage(
+                                                      imageUrl), // Use the first image URL
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : null, // Handle cases where no image is available
+                                          color: imageUrl == null
+                                              ? Colors.grey.shade300
+                                              : null, // Placeholder color if no image
                                         ),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(
-                                      height: 4), // Space between card and text
+                                  const SizedBox(height: 4),
                                   Padding(
-                                    padding: const EdgeInsets.all(
-                                        8.0), // Padding around the text
+                                    padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      category[
-                                          'name'], // Display the category name
+                                      category['name'],
                                       style: const TextStyle(fontSize: 14),
                                       textAlign: TextAlign.center,
                                     ),
@@ -404,7 +422,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                   scrollInfo.metrics.pixels ==
                                       scrollInfo.metrics.maxScrollExtent) {
                                 // Trigger loading more products
-                                fetchMoreProducts();
+                                //fetchMoreProducts();
                                 return true;
                               }
                               return false;
@@ -414,26 +432,10 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                   _scrollController, // Attach the scroll controller
                               scrollDirection: Axis.horizontal,
                               itemCount:
-                                  products.length + 1, // Add one for the loader
+                                  products.length, // Set to products.length
                               itemBuilder: (context, index) {
-                                if (index == products.length) {
-                                  // Show loader at the end
-                                  return Container(
-                                    alignment: Alignment.center,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.6, // Same width as items
-                                    child: _isFetchingMore
-                                        ? CircularProgressIndicator(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface,
-                                          )
-                                        : const SizedBox
-                                            .shrink(), // Empty space when not loading
-                                  );
-                                }
-
-                                final product = products[index];
+                                final product =
+                                    products[index]; // Access product safely
                                 List<String> imgList = [];
                                 if (product['img'] != null) {
                                   if (product['img'] is List<String>) {
@@ -445,11 +447,13 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                 List<String> fullImgList = imgList.map((img) {
                                   return '$img/download?project=677181a60009f5d039dd';
                                 }).toList();
+
                                 return Container(
                                   width:
                                       MediaQuery.of(context).size.width * 0.6,
                                   margin: const EdgeInsets.only(right: 20.0),
                                   child: hot(
+                                    product['id'],
                                     product['name']!,
                                     fullImgList,
                                     product['details']!,
@@ -475,6 +479,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
   }
 
   Widget hot(
+      String itemId,
       String name,
       List<String> img,
       String details,
@@ -493,6 +498,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
           MaterialPageRoute(
             builder: (context) => Productdetails(
               key: UniqueKey(),
+              itemId: itemId,
               name: name,
               details: details,
               amount: amount,

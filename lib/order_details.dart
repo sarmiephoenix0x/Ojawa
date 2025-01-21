@@ -23,6 +23,8 @@ class _OrderDetailsState extends State<OrderDetails> {
   final storage = const FlutterSecureStorage();
   bool _isLoading = true;
   StreamSubscription<ConnectivityResult>? connectivitySubscription;
+  int pageNum = 1;
+  bool _isFetchingMore = false;
 
   @override
   void initState() {
@@ -38,8 +40,29 @@ class _OrderDetailsState extends State<OrderDetails> {
   }
 
   Future<void> fetchProducts() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await _fetchProductsForPage(pageNum);
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> fetchMoreProducts() async {
+    setState(() {
+      _isFetchingMore = true;
+    });
+    pageNum++; // Increment the page number for the next set of products
+    await _fetchProductsForPage(pageNum);
+    setState(() {
+      _isFetchingMore = false;
+    });
+  }
+
+  Future<void> _fetchProductsForPage(int page) async {
     final String? accessToken = await storage.read(key: 'accessToken');
-    final url = 'https://ojawa-api.onrender.com/api/Products';
+    final url = 'https://ojawa-api.onrender.com/api/Products?page=$page';
 
     try {
       final response = await http.get(
@@ -50,20 +73,22 @@ class _OrderDetailsState extends State<OrderDetails> {
         },
       );
 
+      final responseData = json.decode(response.body);
+
+      print('Response Data: $responseData');
+
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
         setState(() {
-          products = responseData.map((product) {
-            // Calculate discount strings
+          products.addAll(responseData.map((product) {
             String discount = product['hasDiscount'] == true
                 ? '${product['discountRate']}% OFF'
                 : '';
-
             String uptoDiscount = product['hasDiscount'] == true
                 ? 'Upto ${product['discountRate']}% OFF'
                 : '';
-
             return {
+              'id': product['id'],
               'name': product['name'],
               'img': product['productImageUrl'],
               'details': product['description'],
@@ -72,31 +97,19 @@ class _OrderDetailsState extends State<OrderDetails> {
                   ? '\$${product['discountPrice']}'
                   : '',
               'discount': discount,
-              'uptoDiscount': uptoDiscount, // New field for "Upto X% OFF"
-              'starImg':
-                  'images/Rating Icon.png', // Assuming a static image for rating
+              'uptoDiscount': uptoDiscount,
+              'starImg': 'images/Rating Icon.png',
               'rating': product['rating'].toString(),
-              'rating2': '(0)', // Placeholder for review count
-              'hasDiscount': product['hasDiscount'], // Include hasDiscount
+              'rating2': '(0)',
+              'hasDiscount': product['hasDiscount'],
             };
-          }).toList();
-          _isLoading = false;
+          }).toList());
         });
       } else {
         print('Error fetching products: ${response.statusCode}');
-        if (mounted) {
-          setState(() {
-            _isLoading = false; // Set loading to false on error
-          });
-        }
       }
     } catch (error) {
       print('Error: $error');
-      if (mounted) {
-        setState(() {
-          _isLoading = false; // Set loading to false on error
-        });
-      }
     }
   }
 
@@ -744,6 +757,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                                         margin: const EdgeInsets.only(
                                             right: 20.0), // Space between items
                                         child: hot(
+                                          product['id'],
                                           product['name']!,
                                           fullImgList,
                                           product['details']!,
@@ -830,6 +844,7 @@ class _OrderDetailsState extends State<OrderDetails> {
   }
 
   Widget hot(
+      String itemId,
       String name,
       List<String> img,
       String details,
@@ -848,6 +863,7 @@ class _OrderDetailsState extends State<OrderDetails> {
           MaterialPageRoute(
             builder: (context) => Productdetails(
               key: UniqueKey(),
+              itemId: itemId,
               name: name,
               details: details,
               amount: amount,

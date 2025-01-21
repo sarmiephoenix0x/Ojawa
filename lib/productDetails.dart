@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class Productdetails extends StatefulWidget {
+  final String itemId;
   final List<String> img;
   final String name;
   final String details;
@@ -23,6 +24,7 @@ class Productdetails extends StatefulWidget {
 
   const Productdetails(
       {super.key,
+      required this.itemId,
       required this.name,
       required this.details,
       required this.amount,
@@ -88,9 +90,11 @@ class _ProductdetailsState extends State<Productdetails>
       _isLoading = true;
     });
     await _fetchProductsForPage(pageNum);
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> fetchMoreProducts() async {
@@ -128,6 +132,7 @@ class _ProductdetailsState extends State<Productdetails>
                 ? 'Upto ${product['discountRate']}% OFF'
                 : '';
             return {
+              'id': product['id'],
               'name': product['name'],
               'img': product['productImageUrl'],
               'details': product['description'],
@@ -400,6 +405,85 @@ class _ProductdetailsState extends State<Productdetails>
         ),
       ),
     );
+  }
+
+  Future<void> addToCart(int productId, int quantity) async {
+    final String? accessToken = await storage.read(
+        key: 'accessToken'); // Replace `storage` with your implementation
+    final url = 'https://ojawa-api.onrender.com/api/Carts';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'productId': productId,
+          'quantity': quantity,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MyCart(key: UniqueKey()),
+          ),
+        );
+        print('Item added to cart successfully');
+        _showCustomSnackBar(
+          context,
+          'Item added to cart successfully',
+          isError: false,
+        );
+      } else {
+        print('Failed to add item to cart: ${response.body}');
+        _showCustomSnackBar(
+          context,
+          'Failed to add item to cart',
+          isError: true,
+        );
+      }
+    } catch (error) {
+      print('Error: $error');
+      _showCustomSnackBar(
+        context,
+        'Failed to add item to cart',
+        isError: true,
+      );
+    }
+  }
+
+  void _showCustomSnackBar(BuildContext context, String message,
+      {bool isError = false}) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle_outline,
+            color: isError ? Colors.red : Colors.green,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(10),
+      duration: const Duration(seconds: 3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -1384,6 +1468,7 @@ class _ProductdetailsState extends State<Productdetails>
                                         margin:
                                             const EdgeInsets.only(right: 20.0),
                                         child: hot(
+                                          product['id'],
                                           product['name']!,
                                           fullImgList,
                                           product['details']!,
@@ -1434,13 +1519,8 @@ class _ProductdetailsState extends State<Productdetails>
                           MediaQuery.of(context).size.height,
                       padding: const EdgeInsets.symmetric(horizontal: 0.0),
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MyCart(key: UniqueKey()),
-                            ),
-                          );
+                        onPressed: () async {
+                          await addToCart(int.parse(widget.itemId), 1);
                         },
                         style: ButtonStyle(
                           backgroundColor:
@@ -1653,6 +1733,7 @@ class _ProductdetailsState extends State<Productdetails>
   }
 
   Widget hot(
+      String itemId,
       String name,
       List<String> img,
       String details,
@@ -1671,6 +1752,7 @@ class _ProductdetailsState extends State<Productdetails>
           MaterialPageRoute(
             builder: (context) => Productdetails(
               key: UniqueKey(),
+              itemId: itemId,
               name: name,
               details: details,
               amount: amount,

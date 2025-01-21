@@ -164,12 +164,12 @@ class _HomePageState extends State<HomePage>
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent &&
-        !_isLoading &&
-        !_isFetchingMore) {
-      fetchMoreProducts(); // Trigger fetching more products
-    }
+    //if (_scrollController.position.pixels >=
+    //         _scrollController.position.maxScrollExtent &&
+    //     !_isLoading &&
+    //     !_isFetchingMore) {
+    //   fetchMoreProducts(); // Trigger fetching more products
+    // }
   }
 
   Future<void> fetchProducts() async {
@@ -177,9 +177,11 @@ class _HomePageState extends State<HomePage>
       _isLoading = true;
     });
     await _fetchProductsForPage(pageNum);
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> fetchMoreProducts() async {
@@ -221,6 +223,7 @@ class _HomePageState extends State<HomePage>
                 ? 'Upto ${product['discountRate']}% OFF'
                 : '';
             return {
+              'id': product['id'],
               'name': product['name'],
               'img': product['productImageUrl'],
               'details': product['description'],
@@ -1093,6 +1096,7 @@ class _HomePageState extends State<HomePage>
                                               return '$img/download?project=677181a60009f5d039dd';
                                             }).toList();
                                             return deal(
+                                              product['id'],
                                               product['name']!,
                                               fullImgList,
                                               product['details']!,
@@ -1193,7 +1197,7 @@ class _HomePageState extends State<HomePage>
                                               scrollInfo
                                                   .metrics.maxScrollExtent) {
                                         // Trigger loading more products
-                                        fetchMoreProducts();
+                                        //fetchMoreProducts();
                                         return true;
                                       }
                                       return false;
@@ -1202,29 +1206,11 @@ class _HomePageState extends State<HomePage>
                                       controller:
                                           _scrollController, // Attach the scroll controller
                                       scrollDirection: Axis.horizontal,
-                                      itemCount: products.length +
-                                          1, // Add one for the loader
+                                      itemCount: products
+                                          .length, // Set to products.length
                                       itemBuilder: (context, index) {
-                                        if (index == products.length) {
-                                          // Show loader at the end
-                                          return Container(
-                                            alignment: Alignment.center,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.6, // Same width as items
-                                            child: _isFetchingMore
-                                                ? CircularProgressIndicator(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface,
-                                                  )
-                                                : const SizedBox
-                                                    .shrink(), // Empty space when not loading
-                                          );
-                                        }
-
-                                        final product = products[index];
+                                        final product = products[
+                                            index]; // Access product safely
                                         List<String> imgList = [];
                                         if (product['img'] != null) {
                                           if (product['img'] is List<String>) {
@@ -1238,6 +1224,7 @@ class _HomePageState extends State<HomePage>
                                             imgList.map((img) {
                                           return '$img/download?project=677181a60009f5d039dd';
                                         }).toList();
+
                                         return Container(
                                           width: MediaQuery.of(context)
                                                   .size
@@ -1246,6 +1233,7 @@ class _HomePageState extends State<HomePage>
                                           margin: const EdgeInsets.only(
                                               right: 20.0),
                                           child: hot(
+                                            product['id'],
                                             product['name']!,
                                             fullImgList,
                                             product['details']!,
@@ -1342,7 +1330,7 @@ class _HomePageState extends State<HomePage>
                                               scrollInfo
                                                   .metrics.maxScrollExtent) {
                                         // Trigger loading more products
-                                        fetchMoreProducts();
+                                        //fetchMoreProducts();
                                         return true;
                                       }
                                       return false;
@@ -1351,29 +1339,11 @@ class _HomePageState extends State<HomePage>
                                       controller:
                                           _scrollController, // Attach the scroll controller
                                       scrollDirection: Axis.horizontal,
-                                      itemCount: products.length +
-                                          1, // Add one for the loader
+                                      itemCount: products
+                                          .length, // Set to products.length, no extra item for loader
                                       itemBuilder: (context, index) {
-                                        if (index == products.length) {
-                                          // Show loader at the end
-                                          return Container(
-                                            alignment: Alignment.center,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.6, // Same width as items
-                                            child: _isFetchingMore
-                                                ? CircularProgressIndicator(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface,
-                                                  )
-                                                : const SizedBox
-                                                    .shrink(), // Empty space when not loading
-                                          );
-                                        }
-
-                                        final product = products[index];
+                                        final product = products[
+                                            index]; // Access product at current index
                                         List<String> imgList = [];
                                         if (product['img'] != null) {
                                           if (product['img'] is List<String>) {
@@ -1387,6 +1357,7 @@ class _HomePageState extends State<HomePage>
                                             imgList.map((img) {
                                           return '$img/download?project=677181a60009f5d039dd';
                                         }).toList();
+
                                         return Container(
                                           width: MediaQuery.of(context)
                                                   .size
@@ -1395,7 +1366,9 @@ class _HomePageState extends State<HomePage>
                                           margin: const EdgeInsets.only(
                                               right: 20.0),
                                           child: hot(
-                                            product['name']!,
+                                            product['id'],
+                                            product[
+                                                'name']!, // Ensure keys are non-null and valid
                                             fullImgList,
                                             product['details']!,
                                             product['amount']!,
@@ -1861,6 +1834,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget deal(
+      String itemId,
       String name,
       List<String> img,
       String details,
@@ -1880,6 +1854,7 @@ class _HomePageState extends State<HomePage>
             MaterialPageRoute(
               builder: (context) => Productdetails(
                 key: UniqueKey(),
+                itemId: itemId,
                 name: name,
                 details: details,
                 amount: amount,
@@ -1942,6 +1917,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget hot(
+      String itemId,
       String name,
       List<String> img,
       String details,
@@ -1960,6 +1936,7 @@ class _HomePageState extends State<HomePage>
           MaterialPageRoute(
             builder: (context) => Productdetails(
               key: UniqueKey(),
+              itemId: itemId,
               name: name,
               details: details,
               amount: amount,

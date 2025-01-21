@@ -32,6 +32,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
   late ScrollController _scrollController;
   int pageNum = 1;
   bool _isFetchingMore = false;
+  bool hasMore = true;
 
   @override
   void initState() {
@@ -111,15 +112,21 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
   }
 
   Future<void> fetchMoreProducts() async {
+    if (!hasMore || _isFetchingMore)
+      return; // Stop if no more pages or already loading
+
     setState(() {
       _isFetchingMore = true;
     });
+
     pageNum++; // Increment the page number for the next set of products
+
     if (widget.id != null) {
       await _fetchProductsForPageBasedOnCategory(pageNum);
     } else {
       await _fetchProductsForPage(pageNum);
     }
+
     setState(() {
       _isFetchingMore = false;
     });
@@ -140,30 +147,36 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
 
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
+
         setState(() {
-          products.addAll(responseData.map((product) {
-            String discount = product['hasDiscount'] == true
-                ? '${product['discountRate']}% OFF'
-                : '';
-            String uptoDiscount = product['hasDiscount'] == true
-                ? 'Upto ${product['discountRate']}% OFF'
-                : '';
-            return {
-              'name': product['name'],
-              'img': product['productImageUrl'],
-              'details': product['description'],
-              'amount': '\$${product['price']}',
-              'slashedPrice': product['hasDiscount'] == true
-                  ? '\$${product['discountPrice']}'
-                  : '',
-              'discount': discount,
-              'uptoDiscount': uptoDiscount,
-              'starImg': 'images/Rating Icon.png',
-              'rating': product['rating'].toString(),
-              'rating2': '(0)',
-              'hasDiscount': product['hasDiscount'],
-            };
-          }).toList());
+          if (responseData.isEmpty) {
+            hasMore = false; // No more pages to fetch
+          } else {
+            products.addAll(responseData.map((product) {
+              String discount = product['hasDiscount'] == true
+                  ? '${product['discountRate']}% OFF'
+                  : '';
+              String uptoDiscount = product['hasDiscount'] == true
+                  ? 'Upto ${product['discountRate']}% OFF'
+                  : '';
+              return {
+                'id': product['id'],
+                'name': product['name'],
+                'img': product['productImageUrl'],
+                'details': product['description'],
+                'amount': '\$${product['price']}',
+                'slashedPrice': product['hasDiscount'] == true
+                    ? '\$${product['discountPrice']}'
+                    : '',
+                'discount': discount,
+                'uptoDiscount': uptoDiscount,
+                'starImg': 'images/Rating Icon.png',
+                'rating': product['rating'].toString(),
+                'rating2': '(0)',
+                'hasDiscount': product['hasDiscount'],
+              };
+            }).toList());
+          }
         });
       } else {
         print('Error fetching products: ${response.statusCode}');
@@ -176,7 +189,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
   Future<void> _fetchProductsForPageBasedOnCategory(int page) async {
     final String? accessToken = await storage.read(key: 'accessToken');
     final url =
-        'https://ojawa-api.onrender.com/api/products/category/${widget.id}?page=$page';
+        'https://ojawa-api.onrender.com/api/Products/category/${widget.id}?page=$page';
 
     try {
       final response = await http.get(
@@ -186,33 +199,39 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
           'Content-Type': 'application/json',
         },
       );
-      print("Prducts Based On Categories Woorked");
+
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
+
         setState(() {
-          products.addAll(responseData.map((product) {
-            String discount = product['hasDiscount'] == true
-                ? '${product['discountRate']}% OFF'
-                : '';
-            String uptoDiscount = product['hasDiscount'] == true
-                ? 'Upto ${product['discountRate']}% OFF'
-                : '';
-            return {
-              'name': product['name'],
-              'img': product['productImageUrl'],
-              'details': product['description'],
-              'amount': '\$${product['price']}',
-              'slashedPrice': product['hasDiscount'] == true
-                  ? '\$${product['discountPrice']}'
-                  : '',
-              'discount': discount,
-              'uptoDiscount': uptoDiscount,
-              'starImg': 'images/Rating Icon.png',
-              'rating': product['rating'].toString(),
-              'rating2': '(0)',
-              'hasDiscount': product['hasDiscount'],
-            };
-          }).toList());
+          if (responseData.isEmpty) {
+            hasMore = false;
+          } else {
+            products.addAll(responseData.map((product) {
+              String discount = product['hasDiscount'] == true
+                  ? '${product['discountRate']}% OFF'
+                  : '';
+              String uptoDiscount = product['hasDiscount'] == true
+                  ? 'Upto ${product['discountRate']}% OFF'
+                  : '';
+              return {
+                'id': product['id'],
+                'name': product['name'],
+                'img': product['productImageUrl'],
+                'details': product['description'],
+                'amount': '\$${product['price']}',
+                'slashedPrice': product['hasDiscount'] == true
+                    ? '\$${product['discountPrice']}'
+                    : '',
+                'discount': discount,
+                'uptoDiscount': uptoDiscount,
+                'starImg': 'images/Rating Icon.png',
+                'rating': product['rating'].toString(),
+                'rating2': '(0)',
+                'hasDiscount': product['hasDiscount'],
+              };
+            }).toList());
+          }
         });
       } else {
         print('Error fetching products: ${response.statusCode}');
@@ -492,7 +511,8 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                 child: ListView.builder(
                                   controller:
                                       _scrollController, // Attach the scroll controller
-                                  scrollDirection: Axis.horizontal,
+                                  scrollDirection:
+                                      Axis.vertical, // Vertical scrolling
                                   itemCount: products.length +
                                       1, // Add one for the loader
                                   itemBuilder: (context, index) {
@@ -500,17 +520,14 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                       // Show loader at the end
                                       return Container(
                                         alignment: Alignment.center,
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.6, // Same width as items
+                                        padding: const EdgeInsets.all(10.0),
                                         child: _isFetchingMore
                                             ? CircularProgressIndicator(
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .onSurface,
                                               )
-                                            : const SizedBox
-                                                .shrink(), // Empty space when not loading
+                                            : const SizedBox.shrink(),
                                       );
                                     }
 
@@ -528,21 +545,42 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                         imgList.map((img) {
                                       return '$img/download?project=677181a60009f5d039dd';
                                     }).toList();
-                                    return Container(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.6,
-                                      margin:
-                                          const EdgeInsets.only(right: 20.0),
-                                      child: hot(
-                                        product['name']!,
-                                        fullImgList,
-                                        product['details']!,
-                                        product['amount']!,
-                                        product['slashedPrice']!,
-                                        product['discount']!,
-                                        product['starImg']!,
-                                        product['rating']!,
-                                        product['rating2']!,
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                          bottom:
+                                              20.0), // Add spacing between items
+                                      child: Container(
+                                        width: double
+                                            .infinity, // Full screen width
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: Theme.of(context)
+                                              .cardColor, // Optional: background color
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.2),
+                                              blurRadius: 5,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        padding: const EdgeInsets.all(
+                                            10.0), // Content padding
+                                        child: hot(
+                                          product['id'],
+                                          product['name']!,
+                                          fullImgList,
+                                          product['details']!,
+                                          product['amount']!,
+                                          product['slashedPrice']!,
+                                          product['discount']!,
+                                          product['starImg']!,
+                                          product['rating']!,
+                                          product['rating2']!,
+                                        ),
                                       ),
                                     );
                                   },
@@ -603,7 +641,8 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                               child: ListView.builder(
                                 controller:
                                     _scrollController, // Attach the scroll controller
-                                scrollDirection: Axis.horizontal,
+                                scrollDirection:
+                                    Axis.vertical, // Vertical scrolling
                                 itemCount: products.length +
                                     1, // Add one for the loader
                                 itemBuilder: (context, index) {
@@ -611,16 +650,14 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                     // Show loader at the end
                                     return Container(
                                       alignment: Alignment.center,
-                                      width: MediaQuery.of(context).size.width *
-                                          0.6, // Same width as items
+                                      padding: const EdgeInsets.all(10.0),
                                       child: _isFetchingMore
                                           ? CircularProgressIndicator(
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface,
                                             )
-                                          : const SizedBox
-                                              .shrink(), // Empty space when not loading
+                                          : const SizedBox.shrink(),
                                     );
                                   }
 
@@ -637,20 +674,40 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                   List<String> fullImgList = imgList.map((img) {
                                     return '$img/download?project=677181a60009f5d039dd';
                                   }).toList();
-                                  return Container(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.6,
-                                    margin: const EdgeInsets.only(right: 20.0),
-                                    child: hot(
-                                      product['name']!,
-                                      fullImgList,
-                                      product['details']!,
-                                      product['amount']!,
-                                      product['slashedPrice']!,
-                                      product['discount']!,
-                                      product['starImg']!,
-                                      product['rating']!,
-                                      product['rating2']!,
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                        bottom:
+                                            20.0), // Add spacing between items
+                                    child: Container(
+                                      width:
+                                          double.infinity, // Full screen width
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Theme.of(context)
+                                            .cardColor, // Optional: background color
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.2),
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      padding: const EdgeInsets.all(
+                                          10.0), // Content padding
+                                      child: hot(
+                                        product['id'],
+                                        product['name']!,
+                                        fullImgList,
+                                        product['details']!,
+                                        product['amount']!,
+                                        product['slashedPrice']!,
+                                        product['discount']!,
+                                        product['starImg']!,
+                                        product['rating']!,
+                                        product['rating2']!,
+                                      ),
                                     ),
                                   );
                                 },
@@ -684,7 +741,8 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                               child: ListView.builder(
                                 controller:
                                     _scrollController, // Attach the scroll controller
-                                scrollDirection: Axis.horizontal,
+                                scrollDirection:
+                                    Axis.vertical, // Vertical scrolling
                                 itemCount: products.length +
                                     1, // Add one for the loader
                                 itemBuilder: (context, index) {
@@ -692,16 +750,14 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                     // Show loader at the end
                                     return Container(
                                       alignment: Alignment.center,
-                                      width: MediaQuery.of(context).size.width *
-                                          0.6, // Same width as items
+                                      padding: const EdgeInsets.all(10.0),
                                       child: _isFetchingMore
                                           ? CircularProgressIndicator(
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface,
                                             )
-                                          : const SizedBox
-                                              .shrink(), // Empty space when not loading
+                                          : const SizedBox.shrink(),
                                     );
                                   }
 
@@ -718,20 +774,40 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                   List<String> fullImgList = imgList.map((img) {
                                     return '$img/download?project=677181a60009f5d039dd';
                                   }).toList();
-                                  return Container(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.6,
-                                    margin: const EdgeInsets.only(right: 20.0),
-                                    child: hot(
-                                      product['name']!,
-                                      fullImgList,
-                                      product['details']!,
-                                      product['amount']!,
-                                      product['slashedPrice']!,
-                                      product['discount']!,
-                                      product['starImg']!,
-                                      product['rating']!,
-                                      product['rating2']!,
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                        bottom:
+                                            20.0), // Add spacing between items
+                                    child: Container(
+                                      width:
+                                          double.infinity, // Full screen width
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Theme.of(context)
+                                            .cardColor, // Optional: background color
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.2),
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      padding: const EdgeInsets.all(
+                                          10.0), // Content padding
+                                      child: hot(
+                                        product['id'],
+                                        product['name']!,
+                                        fullImgList,
+                                        product['details']!,
+                                        product['amount']!,
+                                        product['slashedPrice']!,
+                                        product['discount']!,
+                                        product['starImg']!,
+                                        product['rating']!,
+                                        product['rating2']!,
+                                      ),
                                     ),
                                   );
                                 },
@@ -780,6 +856,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
   }
 
   Widget hot(
+      String itemId,
       String name,
       List<String> img,
       String details,
@@ -798,6 +875,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
           MaterialPageRoute(
             builder: (context) => Productdetails(
               key: UniqueKey(),
+              itemId: itemId,
               name: name,
               details: details,
               amount: amount,
