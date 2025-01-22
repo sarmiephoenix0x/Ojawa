@@ -3,7 +3,8 @@ import 'package:ojawa/add_new_card.dart';
 import 'package:ojawa/successful_order_page.dart';
 
 class PaymentMethodPage extends StatefulWidget {
-  const PaymentMethodPage({super.key});
+  final double totalWithDiscount;
+  const PaymentMethodPage({super.key, required this.totalWithDiscount});
 
   @override
   _PaymentMethodPageState createState() => _PaymentMethodPageState();
@@ -150,12 +151,12 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Total Amount",
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -165,9 +166,9 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                         ),
                       ),
                       Text(
-                        "\$87",
+                        "\$${widget.totalWithDiscount}",
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 20.0,
                           fontWeight: FontWeight.bold,

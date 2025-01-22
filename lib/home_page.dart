@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage>
   late SharedPreferences prefs;
   Timer? _timer;
   int _remainingTime = 0;
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isRefreshing = false;
   StreamSubscription<ConnectivityResult>? connectivitySubscription;
   late ScrollController _scrollController;
@@ -129,16 +129,18 @@ class _HomePageState extends State<HomePage>
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
       if (result != ConnectivityResult.none) {
-        fetchUserProfile();
-        fetchProducts();
+        //fetchUserProfile();
+        if (products.isEmpty) {
+          fetchProducts(overwrite: true);
+        }
       }
     });
     _remainingTime =
         11 * 3600 + 15 * 60 + 4; // Example: 11 hours, 15 minutes, 4 seconds
     _startTimer();
     _initializePrefs();
-    fetchUserProfile();
-    fetchProducts();
+    // fetchUserProfile();
+    fetchProducts(overwrite: true);
   }
 
   Future<void> _initializePrefs() async {
@@ -172,11 +174,52 @@ class _HomePageState extends State<HomePage>
     // }
   }
 
-  Future<void> fetchProducts() async {
+  void _showResponseDialog(BuildContext context, dynamic responseData) {
+    // Convert the response data to a JSON string with indentation
+    final String prettyJson =
+        const JsonEncoder.withIndent('  ').convert(responseData);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Response Data'),
+          content: Container(
+            width:
+                double.maxFinite, // Ensure the dialog takes up available space
+            child: SingleChildScrollView(
+              child: Text(prettyJson),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> fetchProducts({bool overwrite = false}) async {
+    // Prevent multiple fetches by checking `_isLoading`
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
     });
+
+    if (overwrite) {
+      // Clear the existing products if overwriting
+      products.clear();
+      pageNum = 1; // Reset to the first page
+    }
+
     await _fetchProductsForPage(pageNum);
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -185,11 +228,15 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> fetchMoreProducts() async {
+    if (_isFetchingMore) return; // Prevent multiple fetches
+
     setState(() {
       _isFetchingMore = true;
     });
+
     pageNum++; // Increment the page number for the next set of products
     await _fetchProductsForPage(pageNum);
+
     setState(() {
       _isFetchingMore = false;
     });
@@ -208,12 +255,10 @@ class _HomePageState extends State<HomePage>
         },
       );
 
-      final responseData = json.decode(response.body);
-
-      print('Response Data: $responseData');
-
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
+        print('Response Data: $responseData');
+        //_showResponseDialog(context, responseData);
         setState(() {
           products.addAll(responseData.map((product) {
             String discount = product['hasDiscount'] == true
@@ -491,7 +536,7 @@ class _HomePageState extends State<HomePage>
         Future.delayed(const Duration(seconds: 15), () {
           throw TimeoutException('The operation took too long.');
         }),
-        fetchProducts(),
+        fetchProducts(overwrite: true),
       ]);
     } catch (e) {
       if (e is TimeoutException) {
@@ -1834,7 +1879,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget deal(
-      String itemId,
+      int itemId,
       String name,
       List<String> img,
       String details,
@@ -1917,7 +1962,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget hot(
-      String itemId,
+      int itemId,
       String name,
       List<String> img,
       String details,

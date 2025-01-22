@@ -39,6 +39,10 @@ class _MyCartState extends State<MyCart> {
 
   List<Map<String, dynamic>> cartItems = [];
   final storage = const FlutterSecureStorage();
+  double sumPrice = 0.0;
+  double sumDiscount = 0.0;
+  double totalWithDiscount = 0.0;
+  double total = 0.0;
 
   // Method to remove an item from the list
   // void _removeItem(int index) {
@@ -54,6 +58,9 @@ class _MyCartState extends State<MyCart> {
   }
 
   Future<void> fetchCartItems() async {
+    setState(() {
+      isLoading = true;
+    });
     final String? accessToken = await storage.read(key: 'accessToken');
     const String url = 'https://ojawa-api.onrender.com/api/Carts';
 
@@ -71,11 +78,15 @@ class _MyCartState extends State<MyCart> {
 
       if (response.statusCode == 200) {
         // Extract `cartItems` from the response
-        final cartItemsData = responseData['cardItems'] as List;
+        final cartData = responseData['data']; // Access `data` key first
+        final cartItemsData =
+            cartData['cartItems'] as List<dynamic>; // Get `cartItems`
+
         setState(() {
           cartItems = cartItemsData.map((item) {
             return {
-              'id': item['cardItemId'],
+              'id': item['cartItemId'],
+              'productId': item['productId'],
               'quantity': item['quantity'],
               'discount': item['discountRate'],
               'details': item['productName'],
@@ -87,7 +98,11 @@ class _MyCartState extends State<MyCart> {
           }).toList();
           isLoading = false;
         });
+        calculateCartSummary();
       } else {
+        setState(() {
+          isLoading = false;
+        });
         _showCustomSnackBar(
           context,
           'Failed to load cart items. (${response.statusCode})',
@@ -95,6 +110,9 @@ class _MyCartState extends State<MyCart> {
         );
       }
     } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
       print('An error occurred: $error');
       if (mounted) {
         _showCustomSnackBar(
@@ -106,7 +124,7 @@ class _MyCartState extends State<MyCart> {
     }
   }
 
-  Future<void> removeCartItem(String cartItemId) async {
+  Future<void> removeCartItem(int cartItemId) async {
     final String? accessToken = await storage.read(key: 'accessToken');
     final String url = 'https://ojawa-api.onrender.com/api/Carts/$cartItemId';
     try {
@@ -117,6 +135,8 @@ class _MyCartState extends State<MyCart> {
           'Content-Type': 'application/json',
         },
       );
+      final responseData = json.decode(response.body);
+      print('Response Data: $responseData');
       if (response.statusCode == 200) {
         setState(() {
           cartItems.removeWhere((item) => item['id'] == cartItemId);
@@ -143,7 +163,7 @@ class _MyCartState extends State<MyCart> {
     }
   }
 
-  Future<void> updateQuantity(String productId, int newQuantity) async {
+  Future<void> updateQuantity(int productId, int newQuantity) async {
     final String? accessToken = await storage.read(key: 'accessToken');
     const String url = 'https://ojawa-api.onrender.com/api/Carts';
     try {
@@ -158,6 +178,8 @@ class _MyCartState extends State<MyCart> {
           'quantity': newQuantity,
         }),
       );
+      final responseData = json.decode(response.body);
+      print('Response Data: $responseData');
       if (response.statusCode == 200) {
         // Update the quantity in the local list
         setState(() {
@@ -187,6 +209,19 @@ class _MyCartState extends State<MyCart> {
         isError: true,
       );
     }
+  }
+
+  void calculateCartSummary() {
+    sumPrice = cartItems.fold(0.0, (sum, item) => sum + item['amount']);
+    sumDiscount = cartItems.fold(0.0, (sum, item) => sum + item['discount']);
+    totalWithDiscount = cartItems.fold(
+        0.0, (sum, item) => sum + (item['amount'] - item['discount']));
+    total = sumPrice + 8;
+
+    print('Sum of Prices: $sumPrice');
+    print('Sum of Discounts: $sumDiscount');
+    print('Total (Prices + 8): $total');
+    print('Total with Discounts Applied: $totalWithDiscount');
   }
 
   void _showCustomSnackBar(BuildContext context, String message,
@@ -494,7 +529,9 @@ class _MyCartState extends State<MyCart> {
                     height: (200 / MediaQuery.of(context).size.height) *
                         MediaQuery.of(context).size.height,
                     child: isLoading
-                        ? const Center(child: CircularProgressIndicator())
+                        ? const Center(
+                            child:
+                                CircularProgressIndicator(color: Colors.black))
                         : cartItems.isEmpty
                             ? const Center(child: Text('Your cart is empty'))
                             : ListView.builder(
@@ -502,16 +539,18 @@ class _MyCartState extends State<MyCart> {
                                 itemBuilder: (context, index) {
                                   final item = cartItems[index];
                                   return itemWidget(
+                                    context: context,
+                                    cartItemId: item['id'],
                                     img: item['img'],
                                     details: item['details'],
-                                    amount: item['amount'].toDouble(),
-                                    slashedPrice:
-                                        item['slashedPrice'].toDouble(),
-                                    discount: item['discount'].toInt(),
+                                    amount: item['amount'],
+                                    slashedPrice: item['slashedPrice'],
+                                    discount: item['discount'],
                                     quantity: item['quantity'],
                                     onRemove: () => removeCartItem(item['id']),
                                     onUpdateQuantity: (newQuantity) =>
-                                        updateQuantity(item['id'], newQuantity),
+                                        updateQuantity(
+                                            item['productId'], newQuantity),
                                   );
                                 },
                               ),
@@ -567,7 +606,7 @@ class _MyCartState extends State<MyCart> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Text(
-                      'Price Details (2 Items)',
+                      'Price Details (${cartItems.length})',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w500,
@@ -577,8 +616,8 @@ class _MyCartState extends State<MyCart> {
                     ),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                  priceDetails("Total Price ", "\$87"),
-                  priceDetails("Discount", "\$12"),
+                  priceDetails("Total Price ", "\$$total"),
+                  priceDetails("Discount", "\$$sumDiscount"),
                   priceDetails("Delivery Fee", "\$8"),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.04),
                   if (isCouponEnabled)
@@ -665,7 +704,7 @@ class _MyCartState extends State<MyCart> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                  "\$87",
+                                  "\$$totalWithDiscount",
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
@@ -703,12 +742,12 @@ class _MyCartState extends State<MyCart> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Total Amount",
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -718,9 +757,9 @@ class _MyCartState extends State<MyCart> {
                         ),
                       ),
                       Text(
-                        "\$87",
+                        "\$$totalWithDiscount",
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 20.0,
                           fontWeight: FontWeight.bold,
@@ -739,8 +778,9 @@ class _MyCartState extends State<MyCart> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PaymentMethodPage(key: UniqueKey()),
+                            builder: (context) => PaymentMethodPage(
+                                key: UniqueKey(),
+                                totalWithDiscount: totalWithDiscount),
                           ),
                         );
                       },
@@ -773,6 +813,8 @@ class _MyCartState extends State<MyCart> {
   }
 
   Widget itemWidget({
+    required BuildContext context,
+    required int cartItemId,
     required String img,
     required String details,
     required double amount,
@@ -782,99 +824,186 @@ class _MyCartState extends State<MyCart> {
     required VoidCallback onRemove,
     required Function(int) onUpdateQuantity,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Card(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    final ValueNotifier<int> quantityNotifier = ValueNotifier<int>(quantity);
+    final ValueNotifier<String> selectedSizeNotifier =
+        ValueNotifier<String>("L");
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Left-side Image with Remove button below
+            Column(
               children: [
-                // Image
+                // Image with dynamic height based on content
                 Image.network(
-                  img.isNotEmpty
-                      ? img
-                      : 'https://via.placeholder.com/100', // Placeholder if no image
+                  img,
                   width: 100,
-                  height: 100,
+                  height: MediaQuery.of(context).size.height * 0.2,
                   fit: BoxFit.cover,
                 ),
-                const SizedBox(width: 10),
-                // Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+            SizedBox(width: 16.0),
+            // Right-side Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    details,
+                    style: TextStyle(fontSize: 16.0),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 10.0),
+                  Row(
                     children: [
-                      Text(details, style: const TextStyle(fontSize: 16)),
-                      const SizedBox(height: 8),
                       Text(
-                        '\$$amount',
-                        style: const TextStyle(
-                          fontSize: 20,
+                        '\$${amount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 22.0,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            '\$$slashedPrice',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                              decoration: TextDecoration.lineThrough,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '$discount% off',
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ],
+                      SizedBox(width: 16.0),
+                      Text(
+                        '\$${slashedPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                          decorationThickness: 2,
+                          decorationColor: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(width: 16.0),
+                      Text(
+                        '-$discount%',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16.0,
+                          color: Color(0xFFEA580C),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            // Quantity Selector
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () {
-                        if (quantity > 1) {
-                          onUpdateQuantity(quantity - 1);
-                        }
-                      },
-                    ),
-                    Text('$quantity', style: const TextStyle(fontSize: 18)),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        onUpdateQuantity(quantity + 1);
-                      },
-                    ),
-                  ],
-                ),
-                // Remove Button
-                TextButton.icon(
-                  onPressed: onRemove,
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  label: const Text(
-                    'Remove',
-                    style: TextStyle(color: Colors.red),
+                  SizedBox(
+                      height: (10.0 / MediaQuery.of(context).size.height) *
+                          MediaQuery.of(context).size.height),
+                  // Size Dropdown and Quantity Selector
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Size Dropdown
+                      ValueListenableBuilder<String>(
+                        valueListenable: selectedSizeNotifier,
+                        builder: (context, selectedSize, child) {
+                          return Container(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(20, 0, 0, 0),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Row(
+                              children: [
+                                DropdownButton<String>(
+                                  value: selectedSize,
+                                  underline:
+                                      SizedBox(), // Remove default underline
+                                  items: ['S', 'M', 'L', 'XL', 'XXL']
+                                      .map((String size) {
+                                    return DropdownMenuItem<String>(
+                                      value: size,
+                                      child: Text(size),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newSize) {
+                                    if (newSize != null) {
+                                      selectedSizeNotifier.value =
+                                          newSize; // Update size
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      // Quantity Selector
+                      ValueListenableBuilder<int>(
+                        valueListenable: quantityNotifier,
+                        builder: (context, quantity, child) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(20, 0, 0, 0),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  onPressed: () {
+                                    if (quantity > 1) {
+                                      quantityNotifier.value = quantity - 1;
+                                      onUpdateQuantity(quantityNotifier.value);
+                                    }
+                                  },
+                                ),
+                                Text('$quantity',
+                                    style: const TextStyle(fontSize: 18)),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () {
+                                    quantityNotifier.value = quantity + 1;
+                                    onUpdateQuantity(quantityNotifier.value);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
-      ),
+        InkWell(
+          onTap: () {
+            onRemove();
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment:
+                MainAxisAlignment.end, // Align Remove to the right
+            children: [
+              Spacer(),
+              IconButton(
+                icon: Icon(Icons.delete, color: Colors.red),
+                onPressed: null,
+              ),
+              Text(
+                "Remove",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

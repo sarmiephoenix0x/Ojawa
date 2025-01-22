@@ -479,7 +479,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
   }
 
   Widget hot(
-      String itemId,
+      int itemId,
       String name,
       List<String> img,
       String details,

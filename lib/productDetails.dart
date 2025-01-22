@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class Productdetails extends StatefulWidget {
-  final String itemId;
+  final int itemId;
   final List<String> img;
   final String name;
   final String details;
@@ -60,6 +60,7 @@ class _ProductdetailsState extends State<Productdetails>
   late ScrollController _scrollController;
   int pageNum = 1;
   bool _isFetchingMore = false;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -408,6 +409,9 @@ class _ProductdetailsState extends State<Productdetails>
   }
 
   Future<void> addToCart(int productId, int quantity) async {
+    setState(() {
+      isLoading = true;
+    });
     final String? accessToken = await storage.read(
         key: 'accessToken'); // Replace `storage` with your implementation
     final url = 'https://ojawa-api.onrender.com/api/Carts';
@@ -439,6 +443,9 @@ class _ProductdetailsState extends State<Productdetails>
           isError: false,
         );
       } else {
+        setState(() {
+          isLoading = false;
+        });
         print('Failed to add item to cart: ${response.body}');
         _showCustomSnackBar(
           context,
@@ -447,6 +454,9 @@ class _ProductdetailsState extends State<Productdetails>
         );
       }
     } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
       print('Error: $error');
       _showCustomSnackBar(
         context,
@@ -1520,7 +1530,7 @@ class _ProductdetailsState extends State<Productdetails>
                       padding: const EdgeInsets.symmetric(horizontal: 0.0),
                       child: ElevatedButton(
                         onPressed: () async {
-                          await addToCart(int.parse(widget.itemId), 1);
+                          await addToCart(widget.itemId, 1);
                         },
                         style: ButtonStyle(
                           backgroundColor:
@@ -1552,15 +1562,21 @@ class _ProductdetailsState extends State<Productdetails>
                             ),
                           ),
                         ),
-                        child: const Text(
-                          'Add to cart',
-                          softWrap: false,
-                          style: TextStyle(
-                            fontSize: 13.0,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFF1D4ED8),
+                                ),
+                              )
+                            : const Text(
+                                'Add to cart',
+                                softWrap: false,
+                                style: TextStyle(
+                                  fontSize: 13.0,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -1733,7 +1749,7 @@ class _ProductdetailsState extends State<Productdetails>
   }
 
   Widget hot(
-      String itemId,
+      int itemId,
       String name,
       List<String> img,
       String details,

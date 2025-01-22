@@ -844,7 +844,7 @@ class _OrderDetailsState extends State<OrderDetails> {
   }
 
   Widget hot(
-      String itemId,
+      int itemId,
       String name,
       List<String> img,
       String details,

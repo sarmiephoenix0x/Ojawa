@@ -21,7 +21,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
   Map<String, bool> _isLikedMap = {};
   List<Map<String, dynamic>> products = [];
   final storage = const FlutterSecureStorage();
-  bool _isLoading = true;
+  bool _isLoading = false;
   List<Map<String, dynamic>> filteredProducts = [];
   bool _isSearching = false; // To track if the search is active
   String _searchQuery = ''; // To store the current search query
@@ -43,10 +43,12 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
       if (result != ConnectivityResult.none) {
-        fetchProducts();
+        if (products.isEmpty) {
+          fetchProducts(overwrite: true);
+        }
       }
     });
-    fetchProducts();
+    fetchProducts(overwrite: true);
   }
 
   void _clearSearch() {
@@ -97,39 +99,57 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
     }
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts({bool overwrite = false}) async {
+    if (_isLoading) return; // Prevent multiple fetches
+
     setState(() {
       _isLoading = true;
     });
-    if (widget.id != null) {
-      await _fetchProductsForPageBasedOnCategory(pageNum);
-    } else {
-      await _fetchProductsForPage(pageNum);
+
+    if (overwrite) {
+      // Clear existing products and reset pagination
+      products.clear();
+      pageNum = 1;
+      hasMore = true; // Reset `hasMore` for a fresh fetch
     }
-    setState(() {
-      _isLoading = false;
-    });
+
+    try {
+      if (widget.id != null) {
+        await _fetchProductsForPageBasedOnCategory(pageNum);
+      } else {
+        await _fetchProductsForPage(pageNum);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> fetchMoreProducts() async {
-    if (!hasMore || _isFetchingMore)
-      return; // Stop if no more pages or already loading
+    if (!hasMore || _isFetchingMore) return;
 
     setState(() {
       _isFetchingMore = true;
     });
 
-    pageNum++; // Increment the page number for the next set of products
+    pageNum++; // Increment the page number for the next fetch
 
-    if (widget.id != null) {
-      await _fetchProductsForPageBasedOnCategory(pageNum);
-    } else {
-      await _fetchProductsForPage(pageNum);
+    try {
+      if (widget.id != null) {
+        await _fetchProductsForPageBasedOnCategory(pageNum);
+      } else {
+        await _fetchProductsForPage(pageNum);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingMore = false;
+        });
+      }
     }
-
-    setState(() {
-      _isFetchingMore = false;
-    });
   }
 
   Future<void> _fetchProductsForPage(int page) async {
@@ -152,7 +172,11 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
           if (responseData.isEmpty) {
             hasMore = false; // No more pages to fetch
           } else {
-            products.addAll(responseData.map((product) {
+            // Filter out duplicate products
+            final newProducts = responseData.where((product) {
+              return !products.any(
+                  (existingProduct) => existingProduct['id'] == product['id']);
+            }).map((product) {
               String discount = product['hasDiscount'] == true
                   ? '${product['discountRate']}% OFF'
                   : '';
@@ -175,7 +199,13 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                 'rating2': '(0)',
                 'hasDiscount': product['hasDiscount'],
               };
-            }).toList());
+            }).toList();
+
+            if (newProducts.isNotEmpty) {
+              products.addAll(newProducts);
+            } else {
+              hasMore = false; // No new products means end of list
+            }
           }
         });
       } else {
@@ -207,7 +237,10 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
           if (responseData.isEmpty) {
             hasMore = false;
           } else {
-            products.addAll(responseData.map((product) {
+            final newProducts = responseData.where((product) {
+              return !products.any(
+                  (existingProduct) => existingProduct['id'] == product['id']);
+            }).map((product) {
               String discount = product['hasDiscount'] == true
                   ? '${product['discountRate']}% OFF'
                   : '';
@@ -230,7 +263,13 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                 'rating2': '(0)',
                 'hasDiscount': product['hasDiscount'],
               };
-            }).toList());
+            }).toList();
+
+            if (newProducts.isNotEmpty) {
+              products.addAll(newProducts);
+            } else {
+              hasMore = false;
+            }
           }
         });
       } else {
@@ -352,11 +391,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
     if (widget.discountOnly == true) {
       _filterProducts();
     }
-    List<Map<String, dynamic>> displayedProducts = widget.id != null
-        ? products
-            .where((product) => product['categoryId'] == widget.id)
-            .toList()
-        : products;
+
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
@@ -476,7 +511,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                           color: Theme.of(context).colorScheme.onSurface,
                         )) // Show loader while loading
                       : Text(
-                          "${_isSearching ? searchResults.length : (widget.discountOnly ? filteredProducts.length : displayedProducts.length)} Items", // Show item count based on search or filter
+                          "${_isSearching ? searchResults.length : (widget.discountOnly ? filteredProducts.length : products.length)} Items", // Show item count based on search or filter
                           style: const TextStyle(fontSize: 14),
                           textAlign: TextAlign.center,
                         ),
@@ -503,7 +538,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                       scrollInfo.metrics.pixels ==
                                           scrollInfo.metrics.maxScrollExtent) {
                                     // Trigger loading more products
-                                    fetchMoreProducts();
+                                    //fetchMoreProducts();
                                     return true;
                                   }
                                   return false;
@@ -633,7 +668,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                     scrollInfo.metrics.pixels ==
                                         scrollInfo.metrics.maxScrollExtent) {
                                   // Trigger loading more products
-                                  fetchMoreProducts();
+                                  //fetchMoreProducts();
                                   return true;
                                 }
                                 return false;
@@ -733,7 +768,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                     scrollInfo.metrics.pixels ==
                                         scrollInfo.metrics.maxScrollExtent) {
                                   // Trigger loading more products
-                                  fetchMoreProducts();
+                                  //fetchMoreProducts();
                                   return true;
                                 }
                                 return false;
@@ -856,7 +891,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
   }
 
   Widget hot(
-      String itemId,
+      int itemId,
       String name,
       List<String> img,
       String details,
