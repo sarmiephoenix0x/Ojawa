@@ -11,7 +11,13 @@ import 'dart:async';
 
 class OrderDetails extends StatefulWidget {
   final Function goToOrdersPage;
-  const OrderDetails({super.key, required this.goToOrdersPage});
+  final Function(bool) onToggleDarkMode;
+  final bool isDarkMode;
+  const OrderDetails(
+      {super.key,
+      required this.goToOrdersPage,
+      required this.onToggleDarkMode,
+      required this.isDarkMode});
 
   @override
   _OrderDetailsState createState() => _OrderDetailsState();
@@ -692,6 +698,9 @@ class _OrderDetailsState extends State<OrderDetails> {
                                           TopCategoriesDetails(
                                         key: UniqueKey(),
                                         discountOnly: true,
+                                        onToggleDarkMode:
+                                            widget.onToggleDarkMode,
+                                        isDarkMode: widget.isDarkMode,
                                       ),
                                     ),
                                   );
@@ -862,18 +871,19 @@ class _OrderDetailsState extends State<OrderDetails> {
           context,
           MaterialPageRoute(
             builder: (context) => Productdetails(
-              key: UniqueKey(),
-              itemId: itemId,
-              name: name,
-              details: details,
-              amount: amount,
-              slashedPrice: slashedPrice,
-              rating: rating,
-              rating2: rating2,
-              img: img,
-              discount: discount,
-              starImg: starImg,
-            ),
+                key: UniqueKey(),
+                itemId: itemId,
+                name: name,
+                details: details,
+                amount: amount,
+                slashedPrice: slashedPrice,
+                rating: rating,
+                rating2: rating2,
+                img: img,
+                discount: discount,
+                starImg: starImg,
+                onToggleDarkMode: widget.onToggleDarkMode,
+                isDarkMode: widget.isDarkMode),
           ),
         );
       },

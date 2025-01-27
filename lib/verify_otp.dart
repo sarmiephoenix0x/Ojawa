@@ -114,7 +114,7 @@ class VerifyOtpState extends State<VerifyOtp> {
         });
         final String message = responseData['message'];
         final String status = responseData['status'];
-        _showCustomSnackBar(context, 'Error: $message', isError: true);
+        _showCustomSnackBar(context, message, isError: true);
         if (status == "Partial_Success") {
           Navigator.pushReplacement(
             context,

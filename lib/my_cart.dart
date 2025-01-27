@@ -110,9 +110,11 @@ class _MyCartState extends State<MyCart> {
         );
       }
     } catch (error) {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
       print('An error occurred: $error');
       if (mounted) {
         _showCustomSnackBar(

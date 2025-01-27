@@ -11,7 +11,14 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 class TopCategoriesDetails extends StatefulWidget {
   final int? id;
   final bool discountOnly;
-  const TopCategoriesDetails({super.key, required this.discountOnly, this.id});
+  final Function(bool) onToggleDarkMode;
+  final bool isDarkMode;
+  const TopCategoriesDetails(
+      {super.key,
+      required this.discountOnly,
+      this.id,
+      required this.onToggleDarkMode,
+      required this.isDarkMode});
 
   @override
   _TopCategoriesDetailsState createState() => _TopCategoriesDetailsState();
@@ -192,6 +199,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                 'slashedPrice': product['hasDiscount'] == true
                     ? '\$${product['discountPrice']}'
                     : '',
+                'isInFavorite': product['isInFavorite'] ?? false,
                 'discount': discount,
                 'uptoDiscount': uptoDiscount,
                 'starImg': 'images/Rating Icon.png',
@@ -256,6 +264,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                 'slashedPrice': product['hasDiscount'] == true
                     ? '\$${product['discountPrice']}'
                     : '',
+                'isInFavorite': product['isInFavorite'] ?? false,
                 'discount': discount,
                 'uptoDiscount': uptoDiscount,
                 'starImg': 'images/Rating Icon.png',
@@ -274,6 +283,33 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
         });
       } else {
         print('Error fetching products: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
+
+  Future<void> _updateFavoriteStatus(int productId, bool isFavorite) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://ojawa-api.onrender.com/api/Favorites/$productId';
+
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'isFavorite': isFavorite,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Favorite status updated successfully.');
+      } else {
+        print(
+            'Failed to update favorite status: ${response.statusCode}, ${response.body}');
       }
     } catch (error) {
       print('Error: $error');
@@ -605,17 +641,17 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                         padding: const EdgeInsets.all(
                                             10.0), // Content padding
                                         child: hot(
-                                          product['id'],
-                                          product['name']!,
-                                          fullImgList,
-                                          product['details']!,
-                                          product['amount']!,
-                                          product['slashedPrice']!,
-                                          product['discount']!,
-                                          product['starImg']!,
-                                          product['rating']!,
-                                          product['rating2']!,
-                                        ),
+                                            product['id'],
+                                            product['name']!,
+                                            fullImgList,
+                                            product['details']!,
+                                            product['amount']!,
+                                            product['slashedPrice']!,
+                                            product['discount']!,
+                                            product['starImg']!,
+                                            product['rating']!,
+                                            product['rating2']!,
+                                            product['isInFavorite']),
                                       ),
                                     );
                                   },
@@ -732,17 +768,17 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                       padding: const EdgeInsets.all(
                                           10.0), // Content padding
                                       child: hot(
-                                        product['id'],
-                                        product['name']!,
-                                        fullImgList,
-                                        product['details']!,
-                                        product['amount']!,
-                                        product['slashedPrice']!,
-                                        product['discount']!,
-                                        product['starImg']!,
-                                        product['rating']!,
-                                        product['rating2']!,
-                                      ),
+                                          product['id'],
+                                          product['name']!,
+                                          fullImgList,
+                                          product['details']!,
+                                          product['amount']!,
+                                          product['slashedPrice']!,
+                                          product['discount']!,
+                                          product['starImg']!,
+                                          product['rating']!,
+                                          product['rating2']!,
+                                          product['isInFavorite']),
                                     ),
                                   );
                                 },
@@ -832,17 +868,17 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                       padding: const EdgeInsets.all(
                                           10.0), // Content padding
                                       child: hot(
-                                        product['id'],
-                                        product['name']!,
-                                        fullImgList,
-                                        product['details']!,
-                                        product['amount']!,
-                                        product['slashedPrice']!,
-                                        product['discount']!,
-                                        product['starImg']!,
-                                        product['rating']!,
-                                        product['rating2']!,
-                                      ),
+                                          product['id'],
+                                          product['name']!,
+                                          fullImgList,
+                                          product['details']!,
+                                          product['amount']!,
+                                          product['slashedPrice']!,
+                                          product['discount']!,
+                                          product['starImg']!,
+                                          product['rating']!,
+                                          product['rating2']!,
+                                          product['isInFavorite']),
                                     ),
                                   );
                                 },
@@ -900,27 +936,31 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
       String discount,
       String starImg,
       String rating,
-      String rating2) {
+      String rating2,
+      bool liked) {
     Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
-    bool isLiked = _isLikedMap[img[0]] ?? false;
+    //bool isLiked = _isLikedMap[img[0]] ?? false;
+    ValueNotifier<bool> isLikedNotifier;
+    isLikedNotifier = ValueNotifier<bool>(liked);
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => Productdetails(
-              key: UniqueKey(),
-              itemId: itemId,
-              name: name,
-              details: details,
-              amount: amount,
-              slashedPrice: slashedPrice,
-              rating: rating,
-              rating2: rating2,
-              img: img,
-              discount: discount,
-              starImg: starImg,
-            ),
+                key: UniqueKey(),
+                itemId: itemId,
+                name: name,
+                details: details,
+                amount: amount,
+                slashedPrice: slashedPrice,
+                rating: rating,
+                rating2: rating2,
+                img: img,
+                discount: discount,
+                starImg: starImg,
+                onToggleDarkMode: widget.onToggleDarkMode,
+                isDarkMode: widget.isDarkMode),
           ),
         );
       },
@@ -944,30 +984,39 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                   ),
                   Positioned(
                     top: 5,
-                    right: MediaQuery.of(context).padding.right + 5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 0.0, horizontal: 0.0),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(55.0),
-                        ),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                            isLiked == true
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: isLiked == true
-                                ? Colors.red
-                                : originalIconColor),
-                        onPressed: () {
-                          setState(() {
-                            _isLikedMap[img[0]] = !isLiked;
-                          });
-                        },
-                      ),
+                    right: 5,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: isLikedNotifier,
+                      builder: (context, isLiked, child) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 0.0, horizontal: 0.0),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(55.0),
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_border,
+                              color: isLiked ? Colors.red : originalIconColor,
+                            ),
+                            onPressed: () async {
+                              final previousState = isLiked;
+                              isLikedNotifier.value = !isLiked;
+                              try {
+                                await _updateFavoriteStatus(
+                                    itemId, isLikedNotifier.value);
+                              } catch (error) {
+                                isLikedNotifier.value =
+                                    previousState; // Revert if the request fails
+                                print('Error updating favorite status: $error');
+                              }
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ),
                   Positioned(

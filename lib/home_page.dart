@@ -276,6 +276,7 @@ class _HomePageState extends State<HomePage>
               'slashedPrice': product['hasDiscount'] == true
                   ? '\$${product['discountPrice']}'
                   : '',
+              'isInFavorite': product['isInFavorite'] ?? false,
               'discount': discount,
               'uptoDiscount': uptoDiscount,
               'starImg': 'images/Rating Icon.png',
@@ -448,6 +449,55 @@ class _HomePageState extends State<HomePage>
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> _updateFavoriteStatus(int productId, bool isFavorite) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    if (accessToken == null) {
+      _showCustomSnackBar(
+        context,
+        'You are not logged in.',
+        isError: true,
+      );
+      // await prefs.remove('user');
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInPage(
+              key: UniqueKey(),
+              onToggleDarkMode: widget.onToggleDarkMode,
+              isDarkMode: widget.isDarkMode),
+        ),
+      );
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    final url = 'https://ojawa-api.onrender.com/api/Favorites/$productId';
+
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'isFavorite': isFavorite,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Favorite status updated successfully.');
+      } else {
+        print(
+            'Failed to update favorite status: ${response.statusCode}, ${response.body}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
   }
 
   void _showLogoutConfirmationDialog() {
@@ -727,7 +777,31 @@ class _HomePageState extends State<HomePage>
                   ),
                   SizedBox(width: MediaQuery.of(context).size.width * 0.1),
                   InkWell(
-                    onTap: () {
+                    onTap: () async {
+                      final String? accessToken =
+                          await storage.read(key: 'accessToken');
+                      if (accessToken == null) {
+                        _showCustomSnackBar(
+                          context,
+                          'You are not logged in.',
+                          isError: true,
+                        );
+                        // await prefs.remove('user');
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SignInPage(
+                                key: UniqueKey(),
+                                onToggleDarkMode: widget.onToggleDarkMode,
+                                isDarkMode: widget.isDarkMode),
+                          ),
+                        );
+                        setState(() {
+                          isLoading = false;
+                        });
+                        return;
+                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -1028,9 +1102,12 @@ class _HomePageState extends State<HomePage>
                                           MaterialPageRoute(
                                             builder: (context) =>
                                                 TopCategoriesDetails(
-                                              key: UniqueKey(),
-                                              discountOnly: true,
-                                            ),
+                                                    key: UniqueKey(),
+                                                    discountOnly: true,
+                                                    onToggleDarkMode:
+                                                        widget.onToggleDarkMode,
+                                                    isDarkMode:
+                                                        widget.isDarkMode),
                                           ),
                                         );
                                       },
@@ -1185,9 +1262,11 @@ class _HomePageState extends State<HomePage>
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           TopCategoriesDetails(
-                                        key: UniqueKey(),
-                                        discountOnly: false,
-                                      ),
+                                              key: UniqueKey(),
+                                              discountOnly: false,
+                                              onToggleDarkMode:
+                                                  widget.onToggleDarkMode,
+                                              isDarkMode: widget.isDarkMode),
                                     ),
                                   );
                                 },
@@ -1277,17 +1356,22 @@ class _HomePageState extends State<HomePage>
                                               0.6,
                                           margin: const EdgeInsets.only(
                                               right: 20.0),
-                                          child: hot(
-                                            product['id'],
-                                            product['name']!,
-                                            fullImgList,
-                                            product['details']!,
-                                            product['amount']!,
-                                            product['slashedPrice']!,
-                                            product['discount']!,
-                                            product['starImg']!,
-                                            product['rating']!,
-                                            product['rating2']!,
+                                          child: Hot(
+                                            itemId: product['id'],
+                                            name: product['name']!,
+                                            img: fullImgList,
+                                            details: product['details']!,
+                                            amount: product['amount']!,
+                                            slashedPrice:
+                                                product['slashedPrice']!,
+                                            discount: product['discount']!,
+                                            starImg: product['starImg']!,
+                                            rating: product['rating']!,
+                                            rating2: product['rating2']!,
+                                            liked: product['isInFavorite'],
+                                            onToggleDarkMode:
+                                                widget.onToggleDarkMode,
+                                            isDarkMode: widget.isDarkMode,
                                           ),
                                         );
                                       },
@@ -1318,9 +1402,11 @@ class _HomePageState extends State<HomePage>
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           TopCategoriesDetails(
-                                        key: UniqueKey(),
-                                        discountOnly: false,
-                                      ),
+                                              key: UniqueKey(),
+                                              discountOnly: false,
+                                              onToggleDarkMode:
+                                                  widget.onToggleDarkMode,
+                                              isDarkMode: widget.isDarkMode),
                                     ),
                                   );
                                 },
@@ -1410,18 +1496,22 @@ class _HomePageState extends State<HomePage>
                                               0.6,
                                           margin: const EdgeInsets.only(
                                               right: 20.0),
-                                          child: hot(
-                                            product['id'],
-                                            product[
-                                                'name']!, // Ensure keys are non-null and valid
-                                            fullImgList,
-                                            product['details']!,
-                                            product['amount']!,
-                                            product['slashedPrice']!,
-                                            product['discount']!,
-                                            product['starImg']!,
-                                            product['rating']!,
-                                            product['rating2']!,
+                                          child: Hot(
+                                            itemId: product['id'],
+                                            name: product['name']!,
+                                            img: fullImgList,
+                                            details: product['details']!,
+                                            amount: product['amount']!,
+                                            slashedPrice:
+                                                product['slashedPrice']!,
+                                            discount: product['discount']!,
+                                            starImg: product['starImg']!,
+                                            rating: product['rating']!,
+                                            rating2: product['rating2']!,
+                                            liked: product['isInFavorite'],
+                                            onToggleDarkMode:
+                                                widget.onToggleDarkMode,
+                                            isDarkMode: widget.isDarkMode,
                                           ),
                                         );
                                       },
@@ -1898,18 +1988,19 @@ class _HomePageState extends State<HomePage>
             context,
             MaterialPageRoute(
               builder: (context) => Productdetails(
-                key: UniqueKey(),
-                itemId: itemId,
-                name: name,
-                details: details,
-                amount: amount,
-                slashedPrice: slashedPrice,
-                rating: rating,
-                rating2: rating2,
-                img: img,
-                discount: discount,
-                starImg: starImg,
-              ),
+                  key: UniqueKey(),
+                  itemId: itemId,
+                  name: name,
+                  details: details,
+                  amount: amount,
+                  slashedPrice: slashedPrice,
+                  rating: rating,
+                  rating2: rating2,
+                  img: img,
+                  discount: discount,
+                  starImg: starImg,
+                  onToggleDarkMode: widget.onToggleDarkMode,
+                  isDarkMode: widget.isDarkMode),
             ),
           );
         },
@@ -1961,187 +2052,201 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget hot(
-      int itemId,
-      String name,
-      List<String> img,
-      String details,
-      String amount,
-      String slashedPrice,
-      String discount,
-      String starImg,
-      String rating,
-      String rating2) {
-    Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
-    bool isLiked = _isLikedMap[img[0]] ?? false;
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Productdetails(
-              key: UniqueKey(),
-              itemId: itemId,
-              name: name,
-              details: details,
-              amount: amount,
-              slashedPrice: slashedPrice,
-              rating: rating,
-              rating2: rating2,
-              img: img,
-              discount: discount,
-              starImg: starImg,
-            ),
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 40.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(5),
-              child: Stack(
-                children: [
-                  Image.network(
-                    img[0],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey,
-                      ); // Fallback if image fails
-                    },
-                  ),
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 5,
-                    right: MediaQuery.of(context).padding.right + 5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 0.0, horizontal: 0.0),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(55.0),
-                        ),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                            isLiked == true
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: isLiked == true
-                                ? Colors.red
-                                : originalIconColor),
-                        onPressed: () {
-                          setState(() {
-                            _isLikedMap[img[0]] = !isLiked;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 5,
-                    left: MediaQuery.of(context).padding.left + 5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 6.0, horizontal: 10.0),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEA580C),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(5.0),
-                        ),
-                      ),
-                      child: const Text(
-                        "Top Seller",
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14.0,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-            Text(
-              details,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16.0,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            Row(
-              children: [
-                Text(
-                  amount,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-                Text(
-                  slashedPrice,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14.0,
-                    color: Colors.grey,
-                    decoration: TextDecoration.lineThrough,
-                    decorationThickness: 2,
-                    decorationColor: Colors.grey,
-                  ),
-                ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-                Text(
-                  discount,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14.0,
-                    color: Color(0xFFEA580C),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            Row(
-              children: [
-                Image.asset(
-                  starImg,
-                  height: 23,
-                ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.02),
-                Text(
-                  rating,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16.0,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.02),
-                Text(
-                  rating2,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16.0,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget hot(
+  //     int itemId,
+  //     String name,
+  //     List<String> img,
+  //     String details,
+  //     String amount,
+  //     String slashedPrice,
+  //     String discount,
+  //     String starImg,
+  //     String rating,
+  //     String rating2,
+  //     bool liked) {
+  //   Color originalIconColor = IconTheme.of(context).color ?? Colors.black;
+  //   //bool isLiked = liked;
+
+  //   ValueNotifier<bool> isLikedNotifier;
+  //   isLikedNotifier = ValueNotifier<bool>(liked);
+  //   return InkWell(
+  //     onTap: () {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => Productdetails(
+  //               key: UniqueKey(),
+  //               itemId: itemId,
+  //               name: name,
+  //               details: details,
+  //               amount: amount,
+  //               slashedPrice: slashedPrice,
+  //               rating: rating,
+  //               rating2: rating2,
+  //               img: img,
+  //               discount: discount,
+  //               starImg: starImg,
+  //               onToggleDarkMode: widget.onToggleDarkMode,
+  //               isDarkMode: widget.isDarkMode),
+  //         ),
+  //       );
+  //     },
+  //     child: Padding(
+  //       padding: const EdgeInsets.only(bottom: 40.0),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           ClipRRect(
+  //             borderRadius: BorderRadius.circular(5),
+  //             child: Stack(
+  //               children: [
+  //                 Image.network(
+  //                   img[0],
+  //                   fit: BoxFit.cover,
+  //                   errorBuilder: (context, error, stackTrace) {
+  //                     return Container(
+  //                       color: Colors.grey,
+  //                     ); // Fallback if image fails
+  //                   },
+  //                 ),
+  //                 Positioned(
+  //                   top: MediaQuery.of(context).padding.top + 5,
+  //                   right: MediaQuery.of(context).padding.right + 5,
+  //                   child: ValueListenableBuilder<bool>(
+  //                     valueListenable: isLikedNotifier,
+  //                     builder: (context, isLiked, child) {
+  //                       return Container(
+  //                         padding: const EdgeInsets.symmetric(
+  //                             vertical: 0.0, horizontal: 0.0),
+  //                         decoration: const BoxDecoration(
+  //                           color: Colors.white,
+  //                           borderRadius: BorderRadius.all(
+  //                             Radius.circular(55.0),
+  //                           ),
+  //                         ),
+  //                         child: IconButton(
+  //                           icon: Icon(
+  //                             isLiked ? Icons.favorite : Icons.favorite_border,
+  //                             color: isLiked ? Colors.red : originalIconColor,
+  //                           ),
+  //                           onPressed: () async {
+  //                             final previousState = isLiked;
+  //                             isLikedNotifier.value = !isLiked;
+  //                             try {
+  //                               await _updateFavoriteStatus(
+  //                                   itemId, isLikedNotifier.value);
+  //                             } catch (error) {
+  //                               isLikedNotifier.value =
+  //                                   previousState; // Revert if the request fails
+  //                               print('Error updating favorite status: $error');
+  //                             }
+  //                           },
+  //                         ),
+  //                       );
+  //                     },
+  //                   ),
+  //                 ),
+  //                 Positioned(
+  //                   top: MediaQuery.of(context).padding.top + 5,
+  //                   left: MediaQuery.of(context).padding.left + 5,
+  //                   child: Container(
+  //                     padding: const EdgeInsets.symmetric(
+  //                         vertical: 6.0, horizontal: 10.0),
+  //                     decoration: const BoxDecoration(
+  //                       color: Color(0xFFEA580C),
+  //                       borderRadius: BorderRadius.all(
+  //                         Radius.circular(5.0),
+  //                       ),
+  //                     ),
+  //                     child: const Text(
+  //                       "Top Seller",
+  //                       style: TextStyle(
+  //                         fontFamily: 'Poppins',
+  //                         fontSize: 14.0,
+  //                         color: Colors.white,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //           SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+  //           Text(
+  //             details,
+  //             style: TextStyle(
+  //               fontFamily: 'Poppins',
+  //               fontSize: 16.0,
+  //               color: Theme.of(context).colorScheme.onSurface,
+  //             ),
+  //           ),
+  //           SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+  //           Row(
+  //             children: [
+  //               Text(
+  //                 amount,
+  //                 style: TextStyle(
+  //                   fontFamily: 'Poppins',
+  //                   fontSize: 20.0,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: Theme.of(context).colorScheme.onSurface,
+  //                 ),
+  //               ),
+  //               SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+  //               Text(
+  //                 slashedPrice,
+  //                 style: const TextStyle(
+  //                   fontFamily: 'Poppins',
+  //                   fontSize: 14.0,
+  //                   color: Colors.grey,
+  //                   decoration: TextDecoration.lineThrough,
+  //                   decorationThickness: 2,
+  //                   decorationColor: Colors.grey,
+  //                 ),
+  //               ),
+  //               SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+  //               Text(
+  //                 discount,
+  //                 style: const TextStyle(
+  //                   fontFamily: 'Poppins',
+  //                   fontSize: 14.0,
+  //                   color: Color(0xFFEA580C),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+  //           Row(
+  //             children: [
+  //               Image.asset(
+  //                 starImg,
+  //                 height: 23,
+  //               ),
+  //               SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+  //               Text(
+  //                 rating,
+  //                 style: TextStyle(
+  //                   fontFamily: 'Poppins',
+  //                   fontSize: 16.0,
+  //                   color: Theme.of(context).colorScheme.onSurface,
+  //                 ),
+  //               ),
+  //               SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+  //               Text(
+  //                 rating2,
+  //                 style: const TextStyle(
+  //                   fontFamily: 'Poppins',
+  //                   fontSize: 16.0,
+  //                   color: Colors.grey,
+  //                 ),
+  //               ),
+  //             ],
+  //           )
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget filter(String img, String text) {
     return Column(
@@ -2280,6 +2385,311 @@ class _HomePageState extends State<HomePage>
           ],
         );
       },
+    );
+  }
+}
+
+class Hot extends StatefulWidget {
+  final int itemId;
+  final String name;
+  final List<String> img;
+  final String details;
+  final String amount;
+  final String slashedPrice;
+  final String discount;
+  final String starImg;
+  final String rating;
+  final String rating2;
+  final bool liked;
+  final Function(bool) onToggleDarkMode;
+  final bool isDarkMode;
+
+  const Hot({
+    Key? key,
+    required this.itemId,
+    required this.name,
+    required this.img,
+    required this.details,
+    required this.amount,
+    required this.slashedPrice,
+    required this.discount,
+    required this.starImg,
+    required this.rating,
+    required this.rating2,
+    required this.liked,
+    required this.onToggleDarkMode,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  @override
+  _HotWidgetState createState() => _HotWidgetState();
+}
+
+class _HotWidgetState extends State<Hot> {
+  late ValueNotifier<bool> isLikedNotifier;
+  final storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    isLikedNotifier = ValueNotifier<bool>(widget.liked);
+  }
+
+  @override
+  void dispose() {
+    isLikedNotifier.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateFavoriteStatus(int productId, bool isFavorite) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://ojawa-api.onrender.com/api/Favorites/$productId';
+
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'isFavorite': isFavorite,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Favorite status updated successfully.');
+      } else {
+        print(
+            'Failed to update favorite status: ${response.statusCode}, ${response.body}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
+
+  void _showCustomSnackBar(BuildContext context, String message,
+      {bool isError = false}) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle_outline,
+            color: isError ? Colors.red : Colors.green,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(10),
+      duration: const Duration(seconds: 3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Productdetails(
+                key: UniqueKey(),
+                itemId: widget.itemId,
+                name: widget.name,
+                details: widget.details,
+                amount: widget.amount,
+                slashedPrice: widget.slashedPrice,
+                rating: widget.rating,
+                rating2: widget.rating2,
+                img: widget.img,
+                discount: widget.discount,
+                starImg: widget.starImg,
+                onToggleDarkMode: widget.onToggleDarkMode,
+                isDarkMode: widget.isDarkMode),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 40.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Stack(
+                children: [
+                  Image.network(
+                    widget.img[0],
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(color: Colors.grey);
+                    },
+                  ),
+                  Positioned(
+                    top: 5,
+                    right: 5,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: isLikedNotifier,
+                      builder: (context, isLiked, child) {
+                        return Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(55.0)),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_border,
+                              color: isLiked ? Colors.red : Colors.black,
+                            ),
+                            onPressed: () async {
+                              final previousState = isLiked;
+                              try {
+                                final String? accessToken =
+                                    await storage.read(key: 'accessToken');
+                                if (accessToken == null) {
+                                  _showCustomSnackBar(
+                                    context,
+                                    'You are not logged in.',
+                                    isError: true,
+                                  );
+                                  // await prefs.remove('user');
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SignInPage(
+                                          key: UniqueKey(),
+                                          onToggleDarkMode:
+                                              widget.onToggleDarkMode,
+                                          isDarkMode: widget.isDarkMode),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                isLikedNotifier.value = !isLiked;
+                                await _updateFavoriteStatus(
+                                    widget.itemId, isLikedNotifier.value);
+                              } catch (error) {
+                                isLikedNotifier.value = previousState;
+                                print('Error updating favorite status: $error');
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    top: 5,
+                    left: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 6.0, horizontal: 10.0),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEA580C),
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                      ),
+                      child: const Text(
+                        "Top Seller",
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14.0,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            Text(
+              widget.details,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16.0,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+            Row(
+              children: [
+                Text(
+                  widget.amount,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                Text(
+                  widget.slashedPrice,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14.0,
+                    color: Colors.grey,
+                    decoration: TextDecoration.lineThrough,
+                    decorationThickness: 2,
+                    decorationColor: Colors.grey,
+                  ),
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                Text(
+                  widget.discount,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14.0,
+                    color: Color(0xFFEA580C),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+            Row(
+              children: [
+                Image.asset(
+                  widget.starImg,
+                  height: 23,
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                Text(
+                  widget.rating,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16.0,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                Text(
+                  widget.rating2,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16.0,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
     );
   }
 }

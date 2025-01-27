@@ -10,13 +10,17 @@ class OrdersPage extends StatefulWidget {
   final Function goToOrdersPage;
   final Function goToProfilePage;
   final GlobalKey<ScaffoldState> scaffoldKey;
+  final Function(bool) onToggleDarkMode;
+  final bool isDarkMode;
 
   const OrdersPage(
       {super.key,
       required this.goToOrdersPage,
       required this.goToCategoriesPage,
       required this.goToProfilePage,
-      required this.scaffoldKey});
+      required this.scaffoldKey,
+      required this.onToggleDarkMode,
+      required this.isDarkMode});
 
   @override
   _OrdersPageState createState() => _OrdersPageState();
@@ -671,8 +675,11 @@ class _OrdersPageState extends State<OrdersPage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => OrderDetails(
-                          key: UniqueKey(),
-                          goToOrdersPage: widget.goToOrdersPage),
+                        key: UniqueKey(),
+                        goToOrdersPage: widget.goToOrdersPage,
+                        onToggleDarkMode: widget.onToggleDarkMode,
+                        isDarkMode: widget.isDarkMode,
+                      ),
                     ),
                   );
                 },
@@ -715,8 +722,11 @@ class _OrdersPageState extends State<OrdersPage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => OrderDetails(
-                                key: UniqueKey(),
-                                goToOrdersPage: widget.goToOrdersPage),
+                              key: UniqueKey(),
+                              goToOrdersPage: widget.goToOrdersPage,
+                              onToggleDarkMode: widget.onToggleDarkMode,
+                              isDarkMode: widget.isDarkMode,
+                            ),
                           ),
                         );
                       },

@@ -545,13 +545,16 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                 goToProfilePage: _goToProfilePage,
                 scaffoldKey: _scaffoldKey,
                 selectedImageIndex: _selectedImageIndex,
+                onToggleDarkMode: widget.onToggleDarkMode,
+                isDarkMode: widget.isDarkMode,
               ),
               OrdersPage(
-                goToCategoriesPage: _goToCategoriesPage,
-                goToOrdersPage: _goToOrdersPage,
-                goToProfilePage: _goToProfilePage,
-                scaffoldKey: _scaffoldKey,
-              ),
+                  goToCategoriesPage: _goToCategoriesPage,
+                  goToOrdersPage: _goToOrdersPage,
+                  goToProfilePage: _goToProfilePage,
+                  scaffoldKey: _scaffoldKey,
+                  onToggleDarkMode: widget.onToggleDarkMode,
+                  isDarkMode: widget.isDarkMode),
               ProfilePage(
                 goToCategoriesPage: _goToCategoriesPage,
                 goToOrdersPage: _goToOrdersPage,
@@ -708,16 +711,18 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
       );
       // await prefs.remove('user');
 
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => const IntroPage(),
-      //   ),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInPage(
+              key: UniqueKey(),
+              onToggleDarkMode: widget.onToggleDarkMode,
+              isDarkMode: widget.isDarkMode),
+        ),
+      );
       setState(() {
         isLoading = false;
       });
-      Navigator.pop(context);
       return;
     }
 

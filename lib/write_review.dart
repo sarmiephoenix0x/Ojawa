@@ -2,9 +2,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class WriteReviewPage extends StatefulWidget {
-  const WriteReviewPage({super.key});
+  final int productId;
+  final String productImg;
+  final int rating;
+  const WriteReviewPage(
+      {super.key,
+      required this.productId,
+      required this.productImg,
+      required this.rating});
 
   @override
   _WriteReviewPageState createState() => _WriteReviewPageState();
@@ -19,6 +29,13 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
   final double maxWidth = 360;
   final double maxHeight = 360;
   bool isLoading = false;
+  final storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _starCount = widget.rating;
+  }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -72,10 +89,6 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
     }
   }
 
-  void _submitReview() {
-    // Logic to submit the review
-  }
-
   Widget _buildStarRating(int starCount) {
     return Row(
       children: List.generate(5, (index) {
@@ -93,6 +106,63 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
         );
       }),
     );
+  }
+
+  Future<void> _submitFeedback() async {
+    if (_starCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please select a rating before submitting.")),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+    final String _review = _reviewController.text.trim();
+    final String _header = _titleController.text.trim();
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final String apiUrl = "https://ojawa-api.onrender.com/api/Feedbacks";
+    final Map<String, dynamic> feedbackData = {
+      "productId": widget.productId, // Replace with the actual product ID
+      "rating": _starCount,
+      "review": {
+        "headline": _header,
+        "body": _review,
+      }
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode(feedbackData),
+      );
+
+      if (response.statusCode == 200) {
+        _submittedReview();
+      } else {
+        _showCustomSnackBar(
+          context,
+          'Failed to submit review. Please try again.',
+          isError: true,
+        );
+      }
+    } catch (error) {
+      print("An error occurred: $error");
+      _showCustomSnackBar(
+        context,
+        'An error occurred',
+        isError: true,
+      );
+    } finally {
+      setState(() {
+        isLoading = false; // Hide loading indicator
+      });
+    }
   }
 
   void _submittedReview() {
@@ -162,25 +232,49 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                     ),
                   ),
                 ),
-                child: isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Done',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                child: const Text(
+                  'Done',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _showCustomSnackBar(BuildContext context, String message,
+      {bool isError = false}) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle_outline,
+            color: isError ? Colors.red : Colors.green,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(10),
+      duration: const Duration(seconds: 3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -201,8 +295,8 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(
-                  'images/Img2.png', // Replace with the item's image asset or network path
+                Image.network(
+                  widget.productImg,
                   height: 70,
                   width: 70,
                   fit: BoxFit.cover,
@@ -344,11 +438,10 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
               padding: const EdgeInsets.symmetric(horizontal: 0.0),
               child: ElevatedButton(
                 onPressed: () {
-                  _submittedReview();
-                  // if (_titleController.text.trim().isNotEmpty &&
-                  //     _reviewController.text.trim().isNotEmpty) {
-                  //   _submitReview();
-                  // }
+                  if (_titleController.text.trim().isNotEmpty &&
+                      _reviewController.text.trim().isNotEmpty) {
+                    _submitFeedback();
+                  }
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith<Color>(

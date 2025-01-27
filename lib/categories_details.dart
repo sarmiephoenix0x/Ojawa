@@ -9,7 +9,10 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
 
 class CategoriesDetails extends StatefulWidget {
-  const CategoriesDetails({super.key});
+  final Function(bool) onToggleDarkMode;
+  final bool isDarkMode;
+  const CategoriesDetails(
+      {super.key, required this.onToggleDarkMode, required this.isDarkMode});
 
   @override
   _CategoriesDetailsState createState() => _CategoriesDetailsState();
@@ -329,6 +332,9 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                             key: UniqueKey(),
                                             id: category['id'],
                                             discountOnly: false,
+                                            onToggleDarkMode:
+                                                widget.onToggleDarkMode,
+                                            isDarkMode: widget.isDarkMode,
                                           ),
                                         ),
                                       );
@@ -392,6 +398,8 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                               builder: (context) => TopCategoriesDetails(
                                 key: UniqueKey(),
                                 discountOnly: false,
+                                onToggleDarkMode: widget.onToggleDarkMode,
+                                isDarkMode: widget.isDarkMode,
                               ),
                             ),
                           );
@@ -497,18 +505,19 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
           context,
           MaterialPageRoute(
             builder: (context) => Productdetails(
-              key: UniqueKey(),
-              itemId: itemId,
-              name: name,
-              details: details,
-              amount: amount,
-              slashedPrice: slashedPrice,
-              rating: rating,
-              rating2: rating2,
-              img: img,
-              discount: discount,
-              starImg: starImg,
-            ),
+                key: UniqueKey(),
+                itemId: itemId,
+                name: name,
+                details: details,
+                amount: amount,
+                slashedPrice: slashedPrice,
+                rating: rating,
+                rating2: rating2,
+                img: img,
+                discount: discount,
+                starImg: starImg,
+                onToggleDarkMode: widget.onToggleDarkMode,
+                isDarkMode: widget.isDarkMode),
           ),
         );
       },

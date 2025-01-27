@@ -8,6 +8,8 @@ class CategoriesPage extends StatefulWidget {
   final Function goToProfilePage;
   final GlobalKey<ScaffoldState> scaffoldKey;
   final int selectedImageIndex;
+  final Function(bool) onToggleDarkMode;
+  final bool isDarkMode;
 
   const CategoriesPage(
       {super.key,
@@ -15,7 +17,9 @@ class CategoriesPage extends StatefulWidget {
       required this.goToOrdersPage,
       required this.goToProfilePage,
       required this.scaffoldKey,
-      required this.selectedImageIndex});
+      required this.selectedImageIndex,
+      required this.onToggleDarkMode,
+      required this.isDarkMode});
 
   @override
   _CategoriesPageState createState() => _CategoriesPageState();
@@ -153,8 +157,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    CategoriesDetails(key: UniqueKey()),
+                                builder: (context) => CategoriesDetails(
+                                  key: UniqueKey(),
+                                  onToggleDarkMode: widget.onToggleDarkMode,
+                                  isDarkMode: widget.isDarkMode,
+                                ),
                               ),
                             );
                           },
