@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:ojawa/sign_in_page.dart';
 
 class TopCategoriesDetails extends StatefulWidget {
   final int? id;
@@ -316,6 +317,36 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
     }
   }
 
+  void _showCustomSnackBar(BuildContext context, String message,
+      {bool isError = false}) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle_outline,
+            color: isError ? Colors.red : Colors.green,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(10),
+      duration: const Duration(seconds: 3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   void _sortBy() {
     showModalBottomSheet(
       context: context,
@@ -514,7 +545,29 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                       'images/bag.png',
                       height: 22,
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      final String? accessToken =
+                          await storage.read(key: 'accessToken');
+                      if (accessToken == null) {
+                        _showCustomSnackBar(
+                          context,
+                          'You are not logged in.',
+                          isError: true,
+                        );
+                        // await prefs.remove('user');
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SignInPage(
+                                key: UniqueKey(),
+                                onToggleDarkMode: widget.onToggleDarkMode,
+                                isDarkMode: widget.isDarkMode),
+                          ),
+                        );
+
+                        return;
+                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
