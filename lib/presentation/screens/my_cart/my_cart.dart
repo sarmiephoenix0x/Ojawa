@@ -392,23 +392,32 @@ class _MyCartState extends State<MyCart> {
                     height: 55,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PaymentMethodPage(
-                                key: UniqueKey(),
-                                totalWithDiscount:
-                                    myCartController.totalWithDiscount),
-                          ),
-                        );
+                        if (myCartController.totalWithDiscount > 0) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PaymentMethodPage(
+                                  key: UniqueKey(),
+                                  totalWithDiscount:
+                                      myCartController.totalWithDiscount),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1D4ED8),
+                        backgroundColor: myCartController.totalWithDiscount != 0
+                            ? const Color(0xFF1D4ED8)
+                            : Colors.grey,
                         foregroundColor: Colors.white,
                         elevation: 4.0,
-                        shape: const RoundedRectangleBorder(
-                          side: BorderSide(width: 3, color: Color(0xFF1D4ED8)),
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                              width: 3,
+                              color: myCartController.totalWithDiscount != 0
+                                  ? const Color(0xFF1D4ED8)
+                                  : Colors.grey),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(15)),
                         ),
                       ),
                       child: const Text(

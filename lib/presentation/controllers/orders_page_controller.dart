@@ -24,6 +24,7 @@ class OrdersPageController extends ChangeNotifier {
   bool get searchLoading => _searchLoading;
   List<dynamic> get searchResults => _searchResults;
   int? get selectedRadioValue => _selectedRadioValue;
+  int? get selectedRadioValue2 => _selectedRadioValue2;
 
   TextEditingController get searchController => _searchController;
 
@@ -36,6 +37,11 @@ class OrdersPageController extends ChangeNotifier {
 
   void setSelectedRadioValue(int value) {
     _selectedRadioValue = value;
+    notifyListeners();
+  }
+
+  void setSelectedRadioValue2(int value) {
+    _selectedRadioValue2 = value;
     notifyListeners();
   }
 

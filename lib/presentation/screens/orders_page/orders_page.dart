@@ -72,7 +72,9 @@ class _OrdersPageState extends State<OrdersPage> {
                               filterBy(
                                 context,
                                 ordersPageController.setSelectedRadioValue,
+                                ordersPageController.setSelectedRadioValue2,
                                 ordersPageController.selectedRadioValue!,
+                                ordersPageController.selectedRadioValue2!,
                               );
                             },
                             style: ButtonStyle(
