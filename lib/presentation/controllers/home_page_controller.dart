@@ -1,0 +1,489 @@
+import 'dart:convert';
+
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/material.dart' hide CarouselController;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
+import '../../core/widgets/custom_snackbar.dart';
+import '../screens/auth/sign_in_page.dart';
+import '../screens/home_page/widgets/dialogs/no_internet_dialog.dart';
+import '../screens/home_page/widgets/dialogs/show_error_dialog.dart';
+import '../screens/home_page/widgets/dialogs/timeout_dialog.dart';
+import '../screens/intro_page/intro_page.dart';
+import '../screens/my_cart/my_cart.dart';
+
+class HomePageController extends ChangeNotifier {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  List _searchResults = [];
+  bool _searchLoading = false;
+  bool _isSearching = false;
+  List<String> _imagePaths = [
+    "images/Banner.png",
+    "images/Banner.png",
+    "images/Banner.png",
+  ];
+  int _current = 0;
+  final CarouselController _controller = CarouselController();
+  Map<String, bool> _isLikedMap = {};
+  int? _selectedRadioValue = 0;
+  final storage = const FlutterSecureStorage();
+  ValueNotifier<String?> _selectedFilter = ValueNotifier<String?>(null);
+  bool _isFilterActive = false;
+  int? userId;
+  String? userName;
+  String? _profileImage;
+  String? email;
+  String? state;
+  String? phone;
+  String? gender;
+  String? role;
+  List<Map<String, dynamic>> products = [];
+  bool _isLoading = false;
+  late SharedPreferences prefs;
+  Timer? _timer;
+  int _remainingTime = 0;
+  bool _isLoading2 = false;
+  bool _isRefreshing = false;
+  StreamSubscription<ConnectivityResult>? connectivitySubscription;
+  late ScrollController _scrollController;
+  int pageNum = 1;
+  bool _isFetchingMore = false;
+
+  HomePageController() {
+    initialize();
+  }
+
+  //public getters
+  int get remainingTime => _remainingTime;
+  bool get isSearching => _isSearching;
+  bool get isLoading => _isLoading;
+  bool get isLoading2 => _isLoading2;
+  bool get searchLoading => _searchLoading;
+  List<dynamic> get searchResults => _searchResults;
+  int get current => _current;
+  bool get isFetchingMore => _isFetchingMore;
+  List<String> get imagePaths => _imagePaths;
+  bool get isFilterActive => _isFilterActive;
+  ValueNotifier<String?> get selectedFilter => _selectedFilter;
+  int? get selectedRadioValue => _selectedRadioValue;
+
+  TextEditingController get searchController => _searchController;
+  CarouselController get controller => _controller;
+  ScrollController get scrollController => _scrollController;
+
+  FocusNode get searchFocusNode => _searchFocusNode;
+
+  void setIsSearching(bool value) {
+    _isSearching = value;
+    notifyListeners();
+  }
+
+  void setCurrent(int value) {
+    _current = value;
+    notifyListeners();
+  }
+
+  void setIsFilterActive(bool value) {
+    _isFilterActive = value;
+    notifyListeners();
+  }
+
+  void setSelectedRadioValue(int value) {
+    _selectedRadioValue = value;
+    notifyListeners();
+  }
+
+  void initialize() {
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+    connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      if (result != ConnectivityResult.none) {
+        //fetchUserProfile();
+        if (products.isEmpty) {
+          fetchProducts(overwrite: true);
+        }
+      }
+    });
+    _remainingTime =
+        11 * 3600 + 15 * 60 + 4; // Example: 11 hours, 15 minutes, 4 seconds
+    _startTimer();
+    initializePrefs();
+    // fetchUserProfile();
+    fetchProducts(overwrite: true);
+  }
+
+  Future<void> initializePrefs() async {
+    prefs = await SharedPreferences.getInstance();
+  }
+
+  Future<bool> checkForToken() async {
+    // Read the access token from secure storage
+    final accessToken = await storage.read(key: 'accessToken');
+    return accessToken != null; // Check if token exists
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_remainingTime > 0) {
+        _remainingTime--;
+        notifyListeners();
+      } else {
+        _timer?.cancel(); // Stop the timer when it reaches zero
+      }
+    });
+  }
+
+  void _onScroll() {
+    //if (_scrollController.position.pixels >=
+    //         _scrollController.position.maxScrollExtent &&
+    //     !_isLoading2 &&
+    //     !_isFetchingMore) {
+    //   fetchMoreProducts(); // Trigger fetching more products
+    // }
+  }
+
+  Future<void> fetchProducts({bool overwrite = false}) async {
+    // Prevent multiple fetches by checking `_isLoading2`
+    if (_isLoading2) return;
+
+    _isLoading2 = true;
+    notifyListeners();
+
+    if (overwrite) {
+      // Clear the existing products if overwriting
+      products.clear();
+      pageNum = 1; // Reset to the first page
+    }
+
+    await _fetchProductsForPage(pageNum);
+
+    _isLoading2 = false;
+    notifyListeners();
+  }
+
+  Future<void> fetchMoreProducts() async {
+    if (_isFetchingMore) return; // Prevent multiple fetches
+
+    _isFetchingMore = true;
+    notifyListeners();
+
+    pageNum++; // Increment the page number for the next set of products
+    await _fetchProductsForPage(pageNum);
+
+    _isFetchingMore = false;
+    notifyListeners();
+  }
+
+  Future<void> _fetchProductsForPage(int page) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://ojawa-api.onrender.com/api/Products?page=$page';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+        print('Response Data: $responseData');
+        //_showResponseDialog(context, responseData);
+
+        products.addAll(responseData.map((product) {
+          String discount = product['hasDiscount'] == true
+              ? '${product['discountRate']}% OFF'
+              : '';
+          String uptoDiscount = product['hasDiscount'] == true
+              ? 'Upto ${product['discountRate']}% OFF'
+              : '';
+          return {
+            'id': product['id'],
+            'name': product['name'],
+            'img': product['productImageUrl'],
+            'details': product['description'],
+            'amount': '\$${product['price']}',
+            'slashedPrice': product['hasDiscount'] == true
+                ? '\$${product['discountPrice']}'
+                : '',
+            'isInFavorite': product['isInFavorite'] ?? false,
+            'discount': discount,
+            'uptoDiscount': uptoDiscount,
+            'starImg': 'images/Rating Icon.png',
+            'rating': product['rating'].toString(),
+            'rating2': '(0)',
+            'hasDiscount': product['hasDiscount'],
+          };
+        }).toList());
+        notifyListeners();
+      } else {
+        print('Error fetching products: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
+
+  Future<int?> getUserId() async {
+    try {
+      // Retrieve the userId from storage
+      String? userIdString =
+          await storage.read(key: 'userId'); // Use the correct key for userId
+      if (userIdString != null) {
+        return int.tryParse(userIdString); // Convert the string to an integer
+      }
+    } catch (error) {
+      print('Error retrieving userId: $error');
+    }
+    return null; // Return null if userId is not found or an error occurs
+  }
+
+  Future<void> fetchUserProfile() async {
+    // Retrieve the userId from storage
+    userId =
+        await getUserId(); // Assuming this retrieves the userId from Flutter Secure Storage
+    final String? accessToken = await storage.read(
+        key: 'accessToken'); // Use the correct key for access token
+    final url =
+        'https://ojawa-api.onrender.com/api/Users/$userId'; // Update the URL to the correct endpoint
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+
+        // Access the user data from the nested "data" key
+        final userData = responseData['data'];
+        userName = userData['username'];
+        email = userData['email'];
+        state = userData['state'];
+        phone = userData['phone'];
+        gender = userData['gender'];
+        role = userData['role'];
+        final profilePictureUrl =
+            userData['profilePictureUrl']?.toString().trim();
+
+        _profileImage =
+            (profilePictureUrl != null && profilePictureUrl.isNotEmpty)
+                ? '$profilePictureUrl/download?project=66e4476900275deffed4'
+                : '';
+        _isLoading = false; // Set loading to false after data is fetched
+        notifyListeners();
+        print("Profile Loaded: ${response.body}");
+        print("Profile Image URL: $_profileImage");
+      } else {
+        print('Error fetching profile: ${response.statusCode}');
+
+        _isLoading = false; // Set loading to false on error
+        notifyListeners();
+      }
+    } catch (error) {
+      print('Error: $error');
+
+      _isLoading = false; // Set loading to false on exception
+      notifyListeners();
+    }
+  }
+
+  Future<void> performSearch(String query) async {
+    _searchLoading = true;
+    notifyListeners();
+    final String? accessToken = await storage.read(key: 'accessToken');
+    final url = 'https://signal.payguru.com.ng/api/search?query=$query';
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    // Perform GET request
+    final response = await http.get(Uri.parse(url), headers: headers);
+
+    if (response.statusCode == 200) {
+      _searchResults = jsonDecode(response.body);
+      _searchLoading = false;
+      notifyListeners();
+    } else if (response.statusCode == 404) {
+      _searchResults = [];
+      _searchLoading = false;
+      notifyListeners();
+      CustomSnackbar.show(
+        'No results found for the query.',
+        isError: true,
+      );
+    } else if (response.statusCode == 422 || response.statusCode == 401) {
+      _searchResults = [];
+      _searchLoading = false;
+      notifyListeners();
+      final errorMessage = jsonDecode(response.body)['message'];
+      CustomSnackbar.show(
+        errorMessage,
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> logout(BuildContext context,
+      dynamic Function(bool) onToggleDarkMode, bool isDarkMode) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    if (accessToken == null) {
+      CustomSnackbar.show(
+        'You are not logged in.',
+        isError: true,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      Navigator.pop(context);
+      return;
+    }
+
+    await storage.delete(key: 'accessToken');
+    // await prefs.remove('user');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IntroPage(
+            key: UniqueKey(),
+            onToggleDarkMode: onToggleDarkMode,
+            isDarkMode: isDarkMode),
+      ),
+    );
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> updateFavoriteStatus(
+      BuildContext context,
+      int productId,
+      bool isFavorite,
+      dynamic Function(bool) onToggleDarkMode,
+      bool isDarkMode) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    if (accessToken == null) {
+      CustomSnackbar.show(
+        'You are not logged in.',
+        isError: true,
+      );
+      // await prefs.remove('user');
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInPage(
+              key: UniqueKey(),
+              onToggleDarkMode: onToggleDarkMode,
+              isDarkMode: isDarkMode),
+        ),
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+    final url = 'https://ojawa-api.onrender.com/api/Favorites/$productId';
+
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'isFavorite': isFavorite,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Favorite status updated successfully.');
+      } else {
+        print(
+            'Failed to update favorite status: ${response.statusCode}, ${response.body}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
+
+  Future<void> refreshData(BuildContext context) async {
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        showNoInternetDialog(context);
+
+        _isRefreshing = false;
+        notifyListeners();
+        return;
+      }
+
+      await Future.any([
+        Future.delayed(const Duration(seconds: 15), () {
+          throw TimeoutException('The operation took too long.');
+        }),
+        fetchProducts(overwrite: true),
+      ]);
+    } catch (e) {
+      if (e is TimeoutException) {
+        showTimeoutDialog(context);
+      } else {
+        showErrorDialog(context, e.toString());
+      }
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  void loadCart(BuildContext context, dynamic Function(bool) onToggleDarkMode,
+      bool isDarkMode) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    if (accessToken == null) {
+      CustomSnackbar.show(
+        'You are not logged in.',
+        isError: true,
+      );
+      // await prefs.remove('user');
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInPage(
+              key: UniqueKey(),
+              onToggleDarkMode: onToggleDarkMode,
+              isDarkMode: isDarkMode),
+        ),
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MyCart(key: UniqueKey()),
+      ),
+    );
+  }
+}
