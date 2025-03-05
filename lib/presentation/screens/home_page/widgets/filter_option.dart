@@ -13,47 +13,45 @@ class FilterOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String?>(
-      valueListenable: Provider.of<HomePageController>(context, listen: false)
-          .selectedFilter,
-      builder: (context, selectedOption, child) {
-        bool isChecked = selectedOption == text;
+    return Consumer<HomePageController>(
+        builder: (context, homePageController, child) {
+      return ValueListenableBuilder<String?>(
+        valueListenable: homePageController.selectedFilter,
+        builder: (context, selectedOption, child) {
+          bool isChecked = selectedOption == text;
 
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Checkbox(
-              activeColor: const Color(0xFF008000),
-              checkColor: Colors.white,
-              value: isChecked,
-              onChanged: (bool? value) {
-                // Toggle the checkbox for the current option
-                if (value == true) {
-                  // Set this option as selected, unchecking others
-                  Provider.of<HomePageController>(context, listen: false)
-                      .selectedFilter
-                      .value = text;
-                } else {
-                  // Deselect the option
-                  Provider.of<HomePageController>(context, listen: false)
-                      .selectedFilter
-                      .value = null;
-                }
-              },
-            ),
-            Text(
-              text,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontFamily: 'Poppins',
-                fontSize: 15.0,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.none,
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Checkbox(
+                activeColor: const Color(0xFF008000),
+                checkColor: Colors.white,
+                value: isChecked,
+                onChanged: (bool? value) {
+                  // Toggle the checkbox for the current option
+                  if (value == true) {
+                    // Set this option as selected, unchecking others
+                    homePageController.selectedFilter.value = text;
+                  } else {
+                    // Deselect the option
+                    homePageController.selectedFilter.value = null;
+                  }
+                },
               ),
-            ),
-          ],
-        );
-      },
-    );
+              Text(
+                text,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontFamily: 'Poppins',
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    });
   }
 }

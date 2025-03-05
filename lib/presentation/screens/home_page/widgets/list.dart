@@ -15,33 +15,33 @@ class ListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Provider.of<HomePageController>(context, listen: false)
-            .setSelectedRadioValue(value);
-      },
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 20.0),
-        decoration: BoxDecoration(
-          color: Provider.of<HomePageController>(context, listen: false)
-                      .selectedRadioValue ==
-                  value
-              ? const Color(0xFFFFFFFF)
-              : Colors.transparent,
-          borderRadius: const BorderRadius.all(
-            Radius.circular(0.0),
+    return Consumer<HomePageController>(
+        builder: (context, homePageController, child) {
+      return InkWell(
+        onTap: () {
+          homePageController.setSelectedRadioValue(value);
+        },
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 20.0),
+          decoration: BoxDecoration(
+            color: homePageController.selectedRadioValue == value
+                ? const Color(0xFFFFFFFF)
+                : Colors.transparent,
+            borderRadius: const BorderRadius.all(
+              Radius.circular(0.0),
+            ),
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16.0,
+              color: Colors.black,
+            ),
           ),
         ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 16.0,
-            color: Colors.black,
-          ),
-        ),
-      ),
-    );
+      );
+    });
   }
 }

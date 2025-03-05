@@ -12,6 +12,7 @@ void filterBy(BuildContext context, void Function(int) controllerMethod,
     builder: (BuildContext context) {
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
+          int localSelectedValue = controllerVariable;
           return SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -45,27 +46,37 @@ void filterBy(BuildContext context, void Function(int) controllerMethod,
                 ),
                 ListTile(
                   title: Filter(
-                      text: "Upcoming",
-                      value: 1,
-                      controllerMethod: controllerMethod,
-                      controllerVariable: controllerVariable),
-                  onTap: null,
+                    text: "Upcoming",
+                    value: 1,
+                    controllerMethod: (val) {
+                      setState(
+                          () => localSelectedValue = val); // Update modal state
+                    },
+                    controllerVariable: localSelectedValue, // Local UI update
+                  ),
+                  onTap: () {},
                 ),
                 ListTile(
                   title: Filter(
-                      text: "Cancelled",
-                      value: 2,
-                      controllerMethod: controllerMethod,
-                      controllerVariable: controllerVariable),
-                  onTap: null,
+                    text: "Cancelled",
+                    value: 2,
+                    controllerMethod: (val) {
+                      setState(() => localSelectedValue = val);
+                    },
+                    controllerVariable: localSelectedValue,
+                  ),
+                  onTap: () {},
                 ),
                 ListTile(
                   title: Filter(
-                      text: "Delivered",
-                      value: 3,
-                      controllerMethod: controllerMethod,
-                      controllerVariable: controllerVariable),
-                  onTap: null,
+                    text: "Delivered",
+                    value: 3,
+                    controllerMethod: (val) {
+                      setState(() => localSelectedValue = val);
+                    },
+                    controllerVariable: localSelectedValue,
+                  ),
+                  onTap: () {},
                 ),
                 const Divider(), // Divider between the two sections
                 const Padding(
@@ -83,34 +94,46 @@ void filterBy(BuildContext context, void Function(int) controllerMethod,
                 ),
                 ListTile(
                   title: Filter(
-                      text: "Last 30 Days",
-                      value: 1,
-                      controllerMethod: controllerMethod,
-                      controllerVariable: controllerVariable),
+                    text: "Last 30 Days",
+                    value: 1,
+                    controllerMethod: (val) {
+                      setState(() => localSelectedValue = val);
+                    },
+                    controllerVariable: localSelectedValue,
+                  ),
                   onTap: null,
                 ),
                 ListTile(
                   title: Filter(
-                      text: "6 Months",
-                      value: 2,
-                      controllerMethod: controllerMethod,
-                      controllerVariable: controllerVariable),
+                    text: "6 Months",
+                    value: 2,
+                    controllerMethod: (val) {
+                      setState(() => localSelectedValue = val);
+                    },
+                    controllerVariable: localSelectedValue,
+                  ),
                   onTap: null,
                 ),
                 ListTile(
                   title: Filter(
-                      text: "2024",
-                      value: 3,
-                      controllerMethod: controllerMethod,
-                      controllerVariable: controllerVariable),
+                    text: "2024",
+                    value: 3,
+                    controllerMethod: (val) {
+                      setState(() => localSelectedValue = val);
+                    },
+                    controllerVariable: localSelectedValue,
+                  ),
                   onTap: null,
                 ),
                 ListTile(
                   title: Filter(
-                      text: "2023",
-                      value: 1,
-                      controllerMethod: controllerMethod,
-                      controllerVariable: controllerVariable),
+                    text: "2023",
+                    value: 1,
+                    controllerMethod: (val) {
+                      setState(() => localSelectedValue = val);
+                    },
+                    controllerVariable: localSelectedValue,
+                  ),
                   onTap: null,
                 ),
                 SizedBox(

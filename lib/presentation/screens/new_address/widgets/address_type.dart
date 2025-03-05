@@ -15,33 +15,30 @@ class AddressType extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Row(
         children: [
-          InkWell(
-            onTap: () {
-              Provider.of<NewAddressController>(context, listen: false)
-                  .setSelectedRadioValue(value); // Update selected value
-            },
-            child: Container(
-              height: 15,
-              width: 15,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(55.0),
-                border: Border.all(
-                  width:
-                      Provider.of<NewAddressController>(context, listen: false)
-                                  .selectedRadioValue ==
-                              value
-                          ? 3
-                          : 0.8,
-                  color:
-                      Provider.of<NewAddressController>(context, listen: false)
-                                  .selectedRadioValue ==
-                              value
-                          ? const Color(0xFF1D4ED8)
-                          : Theme.of(context).colorScheme.onSurface,
+          Consumer<NewAddressController>(
+              builder: (context, newAddressController, child) {
+            return InkWell(
+              onTap: () {
+                newAddressController
+                    .setSelectedRadioValue(value); // Update selected value
+              },
+              child: Container(
+                height: 15,
+                width: 15,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(55.0),
+                  border: Border.all(
+                    width: newAddressController.selectedRadioValue == value
+                        ? 3
+                        : 0.8,
+                    color: newAddressController.selectedRadioValue == value
+                        ? const Color(0xFF1D4ED8)
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
           SizedBox(width: MediaQuery.of(context).size.width * 0.02),
           Text(
             text,
