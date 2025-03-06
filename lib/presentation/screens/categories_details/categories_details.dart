@@ -285,9 +285,7 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                     starImg: product['starImg']!,
                                     rating: product['rating']!,
                                     rating2: product['rating2']!,
-                                    liked: categoriesDetailsController
-                                            .isLikedMap[fullImgList[0]] ??
-                                        false,
+                                    liked: product['isInFavorite'],
                                     onToggleDarkMode: widget.onToggleDarkMode,
                                     isDarkMode: widget.isDarkMode,
                                   ),
