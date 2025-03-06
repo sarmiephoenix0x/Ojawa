@@ -115,6 +115,7 @@ class MyCartController extends ChangeNotifier {
       print('Response Data: $responseData');
       if (response.statusCode == 200) {
         _cartItems.removeWhere((item) => item['id'] == cartItemId);
+        calculateCartSummary();
         notifyListeners();
         CustomSnackbar.show(
           'Item removed from cart',

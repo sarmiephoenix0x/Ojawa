@@ -89,6 +89,8 @@ class SignInController extends ChangeNotifier {
     print('Response Data: $responseData');
 
     if (response.statusCode == 200) {
+      _isLoading = true;
+      notifyListeners();
       final Map<String, dynamic> responseData =
           json.decode(response.body); // Decode the response body
       final String accessToken = responseData['token'];

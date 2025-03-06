@@ -63,6 +63,7 @@ class TopCategoriesDetailsController extends ChangeNotifier {
         }
       }
     });
+
     fetchProducts(overwrite: true);
   }
 
@@ -75,31 +76,38 @@ class TopCategoriesDetailsController extends ChangeNotifier {
 
   void searchProducts(String query) {
     _searchQuery = query;
-    _isSearching = query.isNotEmpty; // Set searching state based on query
+    _isSearching = query.isNotEmpty;
 
     if (_isSearching) {
-      // Check if products are filtered
+      // Decide whether to search all products or only discounted ones
       List<Map<String, dynamic>> sourceList =
           discountOnly ? filteredProducts : products;
 
       _searchResults = sourceList.where((product) {
-        // Check for null to avoid NoSuchMethodError
-        final productName = product['name'];
-        return productName != null &&
-            productName.toLowerCase().contains(query.toLowerCase());
+        final String name = product['name']?.toLowerCase() ?? '';
+        final String description =
+            product['details']?.toLowerCase() ?? ''; // Check description too
+        final String lowerQuery = query.toLowerCase();
+
+        return name.contains(lowerQuery) || description.contains(lowerQuery);
       }).toList();
     } else {
-      searchResults.clear(); // Clear search results if query is empty
+      _searchResults.clear(); // Clear search results if query is empty
     }
     notifyListeners();
   }
 
-  void filterProducts() {
-    filteredProducts = products.where((product) {
-      // Add your filtering logic here
-      return product['hasDiscount'] == true;
-    }).toList();
-    notifyListeners();
+  List<Map<String, dynamic>> getActiveProducts() {
+    if (isSearching) {
+      return searchResults.isNotEmpty
+          ? searchResults
+          : []; // Prevent null issues
+    }
+    if (discountOnly) {
+      return filteredProducts.isNotEmpty ? filteredProducts : [];
+    } else {
+      return products.isNotEmpty ? products : [];
+    }
   }
 
   void _onScroll() {
@@ -119,7 +127,11 @@ class TopCategoriesDetailsController extends ChangeNotifier {
 
     if (overwrite) {
       // Clear existing products and reset pagination
-      products.clear();
+      if (discountOnly) {
+        filteredProducts.clear();
+      } else {
+        products.clear();
+      }
       pageNum = 1;
       hasMore = true; // Reset `hasMore` for a fresh fetch
     }
@@ -177,8 +189,13 @@ class TopCategoriesDetailsController extends ChangeNotifier {
         } else {
           // Filter out duplicate products
           final newProducts = responseData.where((product) {
-            return !products.any(
-                (existingProduct) => existingProduct['id'] == product['id']);
+            if (discountOnly) {
+              return !filteredProducts.any(
+                  (existingProduct) => existingProduct['id'] == product['id']);
+            } else {
+              return !products.any(
+                  (existingProduct) => existingProduct['id'] == product['id']);
+            }
           }).map((product) {
             String discount = product['hasDiscount'] == true
                 ? '${product['discountRate']}% OFF'
@@ -206,7 +223,16 @@ class TopCategoriesDetailsController extends ChangeNotifier {
           }).toList();
 
           if (newProducts.isNotEmpty) {
-            products.addAll(newProducts);
+            if (discountOnly) {
+              filteredProducts
+                  .addAll(newProducts.where((p) => p['hasDiscount'] == true));
+              print(
+                  "Filtered products count after adding: ${filteredProducts.length}");
+              notifyListeners();
+            } else {
+              products.addAll(newProducts);
+              notifyListeners();
+            }
           } else {
             hasMore = false; // No new products means end of list
           }
@@ -241,8 +267,13 @@ class TopCategoriesDetailsController extends ChangeNotifier {
           hasMore = false;
         } else {
           final newProducts = responseData.where((product) {
-            return !products.any(
-                (existingProduct) => existingProduct['id'] == product['id']);
+            if (discountOnly) {
+              return !filteredProducts.any(
+                  (existingProduct) => existingProduct['id'] == product['id']);
+            } else {
+              return !products.any(
+                  (existingProduct) => existingProduct['id'] == product['id']);
+            }
           }).map((product) {
             String discount = product['hasDiscount'] == true
                 ? '${product['discountRate']}% OFF'
@@ -270,7 +301,16 @@ class TopCategoriesDetailsController extends ChangeNotifier {
           }).toList();
 
           if (newProducts.isNotEmpty) {
-            products.addAll(newProducts);
+            if (discountOnly) {
+              filteredProducts
+                  .addAll(newProducts.where((p) => p['hasDiscount'] == true));
+              print(
+                  "Filtered products count after adding: ${filteredProducts.length}");
+              notifyListeners();
+            } else {
+              products.addAll(newProducts);
+              notifyListeners();
+            }
           } else {
             hasMore = false;
           }

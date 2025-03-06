@@ -49,10 +49,10 @@ void showLogoutDialog(
                               await onLogout(context);
                             } catch (e) {
                               print("Logout failed: $e");
+                              setState(() => isLoading = false);
                             } finally {
-                              if (dialogContext.mounted) {
-                                Navigator.of(dialogContext).pop();
-                              }
+                              setState(() => isLoading = false);
+                              Navigator.of(dialogContext).pop();
                             }
                           },
                           child: Text(

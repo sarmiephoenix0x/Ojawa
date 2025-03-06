@@ -89,6 +89,7 @@ class OrderDetailsController extends ChangeNotifier {
             'slashedPrice': product['hasDiscount'] == true
                 ? '\$${product['discountPrice']}'
                 : '',
+            'isInFavorite': product['isInFavorite'] ?? false,
             'discount': discount,
             'uptoDiscount': uptoDiscount,
             'starImg': 'images/Rating Icon.png',

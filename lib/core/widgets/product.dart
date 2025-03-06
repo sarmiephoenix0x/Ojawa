@@ -78,6 +78,7 @@ class _HotWidgetState extends State<Product> {
 
       if (response.statusCode == 200) {
         print('Favorite status updated successfully.');
+        setState(() {});
       } else {
         print(
             'Failed to update favorite status: ${response.statusCode}, ${response.body}');

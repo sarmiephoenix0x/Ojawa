@@ -31,10 +31,6 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
           id: widget.id, discountOnly: widget.discountOnly),
       child: Consumer<TopCategoriesDetailsController>(
           builder: (context, productDetailsController, child) {
-        if (widget.discountOnly == true) {
-          productDetailsController.filterProducts();
-        }
-
         return Scaffold(
           appBar: AppBar(
             title: productDetailsController.isSearching
@@ -157,7 +153,7 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                               color: Theme.of(context).colorScheme.onSurface,
                             )) // Show loader while loading
                           : Text(
-                              "${productDetailsController.isSearching ? productDetailsController.searchResults.length : (widget.discountOnly ? productDetailsController.filteredProducts.length : productDetailsController.products.length)} Items", // Show item count based on search or filter
+                              "${productDetailsController.isSearching ? productDetailsController.searchResults.length : productDetailsController.getActiveProducts().length} Items",
                               style: const TextStyle(fontSize: 14),
                               textAlign: TextAlign.center,
                             ),
@@ -199,12 +195,19 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                       scrollDirection:
                                           Axis.vertical, // Vertical scrolling
                                       itemCount: productDetailsController
-                                              .products.length +
-                                          1, // Add one for the loader
+                                              .getActiveProducts()
+                                              .isNotEmpty
+                                          ? productDetailsController
+                                                  .getActiveProducts()
+                                                  .length +
+                                              1
+                                          : 0, // Avoids index errors when the list is empty
+
                                       itemBuilder: (context, index) {
-                                        if (index ==
+                                        final activeProducts =
                                             productDetailsController
-                                                .products.length) {
+                                                .getActiveProducts();
+                                        if (index >= activeProducts.length) {
                                           // Show loader at the end
                                           return Container(
                                             alignment: Alignment.center,
@@ -220,8 +223,8 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                           );
                                         }
 
-                                        final product = productDetailsController
-                                            .products[index];
+                                        final product = activeProducts[index];
+
                                         List<String> imgList = [];
                                         if (product['img'] != null) {
                                           if (product['img'] is List<String>) {
@@ -344,12 +347,19 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                     scrollDirection:
                                         Axis.vertical, // Vertical scrolling
                                     itemCount: productDetailsController
-                                            .products.length +
-                                        1, // Add one for the loader
+                                            .getActiveProducts()
+                                            .isNotEmpty
+                                        ? productDetailsController
+                                                .getActiveProducts()
+                                                .length +
+                                            1
+                                        : 0, // Avoids index errors when the list is empty
+
                                     itemBuilder: (context, index) {
-                                      if (index ==
+                                      final activeProducts =
                                           productDetailsController
-                                              .products.length) {
+                                              .getActiveProducts();
+                                      if (index >= activeProducts.length) {
                                         // Show loader at the end
                                         return Container(
                                           alignment: Alignment.center,
@@ -365,8 +375,12 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                         );
                                       }
 
-                                      final product = productDetailsController
-                                          .products[index];
+                                      if (index >= activeProducts.length) {
+                                        return const SizedBox(); // Prevents accessing invalid indexes
+                                      }
+
+                                      final product = activeProducts[index];
+
                                       List<String> imgList = [];
                                       if (product['img'] != null) {
                                         if (product['img'] is List<String>) {
@@ -461,12 +475,19 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                     scrollDirection:
                                         Axis.vertical, // Vertical scrolling
                                     itemCount: productDetailsController
-                                            .products.length +
-                                        1, // Add one for the loader
+                                            .getActiveProducts()
+                                            .isNotEmpty
+                                        ? productDetailsController
+                                                .getActiveProducts()
+                                                .length +
+                                            1
+                                        : 0, // Avoids index errors when the list is empty
+
                                     itemBuilder: (context, index) {
-                                      if (index ==
+                                      final activeProducts =
                                           productDetailsController
-                                              .products.length) {
+                                              .getActiveProducts();
+                                      if (index >= activeProducts.length) {
                                         // Show loader at the end
                                         return Container(
                                           alignment: Alignment.center,
@@ -482,8 +503,12 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                         );
                                       }
 
-                                      final product = productDetailsController
-                                          .products[index];
+                                      if (index >= activeProducts.length) {
+                                        return const SizedBox(); // Prevents accessing invalid indexes
+                                      }
+
+                                      final product = activeProducts[index];
+
                                       List<String> imgList = [];
                                       if (product['img'] != null) {
                                         if (product['img'] is List<String>) {

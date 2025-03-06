@@ -146,14 +146,14 @@ class MainAppControllers extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await logout(context, onToggleDarkMode, isDarkMode);
+    logout(context, onToggleDarkMode, isDarkMode);
 
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> logout(BuildContext context,
-      dynamic Function(bool) onToggleDarkMode, bool isDarkMode) async {
+  void logout(BuildContext context, dynamic Function(bool) onToggleDarkMode,
+      bool isDarkMode) async {
     final String? accessToken = await storage.read(key: 'accessToken');
     if (accessToken == null) {
       CustomSnackbar.show(
@@ -180,17 +180,14 @@ class MainAppControllers extends ChangeNotifier {
     await storage.delete(key: 'accessToken');
     // await prefs.remove('user');
 
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => IntroPage(
+        builder: (context) => SignInPage(
             key: UniqueKey(),
             onToggleDarkMode: onToggleDarkMode,
             isDarkMode: isDarkMode),
       ),
     );
-
-    _isLoading = false;
-    notifyListeners();
   }
 }
