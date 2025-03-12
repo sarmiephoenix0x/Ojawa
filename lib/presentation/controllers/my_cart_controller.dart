@@ -1,9 +1,15 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/widgets/custom_snackbar.dart';
+import '../../core/widgets/error_dialog.dart';
+import '../../core/widgets/no_internet_dialog.dart';
+import '../../core/widgets/time_out_error_dialog.dart';
 
 class MyCartController extends ChangeNotifier {
   bool _isLoading = false;
@@ -16,6 +22,8 @@ class MyCartController extends ChangeNotifier {
   double _sumDiscount = 0.0;
   double _totalWithDiscount = 0.0;
   double _total = 0.0;
+
+  bool _isRefreshing = false;
 
   MyCartController() {
     initialize();
@@ -192,5 +200,37 @@ class MyCartController extends ChangeNotifier {
     print('Sum of Discounts: $_sumDiscount');
     print('Total (Prices + 8): $_total');
     print('Total with Discounts Applied: $_totalWithDiscount');
+  }
+
+  Future<void> refreshData(BuildContext context) async {
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        showNoInternetDialog(context, refreshData);
+
+        _isRefreshing = false;
+        notifyListeners();
+        return;
+      }
+
+      await Future.any([
+        Future.delayed(const Duration(seconds: 15), () {
+          throw TimeoutException('The operation took too long.');
+        }),
+        fetchCartItems(),
+      ]);
+    } catch (e) {
+      if (e is TimeoutException) {
+        showTimeoutDialog(context, refreshData);
+      } else {
+        showErrorDialog(context, e.toString());
+      }
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
+    }
   }
 }

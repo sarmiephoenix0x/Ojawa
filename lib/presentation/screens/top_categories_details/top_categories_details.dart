@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../core/widgets/filter_by.dart';
 import '../../../core/widgets/filter_widget.dart';
 import '../../../core/widgets/product.dart';
-import '../../../core/widgets/sort_by_sheets';
 import '../../controllers/top_categories_details_controller.dart';
+import 'widgets/bottom_sheets/sort_by_sheet.dart';
 
 class TopCategoriesDetails extends StatefulWidget {
   final int? id;

@@ -1,4 +1,3 @@
-import '../../data/services/apply_coupon_service.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'dart:convert';
@@ -6,6 +5,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
+
+import '../../core/widgets/error_dialog.dart';
+import '../../core/widgets/no_internet_dialog.dart';
+import '../../core/widgets/time_out_error_dialog.dart';
 
 class CategoriesDetailsController extends ChangeNotifier {
   final List<String> _imagePaths = [
@@ -25,6 +28,8 @@ class CategoriesDetailsController extends ChangeNotifier {
   late ScrollController _scrollController;
   int pageNum = 1;
   bool _isFetchingMore = false;
+
+  bool _isRefreshing = false;
 
   CategoriesDetailsController() {
     initialize();
@@ -216,6 +221,39 @@ class CategoriesDetailsController extends ChangeNotifier {
       }
     } catch (error) {
       print('Error: $error');
+    }
+  }
+
+  Future<void> refreshData(BuildContext context) async {
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        showNoInternetDialog(context, refreshData);
+
+        _isRefreshing = false;
+        notifyListeners();
+        return;
+      }
+
+      await Future.any([
+        Future.delayed(const Duration(seconds: 15), () {
+          throw TimeoutException('The operation took too long.');
+        }),
+        fetchProducts(),
+        fetchCategories(),
+      ]);
+    } catch (e) {
+      if (e is TimeoutException) {
+        showTimeoutDialog(context, refreshData);
+      } else {
+        showErrorDialog(context, e.toString());
+      }
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
     }
   }
 }
