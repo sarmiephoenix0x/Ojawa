@@ -133,7 +133,35 @@ flutter:
     - images/Terms.png
     - images/ShopCategories.png
     - images/My Orders.png
-    - images/profile_edit.png
+    - images/profile_edit.
+    - images/Add New Products.png
+    - images/All inclusive.png
+    - images/Change Language.png
+    - images/Chat.png
+    - images/Confirmed.png
+    - images/Contact Us.png
+    - images/Delete Account.png
+    - images/Delivered.png
+    - images/Edit Profile.png
+    - images/Logout2.png
+    - images/Manage PickUp Location.png
+    - images/On The Way.png
+    - images/Orders2.png
+    - images/Overall Rating Star.png
+    - images/Pending Delivery.png
+    - images/Privacy Policy.png
+    - images/Products.png
+    - images/Products2.png
+    - images/Refunded.png
+    - images/Return Policy.png
+    - images/Scheduled.png
+    - images/Shipping Policy.png
+    - images/Stock Management.png
+    - images/Terms and Conditions.png
+    - images/Total Orders.png
+    - images/Total Products.png
+    - images/Wallet History.png
+    - images/Wallet2.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
