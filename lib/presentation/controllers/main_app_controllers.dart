@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -9,7 +8,6 @@ import 'dart:async';
 
 import '../../core/widgets/custom_snackbar.dart';
 import '../screens/auth/sign_in_page.dart';
-import '../screens/intro_page/intro_page.dart';
 import 'navigation_controller.dart';
 
 class MainAppControllers extends ChangeNotifier {
@@ -48,10 +46,10 @@ class MainAppControllers extends ChangeNotifier {
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
       if (result != ConnectivityResult.none) {
-        fetchUserProfile();
+        //fetchUserProfile();
       }
     });
-    fetchUserProfile();
+    // fetchUserProfile();
   }
 
   Future<int?> getUserId() async {

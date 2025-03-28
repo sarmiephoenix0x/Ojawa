@@ -11,6 +11,7 @@ import '../../controllers/notification_controller.dart';
 import '../categories_page/categories_page.dart';
 import '../home_page/home_page.dart';
 import '../orders_page/orders_page.dart';
+import '../products_page/products_page.dart';
 import '../profile_page/profile_page.dart';
 import 'widgets/drawer.dart';
 
@@ -40,21 +41,21 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
         return CustomBackHandler(
           child: Scaffold(
             key: scaffoldKey,
-            drawer: MainAppDrawer(
-              goToCategoriesPage: mainAppController.goToCategoriesPage,
-              goToOrdersPage: mainAppController.goToOrdersPage,
-              showLogoutDialog: (context) => showLogoutDialog(
-                  context,
-                  (context) => mainAppController.logoutCall(
-                      context, widget.onToggleDarkMode, widget.isDarkMode)),
-              profileImage: mainAppController.profileImage,
-              userName: mainAppController.userName,
-              phone: mainAppController.phone,
-              checkForToken: mainAppController.checkForToken,
-              goToProfilePage: mainAppController.goToProfilePage,
-              onToggleDarkMode: widget.onToggleDarkMode,
-              isDarkMode: widget.isDarkMode,
-            ),
+            // drawer: MainAppDrawer(
+            //   goToCategoriesPage: mainAppController.goToCategoriesPage,
+            //   goToOrdersPage: mainAppController.goToOrdersPage,
+            //   showLogoutDialog: (context) => showLogoutDialog(
+            //       context,
+            //       (context) => mainAppController.logoutCall(
+            //           context, widget.onToggleDarkMode, widget.isDarkMode)),
+            //   profileImage: mainAppController.profileImage,
+            //   userName: mainAppController.userName,
+            //   phone: mainAppController.phone,
+            //   checkForToken: mainAppController.checkForToken,
+            //   goToProfilePage: mainAppController.goToProfilePage,
+            //   onToggleDarkMode: widget.onToggleDarkMode,
+            //   isDarkMode: widget.isDarkMode,
+            // ),
             body: SafeArea(
               child: IndexedStack(
                 index: navController.selectedIndex,
@@ -68,7 +69,23 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                     goToProfilePage: mainAppController.goToProfilePage,
                     // scaffoldKey: scaffoldKey,
                   ),
-                  CategoriesPage(
+                  // CategoriesPage(
+                  //   goToCategoriesPage: mainAppController.goToCategoriesPage,
+                  //   goToOrdersPage: mainAppController.goToOrdersPage,
+                  //   goToProfilePage: mainAppController.goToProfilePage,
+                  //   // scaffoldKey: scaffoldKey,
+                  //   selectedImageIndex: mainAppController.selectedImageIndex,
+                  //   onToggleDarkMode: widget.onToggleDarkMode,
+                  //   isDarkMode: widget.isDarkMode,
+                  // ),
+                  OrdersPage(
+                      goToCategoriesPage: mainAppController.goToCategoriesPage,
+                      goToOrdersPage: mainAppController.goToOrdersPage,
+                      goToProfilePage: mainAppController.goToProfilePage,
+                      // scaffoldKey: scaffoldKey,
+                      onToggleDarkMode: widget.onToggleDarkMode,
+                      isDarkMode: widget.isDarkMode),
+                  ProductsPage(
                     goToCategoriesPage: mainAppController.goToCategoriesPage,
                     goToOrdersPage: mainAppController.goToOrdersPage,
                     goToProfilePage: mainAppController.goToProfilePage,
@@ -77,17 +94,12 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                     onToggleDarkMode: widget.onToggleDarkMode,
                     isDarkMode: widget.isDarkMode,
                   ),
-                  OrdersPage(
-                      goToCategoriesPage: mainAppController.goToCategoriesPage,
-                      goToOrdersPage: mainAppController.goToOrdersPage,
-                      goToProfilePage: mainAppController.goToProfilePage,
-                      // scaffoldKey: scaffoldKey,
-                      onToggleDarkMode: widget.onToggleDarkMode,
-                      isDarkMode: widget.isDarkMode),
                   ProfilePage(
                     goToCategoriesPage: mainAppController.goToCategoriesPage,
                     goToOrdersPage: mainAppController.goToOrdersPage,
                     goToProfilePage: mainAppController.goToProfilePage,
+                    onToggleDarkMode: widget.onToggleDarkMode,
+                    isDarkMode: widget.isDarkMode,
                     // scaffoldKey: scaffoldKey,
                   ),
                 ],

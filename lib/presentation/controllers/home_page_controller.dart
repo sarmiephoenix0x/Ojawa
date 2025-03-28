@@ -9,10 +9,11 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../core/widgets/custom_snackbar.dart';
+import '../../core/widgets/error_dialog.dart';
+import '../../core/widgets/no_internet_dialog.dart';
+import '../../core/widgets/time_out_error_dialog.dart';
 import '../screens/auth/sign_in_page.dart';
-import '../screens/home_page/widgets/dialogs/no_internet_dialog.dart';
-import '../screens/home_page/widgets/dialogs/show_error_dialog.dart';
-import '../screens/home_page/widgets/dialogs/timeout_dialog.dart';
+
 import '../screens/intro_page/intro_page.dart';
 import '../screens/my_cart/my_cart.dart';
 
@@ -105,7 +106,7 @@ class HomePageController extends ChangeNotifier {
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
       if (result != ConnectivityResult.none) {
-        //fetchUserProfile();
+        fetchUserProfile();
         if (products.isEmpty) {
           fetchProducts(overwrite: true);
         }
@@ -115,7 +116,7 @@ class HomePageController extends ChangeNotifier {
         11 * 3600 + 15 * 60 + 4; // Example: 11 hours, 15 minutes, 4 seconds
     _startTimer();
     initializePrefs();
-    // fetchUserProfile();
+    fetchUserProfile();
     fetchProducts(overwrite: true);
   }
 
@@ -430,7 +431,7 @@ class HomePageController extends ChangeNotifier {
     try {
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.none) {
-        showNoInternetDialog(context);
+        showNoInternetDialog(context, refreshData);
 
         _isRefreshing = false;
         notifyListeners();
@@ -441,11 +442,12 @@ class HomePageController extends ChangeNotifier {
         Future.delayed(const Duration(seconds: 15), () {
           throw TimeoutException('The operation took too long.');
         }),
+        fetchUserProfile(),
         fetchProducts(overwrite: true),
       ]);
     } catch (e) {
       if (e is TimeoutException) {
-        showTimeoutDialog(context);
+        showTimeoutDialog(context, refreshData);
       } else {
         showErrorDialog(context, e.toString());
       }

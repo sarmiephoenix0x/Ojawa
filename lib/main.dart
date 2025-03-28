@@ -68,7 +68,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderDetailsController()),
         ChangeNotifierProvider(create: (_) => OrdersPageController()),
         ChangeNotifierProvider(create: (_) => PaymentMethodController()),
-        ChangeNotifierProvider(create: (_) => ProfilePageController()),
         ChangeNotifierProvider(create: (_) => ReturnOrderController()),
         ChangeNotifierProvider(create: (_) => ReturnOrder2Controller()),
         ChangeNotifierProvider(create: (_) => SucessfulOrderPageController()),

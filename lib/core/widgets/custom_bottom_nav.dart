@@ -20,9 +20,8 @@ class CustomBottomNav extends StatelessWidget {
     return BottomNavigationBar(
       items: [
         _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
-        _buildNavItem(
-            'images/Categories.png', 'Categories', hasNotification[1]),
-        _buildNavItem('images/Orders.png', 'Orders', hasNotification[2]),
+        _buildNavItem('images/Orders.png', 'Orders', hasNotification[1]),
+        _buildNavItem('images/Products.png', 'Products', hasNotification[2]),
         _buildNavItem('images/Profile.png', 'Profile', hasNotification[3]),
       ],
       currentIndex: navController.selectedIndex,

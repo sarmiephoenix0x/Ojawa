@@ -1,8 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../../core/widgets/custom_snackbar.dart';
+import '../../core/widgets/error_dialog.dart';
+import '../../core/widgets/no_internet_dialog.dart';
+import '../../core/widgets/time_out_error_dialog.dart';
+import '../screens/auth/sign_in_page.dart';
 
 class ProfilePageController extends ChangeNotifier {
   final TextEditingController searchController = TextEditingController();
@@ -29,8 +36,13 @@ class ProfilePageController extends ChangeNotifier {
   String? gender;
   String? role;
   bool _isLoading = false;
+  bool _isRefreshing = false;
 
-  ProfilePageController() {
+  final Function(bool) onToggleDarkMode;
+  final bool isDarkMode;
+
+  ProfilePageController(
+      {required this.onToggleDarkMode, required this.isDarkMode}) {
     initialize();
   }
 
@@ -142,6 +154,86 @@ class ProfilePageController extends ChangeNotifier {
       print('Error: $error');
 
       _isLoading = false; // Set loading to false on exception
+      notifyListeners();
+    }
+  }
+
+  Future<void> logoutCall(BuildContext context) async {
+    _isLoading = true;
+    notifyListeners();
+
+    logout(context);
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  void logout(BuildContext context) async {
+    final String? accessToken = await storage.read(key: 'accessToken');
+    if (accessToken == null) {
+      CustomSnackbar.show(
+        'You are not logged in.',
+        isError: true,
+      );
+      // await prefs.remove('user');
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInPage(
+              key: UniqueKey(),
+              onToggleDarkMode: onToggleDarkMode,
+              isDarkMode: isDarkMode),
+        ),
+      );
+
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+    _isLoading = true;
+    await storage.delete(key: 'accessToken');
+    // await prefs.remove('user');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SignInPage(
+            key: UniqueKey(),
+            onToggleDarkMode: onToggleDarkMode,
+            isDarkMode: isDarkMode),
+      ),
+    );
+  }
+
+  Future<void> refreshData(BuildContext context) async {
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        showNoInternetDialog(context, refreshData);
+
+        _isRefreshing = false;
+        notifyListeners();
+        return;
+      }
+
+      await Future.any([
+        Future.delayed(const Duration(seconds: 15), () {
+          throw TimeoutException('The operation took too long.');
+        }),
+        fetchUserProfile(),
+      ]);
+    } catch (e) {
+      if (e is TimeoutException) {
+        showTimeoutDialog(context, refreshData);
+      } else {
+        showErrorDialog(context, e.toString());
+      }
+    } finally {
+      _isRefreshing = false;
       notifyListeners();
     }
   }
