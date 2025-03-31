@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/widgets/custom_gap.dart';
 import '../../../core/widgets/logout_dialog.dart';
 import '../../controllers/profile_page_controller.dart';
+import '../add_new_product/add_new_product.dart';
 import '../edit_profile/edit_profile.dart';
 import 'widgets/profile_options.dart';
 import 'widgets/profile_options_bg.dart';
@@ -257,25 +258,35 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            const ProfileOptionsBG(
+                            ProfileOptionsBG(
                               children: [
-                                ProfileOptions(
+                                const ProfileOptions(
                                   title: 'Wallet History',
                                   img: 'images/Wallet History.png',
                                 ),
-                                ProfileOptions(
+                                const ProfileOptions(
                                   title: 'Products',
                                   img: 'images/Products2.png',
                                 ),
                                 ProfileOptions(
                                   title: 'Add New Products',
                                   img: 'images/Add New Products.png',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddNewProduct(
+                                          key: UniqueKey(),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                                ProfileOptions(
+                                const ProfileOptions(
                                   title: 'Manage PickUp Location',
                                   img: 'images/Manage PickUp Location.png',
                                 ),
-                                ProfileOptions(
+                                const ProfileOptions(
                                   title: 'Stock Management',
                                   img: 'images/Stock Management.png',
                                 ),

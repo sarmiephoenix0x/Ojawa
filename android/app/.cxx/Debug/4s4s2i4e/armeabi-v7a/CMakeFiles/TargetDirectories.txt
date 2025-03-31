@@ -1,0 +1,2 @@
+C:/Users/Philip Nzube/Desktop/ojawa/android/app/.cxx/Debug/4s4s2i4e/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Philip Nzube/Desktop/ojawa/android/app/.cxx/Debug/4s4s2i4e/armeabi-v7a/CMakeFiles/rebuild_cache.dir

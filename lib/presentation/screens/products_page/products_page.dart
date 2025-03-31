@@ -69,7 +69,12 @@ class _ProductsPageState extends State<ProductsPage> {
                     ),
                     child: const Row(
                       children: [
-                        Text('Products', style: TextStyle(fontSize: 20)),
+                        Text('Products',
+                            style: TextStyle(
+                              fontSize: 25,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                            )),
                       ],
                     ),
                   ),

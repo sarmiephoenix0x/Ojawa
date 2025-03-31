@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'core/route/app_routes.dart';
 import 'core/themes/app_theme.dart';
 import 'presentation/controllers/add_new_card_controller.dart';
+import 'presentation/controllers/add_new_product_controller.dart';
 import 'presentation/controllers/apply_coupon_controller.dart';
 import 'presentation/controllers/categories_details_controller.dart';
 import 'presentation/controllers/categories_page_controller.dart';
@@ -66,7 +67,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NewAccountController()),
         ChangeNotifierProvider(create: (_) => NewAddressController()),
         ChangeNotifierProvider(create: (_) => OrderDetailsController()),
-        ChangeNotifierProvider(create: (_) => OrdersPageController()),
         ChangeNotifierProvider(create: (_) => PaymentMethodController()),
         ChangeNotifierProvider(create: (_) => ReturnOrderController()),
         ChangeNotifierProvider(create: (_) => ReturnOrder2Controller()),
@@ -81,6 +81,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SignUpController()),
         ChangeNotifierProvider(create: (_) => NavigationController()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
+        ChangeNotifierProvider(create: (_) => AddNewProductControllers()),
       ],
       child: Consumer<ThemeController>(
         builder: (context, themeController, child) {

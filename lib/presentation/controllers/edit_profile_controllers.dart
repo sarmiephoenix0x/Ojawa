@@ -14,9 +14,25 @@ class EditProfileControllers extends ChangeNotifier {
   final FocusNode _nameFocusNode = FocusNode();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _storeNameController = TextEditingController();
+  final TextEditingController _storeUrlController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _latitudeController = TextEditingController();
+  final TextEditingController _longitudeController = TextEditingController();
+  final TextEditingController _taxNameController = TextEditingController();
+  final TextEditingController _taxNumberController = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
   final TextEditingController _locationController = TextEditingController();
   final FocusNode _locationFocusNode = FocusNode();
+  final FocusNode _addressFocusNode = FocusNode();
+  final FocusNode _storeNameFocusNode = FocusNode();
+  final FocusNode _storeUrlFocusNode = FocusNode();
+  final FocusNode _descriptionFocusNode = FocusNode();
+  final FocusNode _latitudeFocusNode = FocusNode();
+  final FocusNode _longitudeFocusNode = FocusNode();
+  final FocusNode _taxNameFocusNode = FocusNode();
+  final FocusNode _taxNumberFocusNode = FocusNode();
   String _phoneNumber = '';
   int? userId;
   String? _profileImage;
@@ -45,10 +61,26 @@ class EditProfileControllers extends ChangeNotifier {
   TextEditingController get emailController => _emailController;
   TextEditingController get phoneController => _phoneController;
   TextEditingController get locationController => _locationController;
+  TextEditingController get addressController => _addressController;
+  TextEditingController get storeNameController => _storeNameController;
+  TextEditingController get storeUrlController => _storeUrlController;
+  TextEditingController get descriptionController => _descriptionController;
+  TextEditingController get latitudeController => _latitudeController;
+  TextEditingController get longitudeController => _longitudeController;
+  TextEditingController get taxNameController => _taxNameController;
+  TextEditingController get taxNumberController => _taxNumberController;
 
   FocusNode get nameFocusNode => _nameFocusNode;
   FocusNode get emailFocusNode => _emailFocusNode;
   FocusNode get locationFocusNode => _locationFocusNode;
+  FocusNode get addressFocusNode => _addressFocusNode;
+  FocusNode get storeNameFocusNode => _storeNameFocusNode;
+  FocusNode get storeUrlFocusNode => _storeUrlFocusNode;
+  FocusNode get descriptionFocusNode => _descriptionFocusNode;
+  FocusNode get latitudeFocusNode => _latitudeFocusNode;
+  FocusNode get longitudeFocusNode => _longitudeFocusNode;
+  FocusNode get taxNameFocusNode => _taxNameFocusNode;
+  FocusNode get taxNumberFocusNode => _taxNumberFocusNode;
 
   void setPhoneNumber(String value) {
     _phoneNumber = value;

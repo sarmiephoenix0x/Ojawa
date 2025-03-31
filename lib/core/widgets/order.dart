@@ -59,17 +59,17 @@ class OrderWidget extends StatelessWidget {
               padding: const EdgeInsets.only(left: 20.0),
               child: InkWell(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OrderDetails(
-                        key: UniqueKey(),
-                        goToOrdersPage: goToOrdersPage,
-                        onToggleDarkMode: onToggleDarkMode,
-                        isDarkMode: isDarkMode,
-                      ),
-                    ),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => OrderDetails(
+                  //       key: UniqueKey(),
+                  //       //goToOrdersPage: goToOrdersPage,
+                  //       onToggleDarkMode: onToggleDarkMode,
+                  //       isDarkMode: isDarkMode,
+                  //     ),
+                  //   ),
+                  // );
                 },
                 child: Row(
                   children: [
@@ -107,17 +107,17 @@ class OrderWidget extends StatelessWidget {
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => OrderDetails(
-                              key: UniqueKey(),
-                              goToOrdersPage: goToOrdersPage,
-                              onToggleDarkMode: onToggleDarkMode,
-                              isDarkMode: isDarkMode,
-                            ),
-                          ),
-                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => OrderDetails(
+                        //       key: UniqueKey(),
+                        //       //goToOrdersPage: goToOrdersPage,
+                        //       onToggleDarkMode: onToggleDarkMode,
+                        //       isDarkMode: isDarkMode,
+                        //     ),
+                        //   ),
+                        // );
                       },
                     ),
                   ],
