@@ -91,14 +91,26 @@ class _HomePageState extends State<HomePage>
                               ),
                             ),
                             const Gap(10),
-                            Text(
-                              'N 6,000,000',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 25.0,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Image.asset(
+                                  'images/Naira.png',
+                                  height: 20,
+                                ),
+                                const Gap(2, isHorizontal: true),
+                                Text(
+                                  '6,000,000',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 25.0,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

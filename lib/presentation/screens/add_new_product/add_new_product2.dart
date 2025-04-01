@@ -5,11 +5,12 @@ import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_gap.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../controllers/add_new_product_controller.dart';
+import '../new_address/widgets/address_type.dart';
 import 'widgets/bottom_sheets/deliverable_type.dart';
 import 'widgets/bottom_sheets/product_made_in.dart';
-import 'widgets/bottom_sheets/product_type.dart';
 import 'widgets/bottom_sheets/select_indicator.dart';
 import 'widgets/bottom_sheets/select_tax.dart';
+import 'widgets/product_option.dart';
 
 class AddNewProduct2 extends StatefulWidget {
   const AddNewProduct2({super.key});
@@ -29,7 +30,6 @@ class _AddNewProduct2State extends State<AddNewProduct2> {
           children: [
             Column(
               children: [
-                // Header
                 SizedBox(
                   width: MediaQuery.of(context).size.width,
                   child: Container(
@@ -69,7 +69,6 @@ class _AddNewProduct2State extends State<AddNewProduct2> {
                   ),
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -253,26 +252,80 @@ class _AddNewProduct2State extends State<AddNewProduct2> {
                           ),
                           readOnly: true,
                         ),
+                        const Gap(30),
+                        Column(
+                          children: [
+                            ProductOption(
+                              text: "Is Product Returnable?",
+                              value: 1,
+                              selectedRadioValue:
+                                  addNewProductController.selectedRadioValue,
+                              setSelectedRadioValue:
+                                  addNewProductController.setSelectedRadioValue,
+                            ),
+                            const Gap(20),
+                            ProductOption(
+                              text: "Is Product COD Allowed?",
+                              value: 2,
+                              selectedRadioValue:
+                                  addNewProductController.selectedRadioValue,
+                              setSelectedRadioValue:
+                                  addNewProductController.setSelectedRadioValue,
+                            ),
+                            const Gap(20),
+                            ProductOption(
+                              text: "Tax Included in price?",
+                              value: 3,
+                              selectedRadioValue:
+                                  addNewProductController.selectedRadioValue,
+                              setSelectedRadioValue:
+                                  addNewProductController.setSelectedRadioValue,
+                            ),
+                            const Gap(20),
+                            ProductOption(
+                              text: "Is Product Cancelable? (Till Received)",
+                              value: 4,
+                              selectedRadioValue:
+                                  addNewProductController.selectedRadioValue,
+                              setSelectedRadioValue:
+                                  addNewProductController.setSelectedRadioValue,
+                            ),
+                            const Gap(20),
+                            ProductOption(
+                              text: "Is Attachment Required?",
+                              value: 5,
+                              selectedRadioValue:
+                                  addNewProductController.selectedRadioValue,
+                              setSelectedRadioValue:
+                                  addNewProductController.setSelectedRadioValue,
+                            ),
+                          ],
+                        ),
                         const Gap(50),
                         SizedBox(
                           width: MediaQuery.of(context).size.width,
                           child: Row(
                             children: [
-                              CustomButton(
-                                  isLoading: addNewProductController.isLoading,
-                                  text: 'Back',
-                                  bgColor: Colors.white,
-                                  fgColor: Colors.black,
-                                  borderColor: Colors.black,
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  }),
+                              Expanded(
+                                child: CustomButton(
+                                    isLoading:
+                                        addNewProductController.isLoading,
+                                    text: 'Back',
+                                    bgColor: Colors.white,
+                                    fgColor: Colors.black,
+                                    borderColor: Colors.black,
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    }),
+                              ),
                               const Gap(10, isHorizontal: true),
-                              CustomButton(
-                                isLoading: addNewProductController.isLoading,
-                                text: 'Next',
-                                bgColor: Colors.black,
-                                borderColor: Colors.black,
+                              Expanded(
+                                child: CustomButton(
+                                  isLoading: addNewProductController.isLoading,
+                                  text: 'Next',
+                                  bgColor: Colors.black,
+                                  borderColor: Colors.black,
+                                ),
                               ),
                             ],
                           ),

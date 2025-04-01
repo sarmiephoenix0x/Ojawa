@@ -107,7 +107,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         ProductsPageProducts(
                           name: 'Adidas White Sneakers',
                           img: 'images/Img6.png',
-                          price: 'NGN6,000,000',
+                          price: '6,000,000',
                         )
                       ],
                     ),

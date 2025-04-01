@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_gap.dart';
 import 'products_button.dart';
 
@@ -29,7 +30,7 @@ class ProductsPageProducts extends StatelessWidget {
           borderRadius: BorderRadius.circular(12), // Smoother corners
           boxShadow: [
             BoxShadow(
-              color: Colors.grey
+              color: Colors.black
                   .withOpacity(0.2), // Softer shadow for a clean look
               spreadRadius: 2,
               blurRadius: 8,
@@ -87,15 +88,29 @@ class ProductsPageProducts extends StatelessWidget {
                             isHorizontal: true,
                           ),
                           Flexible(
-                            child: Text(
-                              price,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18.0,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Image.asset(
+                                  'images/Naira.png',
+                                  height: 15,
+                                ),
+                                const Gap(2, isHorizontal: true),
+                                Flexible(
+                                  child: Text(
+                                    '6,000.00',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 18.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -110,26 +125,33 @@ class ProductsPageProducts extends StatelessWidget {
               ],
             ),
             const Gap(20),
-            Row(
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ProductsButton(
-                  text: 'Product FAQ',
+                Expanded(
+                  child: CustomButton(
+                      text: 'Product FAQ',
+                      fgColor: Colors.black,
+                      bgColor: Colors.white,
+                      borderColor: Colors.white,
+                      isPaddingActive: false),
                 ),
-                Gap(
-                  15,
-                  isHorizontal: true,
+                Gap(4, isHorizontal: true),
+                Expanded(
+                  child: CustomButton(
+                      text: 'Review',
+                      fgColor: Colors.black,
+                      bgColor: Colors.white,
+                      borderColor: Colors.white,
+                      isPaddingActive: false),
                 ),
-                ProductsButton(
-                  text: 'Review',
-                ),
-                Gap(
-                  15,
-                  isHorizontal: true,
-                ),
-                ProductsButton(
-                  text: 'Enable',
-                  buttonType: buttonType,
-                  color: Colors.green,
+                Gap(4, isHorizontal: true),
+                Expanded(
+                  child: CustomButton(
+                      text: 'Enable',
+                      bgColor: Colors.green,
+                      borderColor: Colors.green,
+                      isPaddingActive: false),
                 ),
               ],
             ),

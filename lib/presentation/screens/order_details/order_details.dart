@@ -415,9 +415,9 @@ class _OrderDetailsState extends State<OrderDetails> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   OrderAttribute(
-                                    text: 'Item Price',
-                                    text2: widget.amount,
-                                  ),
+                                      text: 'Item Price',
+                                      text2: widget.amount,
+                                      isAmount: true),
                                   const OrderAttribute(
                                       text: 'Addon Cost', text2: ''),
                                 ],
@@ -433,25 +433,25 @@ class _OrderDetailsState extends State<OrderDetails> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   OrderAttribute(
-                                    text: 'Subtotal (Tax Included)',
-                                    text2: 'NGN 00.00',
-                                  ),
+                                      text: 'Subtotal (Tax Included)',
+                                      text2: '00.00',
+                                      isAmount: true),
                                   OrderAttribute(
-                                    text: 'Discount',
-                                    text2: 'NGN 00.00',
-                                  ),
+                                      text: 'Discount',
+                                      text2: '00.00',
+                                      isAmount: true),
                                   OrderAttribute(
-                                    text: 'Coupon Discount',
-                                    text2: 'NGN 00.00',
-                                  ),
+                                      text: 'Coupon Discount',
+                                      text2: '00.00',
+                                      isAmount: true),
                                   OrderAttribute(
-                                    text: 'Delivery man tip',
-                                    text2: 'NGN 00.00',
-                                  ),
+                                      text: 'Delivery man tip',
+                                      text2: '00.00',
+                                      isAmount: true),
                                   OrderAttribute(
-                                    text: 'Delivery fee',
-                                    text2: 'NGN 00.00',
-                                  ),
+                                      text: 'Delivery fee',
+                                      text2: '00.00',
+                                      isAmount: true),
                                 ],
                               ),
                               const Gap(20),
@@ -465,13 +465,13 @@ class _OrderDetailsState extends State<OrderDetails> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const OrderAttribute(
-                                    text: 'Additional Charges',
-                                    text2: 'NGN 00.00',
-                                  ),
+                                      text: 'Additional Charges',
+                                      text2: '00.00',
+                                      isAmount: true),
                                   OrderAttribute(
-                                    text: 'Total',
-                                    text2: widget.amount,
-                                  ),
+                                      text: 'Total',
+                                      text2: widget.amount,
+                                      isAmount: true),
                                 ],
                               ),
                             ],

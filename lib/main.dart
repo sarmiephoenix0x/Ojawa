@@ -6,6 +6,7 @@ import 'core/route/app_routes.dart';
 import 'core/themes/app_theme.dart';
 import 'presentation/controllers/add_new_card_controller.dart';
 import 'presentation/controllers/add_new_product_controller.dart';
+import 'presentation/controllers/add_pickup_location_controllers.dart';
 import 'presentation/controllers/apply_coupon_controller.dart';
 import 'presentation/controllers/categories_details_controller.dart';
 import 'presentation/controllers/categories_page_controller.dart';
@@ -15,6 +16,7 @@ import 'presentation/controllers/exchange_order_controller.dart';
 import 'presentation/controllers/faq_page_controller.dart';
 import 'presentation/controllers/home_page_controller.dart';
 import 'presentation/controllers/main_app_controllers.dart';
+import 'presentation/controllers/manage_pickup_location_controllers.dart';
 import 'presentation/controllers/my_cart_controller.dart';
 import 'presentation/controllers/navigation_controller.dart';
 import 'presentation/controllers/new_account_controller.dart';
@@ -31,6 +33,7 @@ import 'presentation/controllers/sign_up_controller.dart';
 import 'presentation/controllers/sucessful_order_page_controller.dart';
 import 'presentation/controllers/theme_controller.dart';
 import 'presentation/controllers/verify_email_controller.dart';
+import 'presentation/controllers/wallet_history_controllers.dart';
 import 'presentation/screens/intro_page/intro_page.dart';
 import 'presentation/screens/main_app/main_app.dart';
 
@@ -82,6 +85,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NavigationController()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
         ChangeNotifierProvider(create: (_) => AddNewProductControllers()),
+        ChangeNotifierProvider(create: (_) => WalletHistoryControllers()),
+        ChangeNotifierProvider(
+            create: (_) => ManagePickupLocationControllers()),
+        ChangeNotifierProvider(create: (_) => AddPickupLocationControllers()),
       ],
       child: Consumer<ThemeController>(
         builder: (context, themeController, child) {

@@ -31,7 +31,7 @@ class OrdersPageController extends ChangeNotifier {
       "Order Date2": "01:11 PM",
       "Customer Info": "Adidas White For Men",
       "Customer Info2": "09016482578",
-      "Total Amount": "\$250.00",
+      "Total Amount": "250.00",
       "Total Amount Status": "Paid",
       "Order Status": "Confirmed",
       "Order Type": "Home Delivery",
@@ -42,7 +42,7 @@ class OrdersPageController extends ChangeNotifier {
       "Order Date2": "01:11 PM",
       "Customer Info": "Jane Smith",
       "Customer Info2": "09106482578",
-      "Total Amount": "\$120.00",
+      "Total Amount": "120.00",
       "Total Amount Status": "Unpaid",
       "Order Status": "Pending",
       "Order Type": "Home Delivery",
@@ -116,7 +116,8 @@ class OrdersPageController extends ChangeNotifier {
             OrderCell(
                 text: _orders[index]["Total Amount"]!,
                 text2: _orders[index]["Total Amount Status"]!,
-                width: 150),
+                width: 150,
+                isAmount: true),
             OrderStatus(
                 text: _orders[index]["Order Status"]!,
                 text2: _orders[index]["Order Type"]!,

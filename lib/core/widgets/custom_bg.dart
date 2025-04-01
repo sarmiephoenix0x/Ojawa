@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class ProfileOptionsBG extends StatelessWidget {
+class CustomBg extends StatelessWidget {
   final List<Widget> children;
 
-  const ProfileOptionsBG({
+  const CustomBg({
     super.key,
     required this.children,
   });
@@ -20,7 +20,7 @@ class ProfileOptionsBG extends StatelessWidget {
           borderRadius: BorderRadius.circular(12), // Smoother corners
           boxShadow: [
             BoxShadow(
-              color: Colors.grey
+              color: Colors.black
                   .withOpacity(0.2), // Softer shadow for a clean look
               spreadRadius: 2,
               blurRadius: 8,

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/custom_gap.dart';
+
 class OrderCell extends StatelessWidget {
   final String text;
   final String? text2;
   final double width;
   final double? height;
+  final bool isAmount;
 
   const OrderCell({
     super.key,
@@ -12,6 +15,7 @@ class OrderCell extends StatelessWidget {
     required this.width,
     this.text2,
     this.height,
+    this.isAmount = false,
   });
 
   @override
@@ -26,14 +30,37 @@ class OrderCell extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            text,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 15.0,
-              color: Theme.of(context).colorScheme.onSurface,
+          if (isAmount) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'images/Naira.png',
+                  height: 15,
+                ),
+                const Gap(2, isHorizontal: true),
+                Text(
+                  text,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 15.0,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ),
-          ),
+          ] else ...[
+            Text(
+              text,
+              softWrap: true,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 15.0,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
           if (text2 != null)
             Text(
               text2!,

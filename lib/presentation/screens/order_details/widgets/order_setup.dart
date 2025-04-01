@@ -7,6 +7,7 @@ class OrderSetup extends StatelessWidget {
   final String? text2;
   final double width;
   final String? img;
+  final bool isAmount;
 
   const OrderSetup({
     super.key,
@@ -14,6 +15,7 @@ class OrderSetup extends StatelessWidget {
     required this.width,
     this.text2,
     this.img,
+    this.isAmount = false,
   });
 
   @override
@@ -39,15 +41,37 @@ class OrderSetup extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                text,
-                softWrap: true,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 15.0,
-                  color: Theme.of(context).colorScheme.onSurface,
+              if (isAmount) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Image.asset(
+                      'images/Naira.png',
+                      height: 15,
+                    ),
+                    const Gap(2, isHorizontal: true),
+                    Text(
+                      text,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 15.0,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+              ] else ...[
+                Text(
+                  text,
+                  softWrap: true,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 15.0,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ],
               if (text2 != null)
                 Text(
                   text2!,

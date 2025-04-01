@@ -4,10 +4,8 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 
 import '../../../core/widgets/auth_label.dart';
-import '../../../core/widgets/auth_text_field.dart';
 import '../../../core/widgets/custom_gap.dart';
 import '../../../core/widgets/custom_text_field.dart';
-import '../../../core/widgets/filter.dart';
 import '../../controllers/edit_profile_controllers.dart';
 import '../../../core/widgets/custom_button.dart';
 
@@ -29,7 +27,6 @@ class _EditProfileState extends State<EditProfile> {
           children: [
             Column(
               children: [
-                // Header
                 SizedBox(
                   width: MediaQuery.of(context).size.width,
                   child: Container(
@@ -63,7 +60,6 @@ class _EditProfileState extends State<EditProfile> {
                   ),
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -109,8 +105,7 @@ class _EditProfileState extends State<EditProfile> {
                                       fit: BoxFit.cover,
                                       errorBuilder:
                                           (context, error, stackTrace) {
-                                        return const Icon(Icons
-                                            .error); // Show an error icon if image fails to load
+                                        return const Icon(Icons.error);
                                       },
                                     ),
                                   ),
@@ -179,8 +174,7 @@ class _EditProfileState extends State<EditProfile> {
                                   BorderRadius.circular(5), // Smoother corners
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(
-                                      0.2), // Softer shadow for a clean look
+                                  color: Colors.black.withOpacity(0.2),
                                   spreadRadius: 2,
                                   blurRadius: 8,
                                   offset: const Offset(
@@ -326,6 +320,7 @@ class _EditProfileState extends State<EditProfile> {
                         ),
                         const Gap(50),
                         CustomButton(
+                          width: double.infinity,
                           isLoading: editProfileController.isLoading,
                           text: 'Change Password',
                           bgColor: Colors.black,
@@ -333,6 +328,7 @@ class _EditProfileState extends State<EditProfile> {
                         ),
                         const Gap(50),
                         CustomButton(
+                          width: double.infinity,
                           isLoading: editProfileController.isLoading,
                           text: 'Update Profile',
                         ),

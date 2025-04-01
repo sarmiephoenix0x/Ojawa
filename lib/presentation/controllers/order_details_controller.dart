@@ -40,7 +40,7 @@ class OrderDetailsController extends ChangeNotifier {
         children: [
           OrderSetup(img: 'images/Img6.png', text: name, width: 350),
           const OrderSetup(text: "", text2: "", width: 200),
-          OrderSetup(text: amount, width: 200),
+          OrderSetup(text: amount, width: 200, isAmount: true),
         ],
       ),
     );

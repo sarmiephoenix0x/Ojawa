@@ -20,7 +20,7 @@ class ProductsFilter extends StatelessWidget {
           borderRadius: BorderRadius.circular(8), // Smoother corners
           boxShadow: [
             BoxShadow(
-              color: Colors.grey
+              color: Colors.black
                   .withOpacity(0.2), // Softer shadow for a clean look
               spreadRadius: 2,
               blurRadius: 8,

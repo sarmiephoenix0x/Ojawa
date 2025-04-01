@@ -27,7 +27,7 @@ class SecondSetUserDetails extends StatelessWidget {
           borderRadius: BorderRadius.circular(12), // Smoother corners
           boxShadow: [
             BoxShadow(
-              color: Colors.grey
+              color: Colors.black
                   .withOpacity(0.2), // Softer shadow for a clean look
               spreadRadius: 2,
               blurRadius: 8,

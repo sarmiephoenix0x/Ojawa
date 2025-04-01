@@ -6,8 +6,10 @@ import '../../../core/widgets/logout_dialog.dart';
 import '../../controllers/profile_page_controller.dart';
 import '../add_new_product/add_new_product.dart';
 import '../edit_profile/edit_profile.dart';
+import '../manage_pickup_location/manage_pickup_location.dart';
+import '../wallet_history/wallet_history.dart';
 import 'widgets/profile_options.dart';
-import 'widgets/profile_options_bg.dart';
+import '../../../core/widgets/custom_bg.dart';
 
 class ProfilePage extends StatefulWidget {
   final Function goToCategoriesPage;
@@ -204,19 +206,35 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   isHorizontal: true,
                                                 ),
                                                 Flexible(
-                                                  child: Text(
-                                                    'N 6,000,000',
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: TextStyle(
-                                                      fontFamily: 'Poppins',
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15.0,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface,
-                                                    ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      Image.asset(
+                                                        'images/Naira.png',
+                                                        height: 15,
+                                                      ),
+                                                      const Gap(2,
+                                                          isHorizontal: true),
+                                                      Flexible(
+                                                        child: Text(
+                                                          '6,000.00',
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            fontSize: 15.0,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .onSurface,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
                                               ],
@@ -232,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.04),
-                            ProfileOptionsBG(
+                            CustomBg(
                               children: [
                                 ProfileOptions(
                                   title: 'Edit Profile',
@@ -258,11 +276,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            ProfileOptionsBG(
+                            CustomBg(
                               children: [
-                                const ProfileOptions(
+                                ProfileOptions(
                                   title: 'Wallet History',
                                   img: 'images/Wallet History.png',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => WalletHistory(
+                                          key: UniqueKey(),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                                 const ProfileOptions(
                                   title: 'Products',
@@ -282,9 +310,20 @@ class _ProfilePageState extends State<ProfilePage> {
                                     );
                                   },
                                 ),
-                                const ProfileOptions(
+                                ProfileOptions(
                                   title: 'Manage PickUp Location',
                                   img: 'images/Manage PickUp Location.png',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ManagePickupLocation(
+                                          key: UniqueKey(),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                                 const ProfileOptions(
                                   title: 'Stock Management',
@@ -292,7 +331,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            const ProfileOptionsBG(
+                            const CustomBg(
                               children: [
                                 ProfileOptions(
                                   title: 'Change Language',
@@ -308,7 +347,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            const ProfileOptionsBG(
+                            const CustomBg(
                               children: [
                                 ProfileOptions(
                                   title: 'Contact Us',
@@ -324,7 +363,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ],
                             ),
-                            ProfileOptionsBG(
+                            CustomBg(
                               children: [
                                 const ProfileOptions(
                                   title: 'Delete Account',
