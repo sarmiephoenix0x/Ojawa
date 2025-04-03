@@ -13,6 +13,7 @@ import 'dart:async';
 
 import '../../core/widgets/custom_snackbar.dart';
 import '../screens/main_app/main_app.dart';
+import '../screens/verify_email/verify_email.dart';
 
 class SignUpController extends ChangeNotifier {
   final FocusNode _displayNameFocusNode = FocusNode();
@@ -22,6 +23,7 @@ class SignUpController extends ChangeNotifier {
   final FocusNode _stateFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
   final FocusNode _password2FocusNode = FocusNode();
+  final FocusNode _roleFocusNode = FocusNode();
 
   final TextEditingController _displayNameController = TextEditingController();
   final TextEditingController _userNameController = TextEditingController();
@@ -30,6 +32,7 @@ class SignUpController extends ChangeNotifier {
   final TextEditingController _stateController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _password2Controller = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
 
   bool dropDownTapped = false;
 
@@ -44,8 +47,11 @@ class SignUpController extends ChangeNotifier {
   final double maxWidth = 360;
   final double maxHeight = 360;
   final ImagePicker _picker = ImagePicker();
+  String _selectedRole = 'Select Role';
+  String _url = "";
 
   SignUpController() {
+    _roleController.text = _selectedRole;
     initializePrefs();
   }
 
@@ -55,12 +61,21 @@ class SignUpController extends ChangeNotifier {
   FocusNode get emailFocusNode => _emailFocusNode;
   FocusNode get stateFocusNode => _stateFocusNode;
   FocusNode get password2FocusNode => _password2FocusNode;
+  FocusNode get roleFocusNode => _roleFocusNode;
   TextEditingController get userNameController => _userNameController;
   TextEditingController get passwordController => _passwordController;
   TextEditingController get emailController => _emailController;
   TextEditingController get stateController => _stateController;
   TextEditingController get password2Controller => _password2Controller;
+  TextEditingController get roleController => _roleController;
   GlobalKey<FormState> get formKey => _formKey;
+  String get profileImage => _profileImage;
+
+  void setSelectedRole(String value) {
+    _selectedRole = value;
+    roleController.text = value;
+    notifyListeners();
+  }
 
   Future<void> initializePrefs() async {
     prefs = await SharedPreferences.getInstance();
@@ -95,7 +110,7 @@ class SignUpController extends ChangeNotifier {
           notifyListeners();
         }
       } else {
-        _profileImage = pickedFile!.path;
+        _profileImage = pickedFile.path;
         notifyListeners();
       }
     }
@@ -103,6 +118,17 @@ class SignUpController extends ChangeNotifier {
 
   Future<void> registerUser(BuildContext context,
       dynamic Function(bool) onToggleDarkMode, bool isDarkMode) async {
+    if (_selectedRole == "Customer") {
+      _url = "customer/sign-up";
+      notifyListeners();
+    } else if (_selectedRole == "Vendor") {
+      _url = "vendor/sign-up";
+      notifyListeners();
+    } else if (_selectedRole == "Logistics") {
+      _url = "logistics/sign-up";
+      notifyListeners();
+    }
+    print(_url);
     if (prefs == null) {
       await initializePrefs();
     }
@@ -111,13 +137,15 @@ class SignUpController extends ChangeNotifier {
     final String passwordConfirmation = password2Controller.text.trim();
     final String state = stateController.text.trim();
     final String username = userNameController.text.trim();
+    final String userRole = _roleController.text.trim();
 
     if (state.isEmpty ||
         username.isEmpty ||
         email.isEmpty ||
         phoneNumber.isEmpty ||
         password.isEmpty ||
-        passwordConfirmation.isEmpty) {
+        passwordConfirmation.isEmpty ||
+        userRole == 'Select Role') {
       CustomSnackbar.show(
         'All fields are required.',
         isError: true,
@@ -175,8 +203,7 @@ class SignUpController extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    final url =
-        Uri.parse('https://ojawa-api.onrender.com/api/Auth/sign-up/buyer');
+    final url = Uri.parse('https://ojawa-api.onrender.com/api/Auth/$_url');
     final request = http.MultipartRequest('POST', url)
       ..fields['username'] = username
       ..fields['email'] = email
@@ -217,7 +244,8 @@ class SignUpController extends ChangeNotifier {
       final String accessToken = responseData['token'];
       final int userId = responseData['value']; // Extract userId from response
 
-      // Store the access token and user ID
+      await prefs.setString('userName', username);
+      await storage.write(key: 'userRole', value: _selectedRole);
       await storage.write(key: 'accessToken', value: accessToken);
       await storage.write(
           key: 'userId', value: userId.toString()); // Store userId as a string
@@ -244,11 +272,27 @@ class SignUpController extends ChangeNotifier {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
       final String error = responseData['message'];
 
-      // Handle validation error
-      CustomSnackbar.show(
-        'Error: $error',
-        isError: true,
-      );
+      if (error ==
+          "Email account has not been verified. Kindly complete verification to sign up") {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerifyEmail(
+                key: UniqueKey(),
+                onToggleDarkMode: onToggleDarkMode,
+                isDarkMode: isDarkMode),
+          ),
+        );
+        CustomSnackbar.show(
+          error,
+          isError: true,
+        );
+      } else {
+        CustomSnackbar.show(
+          error,
+          isError: true,
+        );
+      }
     } else {
       isLoading = false;
       notifyListeners();

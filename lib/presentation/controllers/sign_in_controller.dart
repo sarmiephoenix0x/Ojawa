@@ -4,42 +4,76 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import '../../core/route/app_routes.dart';
 import '../../core/widgets/custom_snackbar.dart';
-import '../../data/model/app_args.dart';
 import '../screens/main_app/main_app.dart';
 
 class SignInController extends ChangeNotifier {
   final FocusNode _userNameFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _roleFocusNode = FocusNode();
 
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
   final storage = const FlutterSecureStorage();
   late SharedPreferences prefs;
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
+  String _selectedRole = 'Select Role';
+  String _url = "";
 
   SignInController() {
+    _roleController.text = _selectedRole;
     initializePrefs();
   }
 
   //public getters
   FocusNode get userNameFocusNode => _userNameFocusNode;
   FocusNode get passwordFocusNode => _passwordFocusNode;
+  FocusNode get roleFocusNode => _roleFocusNode;
   TextEditingController get userNameController => _userNameController;
   TextEditingController get passwordController => _passwordController;
+  TextEditingController get roleController => _roleController;
   bool get isLoading => _isLoading;
   bool get rememberMe => _rememberMe;
 
-  void setRemberMe(bool value) {
+  void setRemberMe(bool value) async {
     _rememberMe = value;
+    await prefs.setBool("rememberMe", _rememberMe);
+    notifyListeners();
+  }
+
+  void setIsLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void setSelectedRole(String value) {
+    _selectedRole = value;
+    roleController.text = value;
     notifyListeners();
   }
 
   Future<void> initializePrefs() async {
     prefs = await SharedPreferences.getInstance();
+    _rememberMe = prefs.getBool('rememberMe') ?? false;
+    notifyListeners();
+    String? savedUserName = prefs.getString('userName');
+    String? savedRole = await storage.read(key: 'userRole');
+
+    if (_rememberMe == true) {
+      if (savedUserName != null) {
+        _userNameController.text = savedUserName;
+        notifyListeners();
+      }
+
+      if (savedRole != null) {
+        _roleController.text = savedRole;
+        _selectedRole = savedRole;
+        notifyListeners();
+      }
+    }
   }
 
   Future<void> submitForm(BuildContext context,
@@ -47,10 +81,23 @@ class SignInController extends ChangeNotifier {
     if (prefs == null) {
       await initializePrefs();
     }
-    final String userName = userNameController.text.trim();
-    final String password = passwordController.text.trim();
+    if (_selectedRole == "Customer") {
+      _url = "customer/sign-in";
+      notifyListeners();
+    } else if (_selectedRole == "Vendor") {
+      _url = "vendor/sign-in";
+      notifyListeners();
+    } else if (_selectedRole == "Logistics") {
+      _url = "logistics/sign-in";
+      notifyListeners();
+    }
+    print(_url);
 
-    if (userName.isEmpty || password.isEmpty) {
+    final String userName = _userNameController.text.trim();
+    final String password = _passwordController.text.trim();
+    final String userRole = _roleController.text.trim();
+
+    if (userName.isEmpty || password.isEmpty || userRole == 'Select Role') {
       // Show an error message if any field is empty
       CustomSnackbar.show(
         'All fields are required.',
@@ -76,7 +123,7 @@ class SignInController extends ChangeNotifier {
 
     // Send the POST request
     final response = await http.post(
-      Uri.parse('https://ojawa-api.onrender.com/api/Auth/sign-in'),
+      Uri.parse('https://ojawa-api.onrender.com/api/Auth/$_url'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'username': userName,
@@ -96,10 +143,10 @@ class SignInController extends ChangeNotifier {
       final String accessToken = responseData['token'];
       final int userId = responseData['userId']; // Extract userId from response
 
-      // Store the access token and user ID
+      await prefs.setString('userName', userName);
+      await storage.write(key: 'userRole', value: _selectedRole);
       await storage.write(key: 'accessToken', value: accessToken);
-      await storage.write(
-          key: 'userId', value: userId.toString()); // Store userId as a string
+      await storage.write(key: 'userId', value: userId.toString());
 
       // Handle the successful response here
       CustomSnackbar.show(

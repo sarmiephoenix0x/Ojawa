@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 import '../../core/widgets/custom_snackbar.dart';
+import '../screens/auth/sign_up_page.dart';
 import '../screens/verify_otp/verify_otp.dart';
 
 class VerifyEmailController extends ChangeNotifier {
@@ -44,7 +45,8 @@ class VerifyEmailController extends ChangeNotifier {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': emailController.text.trim()}),
       );
-
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
       // Check if the response is successful
       if (response.statusCode == 200) {
         // Parse the response JSON
@@ -74,14 +76,30 @@ class VerifyEmailController extends ChangeNotifier {
         // Handle validation error
         final responseData = json.decode(response.body);
         final String message = responseData['message'];
+        final String status = responseData['status'];
 
         _isLoading = false;
         notifyListeners();
-
-        CustomSnackbar.show(
-          'Error: $message',
-          isError: true,
-        );
+        if (status == "Partial_Success" &&
+            message == "Email is already verified") {
+          CustomSnackbar.show(
+            '$message',
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SignUpPage(
+                  key: UniqueKey(),
+                  onToggleDarkMode: onToggleDarkMode,
+                  isDarkMode: isDarkMode),
+            ),
+          );
+        } else {
+          CustomSnackbar.show(
+            message,
+            isError: true,
+          );
+        }
       } else {
         // Handle other unexpected responses
 

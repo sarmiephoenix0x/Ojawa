@@ -4,16 +4,19 @@ import '../../../../core/widgets/custom_gap.dart' show Gap;
 
 class OrderActions extends StatelessWidget {
   final double width;
+  final double? height;
 
   const OrderActions({
     super.key,
     required this.width,
+    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: width,
+      height: height,
       padding: const EdgeInsets.all(8),
       alignment: Alignment.center,
       child: Row(

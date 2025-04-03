@@ -29,7 +29,7 @@ class OrderDetailsController extends ChangeNotifier {
   List<Widget> _buildLeftColumn(int orderLength) {
     return List.generate(
       orderLength,
-      (index) => OrderCell(text: "${index + 1}", width: 50),
+      (index) => OrderCell(text: "${index + 1}", width: 50, height: 120),
     );
   }
 
@@ -38,9 +38,10 @@ class OrderDetailsController extends ChangeNotifier {
       orderLength,
       (index) => Row(
         children: [
-          OrderSetup(img: 'images/Img6.png', text: name, width: 350),
-          const OrderSetup(text: "", text2: "", width: 200),
-          OrderSetup(text: amount, width: 200, isAmount: true),
+          OrderSetup(
+              img: 'images/Img6.png', text: name, width: 350, height: 120),
+          const OrderSetup(text: "", text2: "", width: 200, height: 120),
+          OrderSetup(text: amount, width: 200, isAmount: true, height: 120),
         ],
       ),
     );

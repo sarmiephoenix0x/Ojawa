@@ -54,6 +54,8 @@ class HomePageController extends ChangeNotifier {
   late ScrollController _scrollController;
   int pageNum = 1;
   bool _isFetchingMore = false;
+  String _userRole = "";
+  String _url = "";
 
   HomePageController() {
     initialize();
@@ -72,6 +74,7 @@ class HomePageController extends ChangeNotifier {
   bool get isFilterActive => _isFilterActive;
   ValueNotifier<String?> get selectedFilter => _selectedFilter;
   int? get selectedRadioValue => _selectedRadioValue;
+  String get userRole => _userRole;
 
   TextEditingController get searchController => _searchController;
   CarouselController get controller => _controller;
@@ -99,9 +102,10 @@ class HomePageController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void initialize() {
+  void initialize() async {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    await initializePrefs();
     connectivitySubscription = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
@@ -115,13 +119,17 @@ class HomePageController extends ChangeNotifier {
     _remainingTime =
         11 * 3600 + 15 * 60 + 4; // Example: 11 hours, 15 minutes, 4 seconds
     _startTimer();
-    initializePrefs();
     fetchUserProfile();
     fetchProducts(overwrite: true);
   }
 
   Future<void> initializePrefs() async {
     prefs = await SharedPreferences.getInstance();
+    String? savedRole = await storage.read(key: 'userRole');
+    if (savedRole != null) {
+      _userRole = savedRole;
+      notifyListeners();
+    }
   }
 
   Future<bool> checkForToken() async {
@@ -249,20 +257,29 @@ class HomePageController extends ChangeNotifier {
   }
 
   Future<void> fetchUserProfile() async {
-    // Retrieve the userId from storage
+    if (_userRole == "Customer") {
+      _url = "customer";
+      notifyListeners();
+    } else if (_userRole == "Vendor") {
+      _url = "vendor";
+      notifyListeners();
+    } else if (_userRole == "Logistics") {
+      _url = "logistics";
+      notifyListeners();
+    }
     userId =
         await getUserId(); // Assuming this retrieves the userId from Flutter Secure Storage
     final String? accessToken = await storage.read(
         key: 'accessToken'); // Use the correct key for access token
     final url =
-        'https://ojawa-api.onrender.com/api/Users/$userId'; // Update the URL to the correct endpoint
+        'https://ojawa-api.onrender.com/api/Users/$_url/$userId'; // Update the URL to the correct endpoint
 
     try {
       final response = await http.get(
         Uri.parse(url),
         headers: {
+          'Accept': 'text/plain',
           'Authorization': 'Bearer $accessToken',
-          'Content-Type': 'application/json',
         },
       );
 

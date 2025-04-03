@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/widgets/custom_snackbar.dart';
 import '../../core/widgets/error_dialog.dart';
@@ -18,6 +19,7 @@ class ProfilePageController extends ChangeNotifier {
   bool searchLoading = false;
   bool _isSearching = false;
   final storage = const FlutterSecureStorage();
+  late SharedPreferences prefs;
   int? _selectedRadioValue = 1;
   final TextEditingController _nameController = TextEditingController();
   final FocusNode _nameFocusNode = FocusNode();
@@ -37,6 +39,8 @@ class ProfilePageController extends ChangeNotifier {
   String? role;
   bool _isLoading = false;
   bool _isRefreshing = false;
+  String _userRole = "";
+  String _url = "";
 
   final Function(bool) onToggleDarkMode;
   final bool isDarkMode;
@@ -50,6 +54,7 @@ class ProfilePageController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get profileImage => _profileImage;
   int? get selectedRadioValue => _selectedRadioValue;
+  String get userRole => _userRole;
 
   TextEditingController get nameController => _nameController;
   TextEditingController get emailController => _emailController;
@@ -66,7 +71,8 @@ class ProfilePageController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void initialize() {
+  void initialize() async {
+    await initializePrefs();
     fetchUserProfile();
   }
 
@@ -84,14 +90,32 @@ class ProfilePageController extends ChangeNotifier {
     return null; // Return null if userId is not found or an error occurs
   }
 
+  Future<void> initializePrefs() async {
+    prefs = await SharedPreferences.getInstance();
+    String? savedRole = await storage.read(key: 'userRole');
+    if (savedRole != null) {
+      _userRole = savedRole;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchUserProfile() async {
-    // Retrieve the userId from storage
+    if (_userRole == "Customer") {
+      _url = "customer";
+      notifyListeners();
+    } else if (_userRole == "Vendor") {
+      _url = "vendor";
+      notifyListeners();
+    } else if (_userRole == "Logistics") {
+      _url = "logistics";
+      notifyListeners();
+    }
     userId =
         await getUserId(); // Assuming this retrieves the userId from Flutter Secure Storage
     final String? accessToken = await storage.read(
         key: 'accessToken'); // Use the correct key for access token
     final url =
-        'https://ojawa-api.onrender.com/api/Users/$userId'; // Update the URL to the correct endpoint
+        'https://ojawa-api.onrender.com/api/Users/$_url/$userId'; // Update the URL to the correct endpoint
 
     try {
       final response = await http.get(

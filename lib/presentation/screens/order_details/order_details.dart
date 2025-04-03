@@ -396,11 +396,11 @@ class _OrderDetailsState extends State<OrderDetails> {
                                   rightHandSideColumnWidth: 750,
                                   isFixedHeader: false,
                                   leftSideChildren:
-                                      orderDetailsController.buildLeftColumn(1),
+                                      orderDetailsController.buildLeftColumn(2),
                                   rightSideChildren:
                                       orderDetailsController.buildRightColumns(
-                                          1, widget.name, widget.amount),
-                                  itemCount: 1,
+                                          2, widget.name, widget.amount),
+                                  itemCount: 2,
                                   elevation: 5,
                                 ),
                               ),

@@ -4,18 +4,21 @@ class OrderStatus extends StatelessWidget {
   final String text;
   final String text2;
   final double width;
+  final double? height;
 
   const OrderStatus({
     super.key,
     required this.text,
     required this.text2,
     required this.width,
+    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: width,
+      height: height,
       padding: const EdgeInsets.all(8),
       alignment: Alignment.center,
       child: Column(

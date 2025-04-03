@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -7,7 +9,10 @@ import '../../../core/widgets/auth_label.dart';
 import '../../../core/widgets/auth_password_field.dart';
 import '../../../core/widgets/auth_text_field.dart';
 import '../../../core/widgets/auth_title.dart';
+import '../../../core/widgets/custom_gap.dart';
+import '../../../core/widgets/custom_text_field.dart';
 import '../../controllers/sign_up_controller.dart';
+import 'widgets/bottom_sheets/role_sheet.dart';
 
 class SignUpPage extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -23,6 +28,7 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final signUpController = Provider.of<SignUpController>(context);
     return OrientationBuilder(
       builder: (context, orientation) {
@@ -31,8 +37,8 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
             child: Center(
               child: SizedBox(
                 height: orientation == Orientation.portrait
-                    ? MediaQuery.of(context).size.height * 1.4
-                    : MediaQuery.of(context).size.height * 2.2,
+                    ? MediaQuery.of(context).size.height * 1.7
+                    : MediaQuery.of(context).size.height * 2.5,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -42,17 +48,72 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                     ),
 
                     SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-                    const AuthLabel(title: 'Username'),
+                    Center(
+                      child: Stack(
+                        children: [
+                          if (signUpController.profileImage.isEmpty)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(55),
+                              child: Container(
+                                width:
+                                    (111 / MediaQuery.of(context).size.width) *
+                                        MediaQuery.of(context).size.width,
+                                height:
+                                    (111 / MediaQuery.of(context).size.height) *
+                                        MediaQuery.of(context).size.height,
+                                color: Colors.grey,
+                                child: Image.asset(
+                                  'images/Profile.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            )
+                          else
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(55),
+                              child: Container(
+                                width:
+                                    (111 / MediaQuery.of(context).size.width) *
+                                        MediaQuery.of(context).size.width,
+                                height:
+                                    (111 / MediaQuery.of(context).size.height) *
+                                        MediaQuery.of(context).size.height,
+                                color: Colors.grey,
+                                child: Image.file(
+                                  File(signUpController.profileImage),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: InkWell(
+                              onTap: () {
+                                signUpController.selectImage();
+                              },
+                              child: Image.asset(
+                                height: 35,
+                                'images/profile_edit.png',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.05),
 
-                    AuthTextField(
+                    const AuthLabel(title: 'Username'),
+                    const Gap(5),
+                    CustomTextField(
                       controller: signUpController.userNameController,
                       focusNode: signUpController.userNameFocusNode,
                     ),
 
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     const AuthLabel(title: 'Email'),
-
-                    AuthTextField(
+                    const Gap(5), const Gap(5),
+                    CustomTextField(
                       label: 'example@gmail.com',
                       controller: signUpController.emailController,
                       focusNode: signUpController.emailFocusNode,
@@ -60,7 +121,7 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
 
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     const AuthLabel(title: 'Phone Number'),
-
+                    const Gap(5),
                     Form(
                       key: signUpController.formKey,
                       child: Column(
@@ -68,35 +129,51 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                           Padding(
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 20.0),
-                            child: IntlPhoneField(
-                              decoration: InputDecoration(
-                                labelText: 'Phone Number',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                  borderSide: BorderSide(),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                  borderSide: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? Colors.grey[900]
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(
+                                    5), // Smoother corners
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 8,
+                                    offset: const Offset(
+                                        0, 2), // Position shadow for depth
                                   ),
-                                ),
-                                counterText: '',
+                                ],
                               ),
-                              initialCountryCode: 'NG',
-                              // Set initial country code
-                              onChanged: (phone) {
-                                setState(() {
-                                  signUpController.phoneNumber =
-                                      phone.completeNumber;
-                                  signUpController.localPhoneNumber =
-                                      phone.number;
-                                });
-                              },
-                              onCountryChanged: (country) {
-                                print('Country changed to: ${country.name}');
-                              },
+                              child: IntlPhoneField(
+                                decoration: InputDecoration(
+                                  labelText: 'Phone Number',
+                                  border: InputBorder.none,
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                  ),
+                                  counterText: '',
+                                ),
+                                initialCountryCode: 'NG',
+                                // Set initial country code
+                                onChanged: (phone) {
+                                  setState(() {
+                                    signUpController.phoneNumber =
+                                        phone.completeNumber;
+                                    signUpController.localPhoneNumber =
+                                        phone.number;
+                                  });
+                                },
+                                onCountryChanged: (country) {
+                                  print('Country changed to: ${country.name}');
+                                },
+                              ),
                             ),
                           ),
                         ],
@@ -104,38 +181,55 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     const AuthLabel(title: 'Gender'),
+                    const Gap(5),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: DropdownButtonFormField<String>(
-                        value: signUpController.selectedGender,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            signUpController.selectedGender = newValue!;
-                          });
-                        },
-                        items: <String>['Male', 'Female', 'Other']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(
-                              value,
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 16.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[900] : Colors.white,
+                          borderRadius:
+                              BorderRadius.circular(5), // Smoother corners
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 8,
+                              offset: const Offset(
+                                  0, 2), // Position shadow for depth
+                            ),
+                          ],
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          value: signUpController.selectedGender,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              signUpController.selectedGender = newValue!;
+                            });
+                          },
+                          items: <String>['Male', 'Female', 'Other']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                value,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16.0,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.all(8),
+                            border: InputBorder.none,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5),
+                              borderSide: BorderSide(
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
-                            ),
-                          );
-                        }).toList(),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -143,14 +237,15 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     const AuthLabel(title: 'State'),
-                    AuthTextField(
+                    const Gap(5),
+                    CustomTextField(
                       controller: signUpController.stateController,
                       focusNode: signUpController.stateFocusNode,
                     ),
 
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     const AuthLabel(title: 'New Password'),
-
+                    const Gap(5),
                     AuthPasswordField(
                       controller: signUpController.passwordController,
                       focusNode: signUpController.passwordFocusNode,
@@ -158,12 +253,30 @@ class _SignUpPageState extends State<SignUpPage> with WidgetsBindingObserver {
 
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     const AuthLabel(title: 'Retype Password'),
-
+                    const Gap(5),
                     AuthPasswordField(
                       controller: signUpController.password2Controller,
                       focusNode: signUpController.password2FocusNode,
                     ),
-
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: AuthLabel(title: 'Role'),
+                    ),
+                    const Gap(5),
+                    CustomTextField(
+                      controller: signUpController.roleController,
+                      focusNode: signUpController.roleFocusNode,
+                      label: 'Select Role',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onPressed: () {
+                          showRoleSelection(
+                              context, signUpController.setSelectedRole);
+                        },
+                      ),
+                      readOnly: true,
+                    ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                     AuthButton(
                       onPressed: () {

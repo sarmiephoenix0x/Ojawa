@@ -27,14 +27,13 @@ class ProductsPageProducts extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 6),
         decoration: BoxDecoration(
           color: isDarkMode ? Colors.grey[900] : Colors.white,
-          borderRadius: BorderRadius.circular(12), // Smoother corners
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black
-                  .withOpacity(0.2), // Softer shadow for a clean look
+              color: Colors.black.withOpacity(0.2),
               spreadRadius: 2,
               blurRadius: 8,
-              offset: const Offset(0, 2), // Position shadow for depth
+              offset: const Offset(0, 2),
             ),
           ],
         ),

@@ -61,8 +61,7 @@ class VerifyOtpController extends ChangeNotifier {
           ),
         );
         CustomSnackbar.show(
-          'Error: $message',
-          isError: true,
+          message,
         );
       } else if (response.statusCode == 400) {
         _isLoading = false;

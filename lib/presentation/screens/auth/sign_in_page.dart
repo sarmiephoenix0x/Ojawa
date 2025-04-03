@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/widgets/auth_button.dart';
 import '../../../core/widgets/auth_label.dart';
 import '../../../core/widgets/auth_password_field.dart';
 import '../../../core/widgets/auth_text_field.dart';
 import '../../../core/widgets/auth_title.dart';
 import '../../../core/widgets/custom_gap.dart';
+import '../../../core/widgets/custom_text_field.dart';
 import '../../controllers/sign_in_controller.dart';
-import '../main_app/main_app.dart';
 import '../verify_email/verify_email.dart';
+import 'widgets/bottom_sheets/role_sheet.dart';
 
 class SignInPage extends StatefulWidget {
   final Function(bool) onToggleDarkMode;
@@ -61,20 +58,39 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                     Gap(MediaQuery.of(context).size.height * 0.05,
                         useMediaQuery: false),
                     const AuthLabel(title: 'Username'),
-
-                    AuthTextField(
+                    const Gap(5),
+                    CustomTextField(
                       controller: signInController.userNameController,
                       focusNode: signInController.userNameFocusNode,
                     ),
 
                     SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                     const AuthLabel(title: 'Password'),
-
+                    const Gap(5),
                     AuthPasswordField(
                       controller: signInController.passwordController,
                       focusNode: signInController.passwordFocusNode,
                     ),
 
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: AuthLabel(title: 'Role'),
+                    ),
+                    const Gap(5),
+                    CustomTextField(
+                      controller: signInController.roleController,
+                      focusNode: signInController.roleFocusNode,
+                      label: 'Select Role',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onPressed: () {
+                          showRoleSelection(
+                              context, signInController.setSelectedRole);
+                        },
+                      ),
+                      readOnly: true,
+                    ),
                     Row(
                       children: [
                         Row(
@@ -194,6 +210,7 @@ class _SignInPageState extends State<SignInPage> with WidgetsBindingObserver {
                             width: MediaQuery.of(context).size.width * 0.01),
                         GestureDetector(
                           onTap: () {
+                            signInController.setIsLoading(false);
                             Navigator.push(
                               context,
                               MaterialPageRoute(

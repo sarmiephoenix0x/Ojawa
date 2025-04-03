@@ -5,6 +5,7 @@ import '../../../../core/widgets/custom_gap.dart';
 class OrderSetup extends StatelessWidget {
   final String text;
   final String? text2;
+  final double? height;
   final double width;
   final String? img;
   final bool isAmount;
@@ -16,12 +17,14 @@ class OrderSetup extends StatelessWidget {
     this.text2,
     this.img,
     this.isAmount = false,
+    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: width,
+      height: height,
       padding: const EdgeInsets.all(8),
       alignment: Alignment.center,
       child: Row(

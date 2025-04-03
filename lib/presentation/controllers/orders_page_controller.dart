@@ -47,6 +47,17 @@ class OrdersPageController extends ChangeNotifier {
       "Order Status": "Pending",
       "Order Type": "Home Delivery",
     },
+    {
+      "Order ID": "ORD124",
+      "Order Date": "27 Dec 2025",
+      "Order Date2": "01:11 PM",
+      "Customer Info": "Jane Smith",
+      "Customer Info2": "09106482578",
+      "Total Amount": "120.00",
+      "Total Amount Status": "Unpaid",
+      "Order Status": "Pending",
+      "Order Type": "Home Delivery",
+    },
     // Add more orders here
   ];
 
@@ -69,11 +80,7 @@ class OrdersPageController extends ChangeNotifier {
   List<Widget> _buildLeftColumn() {
     return List.generate(
       _orders.length,
-      (index) => OrderCell(
-        text: "${index + 1}",
-        width: 50,
-        height: 50,
-      ),
+      (index) => OrderCell(text: "${index + 1}", width: 50, height: 70),
     );
   }
 
@@ -104,25 +111,30 @@ class OrdersPageController extends ChangeNotifier {
         },
         child: Row(
           children: [
-            OrderCell(text: _orders[index]["Order ID"]!, width: 150),
+            OrderCell(
+                text: _orders[index]["Order ID"]!, width: 150, height: 70),
             OrderCell(
                 text: _orders[index]["Order Date"]!,
                 text2: _orders[index]["Order Date2"]!,
-                width: 150),
+                width: 150,
+                height: 70),
             OrderCell(
                 text: _orders[index]["Customer Info"]!,
                 text2: _orders[index]["Customer Info2"]!,
-                width: 200),
+                width: 200,
+                height: 70),
             OrderCell(
                 text: _orders[index]["Total Amount"]!,
                 text2: _orders[index]["Total Amount Status"]!,
                 width: 150,
-                isAmount: true),
+                isAmount: true,
+                height: 70),
             OrderStatus(
                 text: _orders[index]["Order Status"]!,
                 text2: _orders[index]["Order Type"]!,
-                width: 150),
-            const OrderActions(width: 150),
+                width: 150,
+                height: 70),
+            const OrderActions(width: 150, height: 70),
           ],
         ),
       ),
