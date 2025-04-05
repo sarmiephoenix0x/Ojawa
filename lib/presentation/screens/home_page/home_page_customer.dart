@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:provider/provider.dart';
 
+import '../../../core/widgets/custom_error_message.dart';
 import '../../../core/widgets/product.dart';
 import '../../controllers/home_page_controller.dart';
 import '../top_categories_details/top_categories_details.dart';
@@ -617,71 +618,81 @@ class _HomePageCustomerState extends State<HomePageCustomer>
                                           .onSurface,
                                     ),
                                   )
-                                : NotificationListener<ScrollNotification>(
-                                    onNotification:
-                                        (ScrollNotification scrollInfo) {
-                                      if (!homePageController.isFetchingMore &&
-                                          scrollInfo.metrics.pixels ==
-                                              scrollInfo
-                                                  .metrics.maxScrollExtent) {
-                                        // Trigger loading more products
-                                        //fetchMoreProducts();
-                                        return true;
-                                      }
-                                      return false;
-                                    },
-                                    child: ListView.builder(
-                                      controller: homePageController
-                                          .scrollController, // Attach the scroll controller
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: homePageController.products
-                                          .length, // Set to products.length
-                                      itemBuilder: (context, index) {
-                                        final product =
-                                            homePageController.products[
-                                                index]; // Access product safely
-                                        List<String> imgList = [];
-                                        if (product['img'] != null) {
-                                          if (product['img'] is List<String>) {
-                                            imgList = List<String>.from(
-                                                product['img']);
-                                          } else if (product['img'] is String) {
-                                            imgList = [product['img']];
+                                : homePageController.products.isEmpty
+                                    ? CustomErrorMessage(
+                                        text:
+                                            'No products available at the moment.',
+                                        onPressed: () => homePageController
+                                            .fetchProducts(overwrite: true),
+                                      )
+                                    : NotificationListener<ScrollNotification>(
+                                        onNotification:
+                                            (ScrollNotification scrollInfo) {
+                                          if (!homePageController
+                                                  .isFetchingMore &&
+                                              scrollInfo.metrics.pixels ==
+                                                  scrollInfo.metrics
+                                                      .maxScrollExtent) {
+                                            // Trigger loading more products
+                                            //fetchMoreProducts();
+                                            return true;
                                           }
-                                        }
-                                        List<String> fullImgList =
-                                            imgList.map((img) {
-                                          return '$img/download?project=677181a60009f5d039dd';
-                                        }).toList();
+                                          return false;
+                                        },
+                                        child: ListView.builder(
+                                          controller: homePageController
+                                              .scrollController, // Attach the scroll controller
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: homePageController.products
+                                              .length, // Set to products.length
+                                          itemBuilder: (context, index) {
+                                            final product = homePageController
+                                                    .products[
+                                                index]; // Access product safely
+                                            List<String> imgList = [];
+                                            if (product['img'] != null) {
+                                              if (product['img']
+                                                  is List<String>) {
+                                                imgList = List<String>.from(
+                                                    product['img']);
+                                              } else if (product['img']
+                                                  is String) {
+                                                imgList = [product['img']];
+                                              }
+                                            }
+                                            List<String> fullImgList =
+                                                imgList.map((img) {
+                                              return '$img/download?project=677181a60009f5d039dd';
+                                            }).toList();
 
-                                        return Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.6,
-                                          margin: const EdgeInsets.only(
-                                              right: 20.0),
-                                          child: Product(
-                                            itemId: product['id'],
-                                            name: product['name']!,
-                                            img: fullImgList,
-                                            details: product['details']!,
-                                            amount: product['amount']!,
-                                            slashedPrice:
-                                                product['slashedPrice']!,
-                                            discount: product['discount']!,
-                                            starImg: product['starImg']!,
-                                            rating: product['rating']!,
-                                            rating2: product['rating2']!,
-                                            liked: product['isInFavorite'],
-                                            onToggleDarkMode:
-                                                widget.onToggleDarkMode,
-                                            isDarkMode: widget.isDarkMode,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
+                                            return Container(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.6,
+                                              margin: const EdgeInsets.only(
+                                                  right: 20.0),
+                                              child: Product(
+                                                itemId: product['id'],
+                                                name: product['name']!,
+                                                img: fullImgList,
+                                                details: product['details']!,
+                                                amount: product['amount']!,
+                                                slashedPrice:
+                                                    product['slashedPrice']!,
+                                                discount: product['discount']!,
+                                                starImg: product['starImg']!,
+                                                rating: product['rating']!,
+                                                rating2: product['rating2']!,
+                                                liked: product['isInFavorite'],
+                                                onToggleDarkMode:
+                                                    widget.onToggleDarkMode,
+                                                isDarkMode: widget.isDarkMode,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
                           ),
                         ),
 
@@ -758,71 +769,81 @@ class _HomePageCustomerState extends State<HomePageCustomer>
                                           .onSurface,
                                     ),
                                   )
-                                : NotificationListener<ScrollNotification>(
-                                    onNotification:
-                                        (ScrollNotification scrollInfo) {
-                                      if (!homePageController.isFetchingMore &&
-                                          scrollInfo.metrics.pixels ==
-                                              scrollInfo
-                                                  .metrics.maxScrollExtent) {
-                                        // Trigger loading more products
-                                        //fetchMoreProducts();
-                                        return true;
-                                      }
-                                      return false;
-                                    },
-                                    child: ListView.builder(
-                                      controller: homePageController
-                                          .scrollController, // Attach the scroll controller
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: homePageController.products
-                                          .length, // Set to products.length, no extra item for loader
-                                      itemBuilder: (context, index) {
-                                        final product = homePageController
-                                                .products[
-                                            index]; // Access product at current index
-                                        List<String> imgList = [];
-                                        if (product['img'] != null) {
-                                          if (product['img'] is List<String>) {
-                                            imgList = List<String>.from(
-                                                product['img']);
-                                          } else if (product['img'] is String) {
-                                            imgList = [product['img']];
+                                : homePageController.products.isEmpty
+                                    ? CustomErrorMessage(
+                                        text:
+                                            'No products available at the moment.',
+                                        onPressed: () => homePageController
+                                            .fetchProducts(overwrite: true),
+                                      )
+                                    : NotificationListener<ScrollNotification>(
+                                        onNotification:
+                                            (ScrollNotification scrollInfo) {
+                                          if (!homePageController
+                                                  .isFetchingMore &&
+                                              scrollInfo.metrics.pixels ==
+                                                  scrollInfo.metrics
+                                                      .maxScrollExtent) {
+                                            // Trigger loading more products
+                                            //fetchMoreProducts();
+                                            return true;
                                           }
-                                        }
-                                        List<String> fullImgList =
-                                            imgList.map((img) {
-                                          return '$img/download?project=677181a60009f5d039dd';
-                                        }).toList();
+                                          return false;
+                                        },
+                                        child: ListView.builder(
+                                          controller: homePageController
+                                              .scrollController, // Attach the scroll controller
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: homePageController.products
+                                              .length, // Set to products.length, no extra item for loader
+                                          itemBuilder: (context, index) {
+                                            final product = homePageController
+                                                    .products[
+                                                index]; // Access product at current index
+                                            List<String> imgList = [];
+                                            if (product['img'] != null) {
+                                              if (product['img']
+                                                  is List<String>) {
+                                                imgList = List<String>.from(
+                                                    product['img']);
+                                              } else if (product['img']
+                                                  is String) {
+                                                imgList = [product['img']];
+                                              }
+                                            }
+                                            List<String> fullImgList =
+                                                imgList.map((img) {
+                                              return '$img/download?project=677181a60009f5d039dd';
+                                            }).toList();
 
-                                        return Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.6,
-                                          margin: const EdgeInsets.only(
-                                              right: 20.0),
-                                          child: Product(
-                                            itemId: product['id'],
-                                            name: product['name']!,
-                                            img: fullImgList,
-                                            details: product['details']!,
-                                            amount: product['amount']!,
-                                            slashedPrice:
-                                                product['slashedPrice']!,
-                                            discount: product['discount']!,
-                                            starImg: product['starImg']!,
-                                            rating: product['rating']!,
-                                            rating2: product['rating2']!,
-                                            liked: product['isInFavorite'],
-                                            onToggleDarkMode:
-                                                widget.onToggleDarkMode,
-                                            isDarkMode: widget.isDarkMode,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
+                                            return Container(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.6,
+                                              margin: const EdgeInsets.only(
+                                                  right: 20.0),
+                                              child: Product(
+                                                itemId: product['id'],
+                                                name: product['name']!,
+                                                img: fullImgList,
+                                                details: product['details']!,
+                                                amount: product['amount']!,
+                                                slashedPrice:
+                                                    product['slashedPrice']!,
+                                                discount: product['discount']!,
+                                                starImg: product['starImg']!,
+                                                rating: product['rating']!,
+                                                rating2: product['rating2']!,
+                                                liked: product['isInFavorite'],
+                                                onToggleDarkMode:
+                                                    widget.onToggleDarkMode,
+                                                isDarkMode: widget.isDarkMode,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
                           ),
                         ),
                       ],

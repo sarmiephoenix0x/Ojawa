@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/widgets/custom_error_message.dart';
 import '../../../core/widgets/product.dart';
 import '../../controllers/order_details_controller.dart';
 import '../exchange_order/exchange_order.dart';
@@ -575,63 +576,73 @@ class _OrderDetailsCustomerState extends State<OrderDetailsCustomer> {
                                           .colorScheme
                                           .onSurface,
                                     ),
-                                  ) // Show loader while loading
-                                : ListView.builder(
-                                    scrollDirection: Axis
-                                        .horizontal, // Enable horizontal scrolling
-                                    itemCount:
-                                        orderDetailsController.products.length,
-                                    itemBuilder: (context, index) {
-                                      final product = orderDetailsController
-                                          .products[index];
-                                      List<String> imgList = [];
+                                  )
+                                : orderDetailsController.products.isEmpty
+                                    ? CustomErrorMessage(
+                                        text:
+                                            'No products available at the moment.',
+                                        onPressed: () => orderDetailsController
+                                            .fetchProducts(),
+                                      )
+                                    : ListView.builder(
+                                        scrollDirection: Axis
+                                            .horizontal, // Enable horizontal scrolling
+                                        itemCount: orderDetailsController
+                                            .products.length,
+                                        itemBuilder: (context, index) {
+                                          final product = orderDetailsController
+                                              .products[index];
+                                          List<String> imgList = [];
 
-                                      // Check if product['img'] is not null
-                                      if (product['img'] != null) {
-                                        if (product['img'] is List<String>) {
-                                          // If it's already a List<String>, use it directly
-                                          imgList =
-                                              List<String>.from(product['img']);
-                                        } else if (product['img'] is String) {
-                                          // If it's a String, convert it to a List<String>
-                                          imgList = [
-                                            product['img']
-                                          ]; // Create a list with the single image
-                                        }
-                                      }
+                                          // Check if product['img'] is not null
+                                          if (product['img'] != null) {
+                                            if (product['img']
+                                                is List<String>) {
+                                              // If it's already a List<String>, use it directly
+                                              imgList = List<String>.from(
+                                                  product['img']);
+                                            } else if (product['img']
+                                                is String) {
+                                              // If it's a String, convert it to a List<String>
+                                              imgList = [
+                                                product['img']
+                                              ]; // Create a list with the single image
+                                            }
+                                          }
 
-                                      // Append the download string to each image URL in imgList
-                                      List<String> fullImgList =
-                                          imgList.map((img) {
-                                        return '$img/download?project=677181a60009f5d039dd';
-                                      }).toList();
-                                      return Container(
-                                        width: MediaQuery.of(context)
-                                                .size
-                                                .width *
-                                            0.6, // Set a fixed width for each item
-                                        margin: const EdgeInsets.only(
-                                            right: 20.0), // Space between items
-                                        child: Product(
-                                          itemId: product['id'],
-                                          name: product['name']!,
-                                          img: fullImgList,
-                                          details: product['details']!,
-                                          amount: product['amount']!,
-                                          slashedPrice:
-                                              product['slashedPrice']!,
-                                          discount: product['discount']!,
-                                          starImg: product['starImg']!,
-                                          rating: product['rating']!,
-                                          rating2: product['rating2']!,
-                                          liked: product['isInFavorite'],
-                                          onToggleDarkMode:
-                                              widget.onToggleDarkMode,
-                                          isDarkMode: widget.isDarkMode,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                          // Append the download string to each image URL in imgList
+                                          List<String> fullImgList =
+                                              imgList.map((img) {
+                                            return '$img/download?project=677181a60009f5d039dd';
+                                          }).toList();
+                                          return Container(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.6, // Set a fixed width for each item
+                                            margin: const EdgeInsets.only(
+                                                right:
+                                                    20.0), // Space between items
+                                            child: Product(
+                                              itemId: product['id'],
+                                              name: product['name']!,
+                                              img: fullImgList,
+                                              details: product['details']!,
+                                              amount: product['amount']!,
+                                              slashedPrice:
+                                                  product['slashedPrice']!,
+                                              discount: product['discount']!,
+                                              starImg: product['starImg']!,
+                                              rating: product['rating']!,
+                                              rating2: product['rating2']!,
+                                              liked: product['isInFavorite'],
+                                              onToggleDarkMode:
+                                                  widget.onToggleDarkMode,
+                                              isDarkMode: widget.isDarkMode,
+                                            ),
+                                          );
+                                        },
+                                      ),
                           ),
                         ),
                         SizedBox(

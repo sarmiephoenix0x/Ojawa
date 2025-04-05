@@ -23,7 +23,7 @@ class CategoriesDetailsController extends ChangeNotifier {
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
-  final bool _isLoading2 = true;
+  bool _isLoading2 = true;
   StreamSubscription<ConnectivityResult>? connectivitySubscription;
   late ScrollController _scrollController;
   int pageNum = 1;
@@ -39,6 +39,7 @@ class CategoriesDetailsController extends ChangeNotifier {
   int get current => _current;
   List<String> get imagePaths => _imagePaths;
   bool get isLoading => _isLoading;
+  bool get isLoading2 => _isLoading2;
   List<Map<String, dynamic>> get categories => _categories;
   bool get isFetchingMore => _isFetchingMore;
   List<Map<String, dynamic>> get products => _products;
@@ -73,6 +74,7 @@ class CategoriesDetailsController extends ChangeNotifier {
   }
 
   Future<void> fetchCategories() async {
+    _isLoading = true;
     final String? accessToken = await storage.read(key: 'accessToken');
     final url =
         'https://ojawa-api.onrender.com/api/Products/categories'; // Update with your categories endpoint
@@ -101,9 +103,11 @@ class CategoriesDetailsController extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
       } else {
+        _isLoading = false;
         print('Error fetching categories: ${response.statusCode}');
       }
     } catch (error) {
+      _isLoading = false;
       print('Error: $error');
     }
   }
@@ -149,18 +153,18 @@ class CategoriesDetailsController extends ChangeNotifier {
   void _onScroll() {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent &&
-        !_isLoading &&
+        !_isLoading2 &&
         !_isFetchingMore) {
       //fetchMoreProducts(); // Trigger fetching more products
     }
   }
 
   Future<void> fetchProducts() async {
-    _isLoading = true;
+    _isLoading2 = true;
     notifyListeners();
     await _fetchProductsForPage(pageNum);
 
-    _isLoading = false;
+    _isLoading2 = false;
     notifyListeners();
   }
 
@@ -215,11 +219,14 @@ class CategoriesDetailsController extends ChangeNotifier {
             'hasDiscount': product['hasDiscount'],
           };
         }).toList());
+        _isLoading2 = false;
         notifyListeners();
       } else {
+        _isLoading2 = false;
         print('Error fetching products: ${response.statusCode}');
       }
     } catch (error) {
+      _isLoading2 = false;
       print('Error: $error');
     }
   }

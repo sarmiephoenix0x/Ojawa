@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:provider/provider.dart';
 
+import '../../../core/widgets/custom_error_message.dart';
 import '../../../core/widgets/product.dart';
 import '../../controllers/categories_details_controller.dart';
 import '../top_categories_details/top_categories_details.dart';
@@ -105,98 +106,109 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                             )
-                          : GridView.builder(
-                              padding: const EdgeInsets.only(top: 20.0),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 1,
-                                crossAxisSpacing: 8.0,
-                                mainAxisSpacing: 8.0,
-                              ),
-                              itemCount:
-                                  categoriesDetailsController.categories.length,
-                              itemBuilder: (context, index) {
-                                final category = categoriesDetailsController
-                                    .categories[index];
-                                List<String> imgList = [];
-                                if (category['categoryImageUrl'] != null) {
-                                  if (category['categoryImageUrl']
-                                      is List<String>) {
-                                    imgList = List<String>.from(
-                                        category['categoryImageUrl']);
-                                  } else if (category['categoryImageUrl']
-                                      is String) {
-                                    imgList = [category['categoryImageUrl']];
-                                  }
-                                }
-                                List<String> fullImgList = imgList.map((img) {
-                                  return '$img/download?project=677181a60009f5d039dd';
-                                }).toList();
+                          : categoriesDetailsController.categories.isEmpty
+                              ? CustomErrorMessage(
+                                  text:
+                                      'No categories available at the moment.',
+                                  onPressed: () => categoriesDetailsController
+                                      .fetchCategories(),
+                                )
+                              : GridView.builder(
+                                  padding: const EdgeInsets.only(top: 20.0),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 1,
+                                    crossAxisSpacing: 8.0,
+                                    mainAxisSpacing: 8.0,
+                                  ),
+                                  itemCount: categoriesDetailsController
+                                      .categories.length,
+                                  itemBuilder: (context, index) {
+                                    final category = categoriesDetailsController
+                                        .categories[index];
+                                    List<String> imgList = [];
+                                    if (category['categoryImageUrl'] != null) {
+                                      if (category['categoryImageUrl']
+                                          is List<String>) {
+                                        imgList = List<String>.from(
+                                            category['categoryImageUrl']);
+                                      } else if (category['categoryImageUrl']
+                                          is String) {
+                                        imgList = [
+                                          category['categoryImageUrl']
+                                        ];
+                                      }
+                                    }
+                                    List<String> fullImgList =
+                                        imgList.map((img) {
+                                      return '$img/download?project=677181a60009f5d039dd';
+                                    }).toList();
 
-                                // Ensure the image URL is not empty
-                                final imageUrl = fullImgList.isNotEmpty
-                                    ? fullImgList[0]
-                                    : null;
+                                    // Ensure the image URL is not empty
+                                    final imageUrl = fullImgList.isNotEmpty
+                                        ? fullImgList[0]
+                                        : null;
 
-                                return Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                TopCategoriesDetails(
-                                              key: UniqueKey(),
-                                              id: category['id'],
-                                              discountOnly: false,
-                                              onToggleDarkMode:
-                                                  widget.onToggleDarkMode,
-                                              isDarkMode: widget.isDarkMode,
+                                    return Column(
+                                      children: [
+                                        InkWell(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    TopCategoriesDetails(
+                                                  key: UniqueKey(),
+                                                  id: category['id'],
+                                                  discountOnly: false,
+                                                  onToggleDarkMode:
+                                                      widget.onToggleDarkMode,
+                                                  isDarkMode: widget.isDarkMode,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                            ),
+                                            elevation: 4,
+                                            child: Container(
+                                              height: 108,
+                                              width: double.infinity,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                image: imageUrl != null
+                                                    ? DecorationImage(
+                                                        image: NetworkImage(
+                                                            imageUrl), // Use the first image URL
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : null, // Handle cases where no image is available
+                                                color: imageUrl == null
+                                                    ? Colors.grey.shade300
+                                                    : null, // Placeholder color if no image
+                                              ),
                                             ),
                                           ),
-                                        );
-                                      },
-                                      child: Card(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(15),
                                         ),
-                                        elevation: 4,
-                                        child: Container(
-                                          height: 108,
-                                          width: double.infinity,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(15),
-                                            image: imageUrl != null
-                                                ? DecorationImage(
-                                                    image: NetworkImage(
-                                                        imageUrl), // Use the first image URL
-                                                    fit: BoxFit.cover,
-                                                  )
-                                                : null, // Handle cases where no image is available
-                                            color: imageUrl == null
-                                                ? Colors.grey.shade300
-                                                : null, // Placeholder color if no image
+                                        const SizedBox(height: 4),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            category['name'],
+                                            style:
+                                                const TextStyle(fontSize: 14),
+                                            textAlign: TextAlign.center,
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        category['name'],
-                                        style: const TextStyle(fontSize: 14),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
+                                      ],
+                                    );
+                                  },
+                                ),
                     ),
                     Row(
                       children: [
@@ -238,69 +250,84 @@ class _CategoriesDetailsState extends State<CategoriesDetails> {
                     SizedBox(height: MediaQuery.of(context).size.height * 0.03),
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.62,
-                      child: categoriesDetailsController.isLoading
+                      child: categoriesDetailsController.isLoading2
                           ? Center(
                               child: CircularProgressIndicator(
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                             )
-                          : NotificationListener<ScrollNotification>(
-                              onNotification: (ScrollNotification scrollInfo) {
-                                if (!categoriesDetailsController
-                                        .isFetchingMore &&
-                                    scrollInfo.metrics.pixels ==
-                                        scrollInfo.metrics.maxScrollExtent) {
-                                  // Trigger loading more products
-                                  //fetchMoreProducts();
-                                  return true;
-                                }
-                                return false;
-                              },
-                              child: ListView.builder(
-                                controller: categoriesDetailsController
-                                    .scrollController, // Attach the scroll controller
-                                scrollDirection: Axis.horizontal,
-                                itemCount: categoriesDetailsController
-                                    .products.length, // Set to products.length
-                                itemBuilder: (context, index) {
-                                  final product = categoriesDetailsController
-                                      .products[index]; // Access product safely
-                                  List<String> imgList = [];
-                                  if (product['img'] != null) {
-                                    if (product['img'] is List<String>) {
-                                      imgList =
-                                          List<String>.from(product['img']);
-                                    } else if (product['img'] is String) {
-                                      imgList = [product['img']];
+                          : categoriesDetailsController.products.isEmpty
+                              ? CustomErrorMessage(
+                                  text: 'No products available at the moment.',
+                                  onPressed: () => categoriesDetailsController
+                                      .fetchProducts(),
+                                )
+                              : NotificationListener<ScrollNotification>(
+                                  onNotification:
+                                      (ScrollNotification scrollInfo) {
+                                    if (!categoriesDetailsController
+                                            .isFetchingMore &&
+                                        scrollInfo.metrics.pixels ==
+                                            scrollInfo
+                                                .metrics.maxScrollExtent) {
+                                      // Trigger loading more products
+                                      //fetchMoreProducts();
+                                      return true;
                                     }
-                                  }
-                                  List<String> fullImgList = imgList.map((img) {
-                                    return '$img/download?project=677181a60009f5d039dd';
-                                  }).toList();
+                                    return false;
+                                  },
+                                  child: ListView.builder(
+                                    controller: categoriesDetailsController
+                                        .scrollController, // Attach the scroll controller
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: categoriesDetailsController
+                                        .products
+                                        .length, // Set to products.length
+                                    itemBuilder: (context, index) {
+                                      final product =
+                                          categoriesDetailsController.products[
+                                              index]; // Access product safely
+                                      List<String> imgList = [];
+                                      if (product['img'] != null) {
+                                        if (product['img'] is List<String>) {
+                                          imgList =
+                                              List<String>.from(product['img']);
+                                        } else if (product['img'] is String) {
+                                          imgList = [product['img']];
+                                        }
+                                      }
+                                      List<String> fullImgList =
+                                          imgList.map((img) {
+                                        return '$img/download?project=677181a60009f5d039dd';
+                                      }).toList();
 
-                                  return Container(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.6,
-                                    margin: const EdgeInsets.only(right: 20.0),
-                                    child: Product(
-                                      itemId: product['id'],
-                                      name: product['name']!,
-                                      img: fullImgList,
-                                      details: product['details']!,
-                                      amount: product['amount']!,
-                                      slashedPrice: product['slashedPrice']!,
-                                      discount: product['discount']!,
-                                      starImg: product['starImg']!,
-                                      rating: product['rating']!,
-                                      rating2: product['rating2']!,
-                                      liked: product['isInFavorite'],
-                                      onToggleDarkMode: widget.onToggleDarkMode,
-                                      isDarkMode: widget.isDarkMode,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                                      return Container(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.6,
+                                        margin:
+                                            const EdgeInsets.only(right: 20.0),
+                                        child: Product(
+                                          itemId: product['id'],
+                                          name: product['name']!,
+                                          img: fullImgList,
+                                          details: product['details']!,
+                                          amount: product['amount']!,
+                                          slashedPrice:
+                                              product['slashedPrice']!,
+                                          discount: product['discount']!,
+                                          starImg: product['starImg']!,
+                                          rating: product['rating']!,
+                                          rating2: product['rating2']!,
+                                          liked: product['isInFavorite'],
+                                          onToggleDarkMode:
+                                              widget.onToggleDarkMode,
+                                          isDarkMode: widget.isDarkMode,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                     ),
                   ],
                 ),

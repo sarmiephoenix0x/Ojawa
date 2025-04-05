@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/widgets/custom_error_message.dart';
 import '../../../core/widgets/filter_by.dart';
 import '../../../core/widgets/filter_widget.dart';
 import '../../../core/widgets/product.dart';
@@ -175,115 +176,131 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                           .onSurface,
                                     ),
                                   )
-                                : NotificationListener<ScrollNotification>(
-                                    onNotification:
-                                        (ScrollNotification scrollInfo) {
-                                      if (!productDetailsController
-                                              .isFetchingMore &&
-                                          scrollInfo.metrics.pixels ==
-                                              scrollInfo
-                                                  .metrics.maxScrollExtent) {
-                                        // Trigger loading more products
-                                        //fetchMoreProducts();
-                                        return true;
-                                      }
-                                      return false;
-                                    },
-                                    child: ListView.builder(
-                                      controller: productDetailsController
-                                          .scrollController, // Attach the scroll controller
-                                      scrollDirection:
-                                          Axis.vertical, // Vertical scrolling
-                                      itemCount: productDetailsController
-                                              .getActiveProducts()
-                                              .isNotEmpty
-                                          ? productDetailsController
-                                                  .getActiveProducts()
-                                                  .length +
-                                              1
-                                          : 0, // Avoids index errors when the list is empty
-
-                                      itemBuilder: (context, index) {
-                                        final activeProducts =
+                                : productDetailsController.products.isEmpty
+                                    ? CustomErrorMessage(
+                                        text:
+                                            'No products available at the moment.',
+                                        onPressed: () =>
                                             productDetailsController
-                                                .getActiveProducts();
-                                        if (index >= activeProducts.length) {
-                                          // Show loader at the end
-                                          return Container(
-                                            alignment: Alignment.center,
-                                            padding: const EdgeInsets.all(10.0),
-                                            child: productDetailsController
-                                                    .isFetchingMore
-                                                ? CircularProgressIndicator(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface,
-                                                  )
-                                                : const SizedBox.shrink(),
-                                          );
-                                        }
-
-                                        final product = activeProducts[index];
-
-                                        List<String> imgList = [];
-                                        if (product['img'] != null) {
-                                          if (product['img'] is List<String>) {
-                                            imgList = List<String>.from(
-                                                product['img']);
-                                          } else if (product['img'] is String) {
-                                            imgList = [product['img']];
+                                                .fetchProducts(overwrite: true),
+                                      )
+                                    : NotificationListener<ScrollNotification>(
+                                        onNotification:
+                                            (ScrollNotification scrollInfo) {
+                                          if (!productDetailsController
+                                                  .isFetchingMore &&
+                                              scrollInfo.metrics.pixels ==
+                                                  scrollInfo.metrics
+                                                      .maxScrollExtent) {
+                                            // Trigger loading more products
+                                            //fetchMoreProducts();
+                                            return true;
                                           }
-                                        }
-                                        List<String> fullImgList =
-                                            imgList.map((img) {
-                                          return '$img/download?project=677181a60009f5d039dd';
-                                        }).toList();
+                                          return false;
+                                        },
+                                        child: ListView.builder(
+                                          controller: productDetailsController
+                                              .scrollController, // Attach the scroll controller
+                                          scrollDirection: Axis
+                                              .vertical, // Vertical scrolling
+                                          itemCount: productDetailsController
+                                                  .getActiveProducts()
+                                                  .isNotEmpty
+                                              ? productDetailsController
+                                                      .getActiveProducts()
+                                                      .length +
+                                                  1
+                                              : 0, // Avoids index errors when the list is empty
 
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                              bottom:
-                                                  20.0), // Add spacing between items
-                                          child: Container(
-                                            width: double
-                                                .infinity, // Full screen width
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Theme.of(context)
-                                                  .cardColor, // Optional: background color
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.grey
-                                                      .withOpacity(0.2),
-                                                  blurRadius: 5,
-                                                  offset: const Offset(0, 3),
+                                          itemBuilder: (context, index) {
+                                            final activeProducts =
+                                                productDetailsController
+                                                    .getActiveProducts();
+                                            if (index >=
+                                                activeProducts.length) {
+                                              // Show loader at the end
+                                              return Container(
+                                                alignment: Alignment.center,
+                                                padding:
+                                                    const EdgeInsets.all(10.0),
+                                                child: productDetailsController
+                                                        .isFetchingMore
+                                                    ? CircularProgressIndicator(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface,
+                                                      )
+                                                    : const SizedBox.shrink(),
+                                              );
+                                            }
+
+                                            final product =
+                                                activeProducts[index];
+
+                                            List<String> imgList = [];
+                                            if (product['img'] != null) {
+                                              if (product['img']
+                                                  is List<String>) {
+                                                imgList = List<String>.from(
+                                                    product['img']);
+                                              } else if (product['img']
+                                                  is String) {
+                                                imgList = [product['img']];
+                                              }
+                                            }
+                                            List<String> fullImgList =
+                                                imgList.map((img) {
+                                              return '$img/download?project=677181a60009f5d039dd';
+                                            }).toList();
+
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  bottom:
+                                                      20.0), // Add spacing between items
+                                              child: Container(
+                                                width: double
+                                                    .infinity, // Full screen width
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  color: Theme.of(context)
+                                                      .cardColor, // Optional: background color
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.grey
+                                                          .withOpacity(0.2),
+                                                      blurRadius: 5,
+                                                      offset:
+                                                          const Offset(0, 3),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                            padding: const EdgeInsets.all(
-                                                10.0), // Content padding
-                                            child: Product(
-                                              itemId: product['id'],
-                                              name: product['name']!,
-                                              img: fullImgList,
-                                              details: product['details']!,
-                                              amount: product['amount']!,
-                                              slashedPrice:
-                                                  product['slashedPrice']!,
-                                              discount: product['discount']!,
-                                              starImg: product['starImg']!,
-                                              rating: product['rating']!,
-                                              rating2: product['rating2']!,
-                                              liked: product['isInFavorite'],
-                                              onToggleDarkMode:
-                                                  widget.onToggleDarkMode,
-                                              isDarkMode: widget.isDarkMode,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
+                                                padding: const EdgeInsets.all(
+                                                    10.0), // Content padding
+                                                child: Product(
+                                                  itemId: product['id'],
+                                                  name: product['name']!,
+                                                  img: fullImgList,
+                                                  details: product['details']!,
+                                                  amount: product['amount']!,
+                                                  slashedPrice:
+                                                      product['slashedPrice']!,
+                                                  discount:
+                                                      product['discount']!,
+                                                  starImg: product['starImg']!,
+                                                  rating: product['rating']!,
+                                                  rating2: product['rating2']!,
+                                                  liked:
+                                                      product['isInFavorite'],
+                                                  onToggleDarkMode:
+                                                      widget.onToggleDarkMode,
+                                                  isDarkMode: widget.isDarkMode,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
                           ),
                         )
                       ] else ...[
@@ -327,119 +344,129 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                         Theme.of(context).colorScheme.onSurface,
                                   ),
                                 )
-                              : NotificationListener<ScrollNotification>(
-                                  onNotification:
-                                      (ScrollNotification scrollInfo) {
-                                    if (!productDetailsController
-                                            .isFetchingMore &&
-                                        scrollInfo.metrics.pixels ==
-                                            scrollInfo
-                                                .metrics.maxScrollExtent) {
-                                      // Trigger loading more products
-                                      //fetchMoreProducts();
-                                      return true;
-                                    }
-                                    return false;
-                                  },
-                                  child: ListView.builder(
-                                    controller: productDetailsController
-                                        .scrollController, // Attach the scroll controller
-                                    scrollDirection:
-                                        Axis.vertical, // Vertical scrolling
-                                    itemCount: productDetailsController
-                                            .getActiveProducts()
-                                            .isNotEmpty
-                                        ? productDetailsController
-                                                .getActiveProducts()
-                                                .length +
-                                            1
-                                        : 0, // Avoids index errors when the list is empty
-
-                                    itemBuilder: (context, index) {
-                                      final activeProducts =
-                                          productDetailsController
-                                              .getActiveProducts();
-                                      if (index >= activeProducts.length) {
-                                        // Show loader at the end
-                                        return Container(
-                                          alignment: Alignment.center,
-                                          padding: const EdgeInsets.all(10.0),
-                                          child: productDetailsController
-                                                  .isFetchingMore
-                                              ? CircularProgressIndicator(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface,
-                                                )
-                                              : const SizedBox.shrink(),
-                                        );
-                                      }
-
-                                      if (index >= activeProducts.length) {
-                                        return const SizedBox(); // Prevents accessing invalid indexes
-                                      }
-
-                                      final product = activeProducts[index];
-
-                                      List<String> imgList = [];
-                                      if (product['img'] != null) {
-                                        if (product['img'] is List<String>) {
-                                          imgList =
-                                              List<String>.from(product['img']);
-                                        } else if (product['img'] is String) {
-                                          imgList = [product['img']];
+                              : productDetailsController.products.isEmpty
+                                  ? CustomErrorMessage(
+                                      text:
+                                          'No products available at the moment.',
+                                      onPressed: () => productDetailsController
+                                          .fetchProducts(overwrite: true),
+                                    )
+                                  : NotificationListener<ScrollNotification>(
+                                      onNotification:
+                                          (ScrollNotification scrollInfo) {
+                                        if (!productDetailsController
+                                                .isFetchingMore &&
+                                            scrollInfo.metrics.pixels ==
+                                                scrollInfo
+                                                    .metrics.maxScrollExtent) {
+                                          // Trigger loading more products
+                                          //fetchMoreProducts();
+                                          return true;
                                         }
-                                      }
-                                      List<String> fullImgList =
-                                          imgList.map((img) {
-                                        return '$img/download?project=677181a60009f5d039dd';
-                                      }).toList();
+                                        return false;
+                                      },
+                                      child: ListView.builder(
+                                        controller: productDetailsController
+                                            .scrollController, // Attach the scroll controller
+                                        scrollDirection:
+                                            Axis.vertical, // Vertical scrolling
+                                        itemCount: productDetailsController
+                                                .getActiveProducts()
+                                                .isNotEmpty
+                                            ? productDetailsController
+                                                    .getActiveProducts()
+                                                    .length +
+                                                1
+                                            : 0, // Avoids index errors when the list is empty
 
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                            bottom:
-                                                20.0), // Add spacing between items
-                                        child: Container(
-                                          width: double
-                                              .infinity, // Full screen width
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: Theme.of(context)
-                                                .cardColor, // Optional: background color
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey
-                                                    .withOpacity(0.2),
-                                                blurRadius: 5,
-                                                offset: const Offset(0, 3),
+                                        itemBuilder: (context, index) {
+                                          final activeProducts =
+                                              productDetailsController
+                                                  .getActiveProducts();
+                                          if (index >= activeProducts.length) {
+                                            // Show loader at the end
+                                            return Container(
+                                              alignment: Alignment.center,
+                                              padding:
+                                                  const EdgeInsets.all(10.0),
+                                              child: productDetailsController
+                                                      .isFetchingMore
+                                                  ? CircularProgressIndicator(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface,
+                                                    )
+                                                  : const SizedBox.shrink(),
+                                            );
+                                          }
+
+                                          if (index >= activeProducts.length) {
+                                            return const SizedBox(); // Prevents accessing invalid indexes
+                                          }
+
+                                          final product = activeProducts[index];
+
+                                          List<String> imgList = [];
+                                          if (product['img'] != null) {
+                                            if (product['img']
+                                                is List<String>) {
+                                              imgList = List<String>.from(
+                                                  product['img']);
+                                            } else if (product['img']
+                                                is String) {
+                                              imgList = [product['img']];
+                                            }
+                                          }
+                                          List<String> fullImgList =
+                                              imgList.map((img) {
+                                            return '$img/download?project=677181a60009f5d039dd';
+                                          }).toList();
+
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom:
+                                                    20.0), // Add spacing between items
+                                            child: Container(
+                                              width: double
+                                                  .infinity, // Full screen width
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Theme.of(context)
+                                                    .cardColor, // Optional: background color
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.2),
+                                                    blurRadius: 5,
+                                                    offset: const Offset(0, 3),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                          padding: const EdgeInsets.all(
-                                              10.0), // Content padding
-                                          child: Product(
-                                            itemId: product['id'],
-                                            name: product['name']!,
-                                            img: fullImgList,
-                                            details: product['details']!,
-                                            amount: product['amount']!,
-                                            slashedPrice:
-                                                product['slashedPrice']!,
-                                            discount: product['discount']!,
-                                            starImg: product['starImg']!,
-                                            rating: product['rating']!,
-                                            rating2: product['rating2']!,
-                                            liked: product['isInFavorite'],
-                                            onToggleDarkMode:
-                                                widget.onToggleDarkMode,
-                                            isDarkMode: widget.isDarkMode,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
+                                              padding: const EdgeInsets.all(
+                                                  10.0), // Content padding
+                                              child: Product(
+                                                itemId: product['id'],
+                                                name: product['name']!,
+                                                img: fullImgList,
+                                                details: product['details']!,
+                                                amount: product['amount']!,
+                                                slashedPrice:
+                                                    product['slashedPrice']!,
+                                                discount: product['discount']!,
+                                                starImg: product['starImg']!,
+                                                rating: product['rating']!,
+                                                rating2: product['rating2']!,
+                                                liked: product['isInFavorite'],
+                                                onToggleDarkMode:
+                                                    widget.onToggleDarkMode,
+                                                isDarkMode: widget.isDarkMode,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
                         ),
                       )
                     ] else ...[
@@ -455,119 +482,129 @@ class _TopCategoriesDetailsState extends State<TopCategoriesDetails> {
                                         Theme.of(context).colorScheme.onSurface,
                                   ),
                                 )
-                              : NotificationListener<ScrollNotification>(
-                                  onNotification:
-                                      (ScrollNotification scrollInfo) {
-                                    if (!productDetailsController
-                                            .isFetchingMore &&
-                                        scrollInfo.metrics.pixels ==
-                                            scrollInfo
-                                                .metrics.maxScrollExtent) {
-                                      // Trigger loading more products
-                                      //fetchMoreProducts();
-                                      return true;
-                                    }
-                                    return false;
-                                  },
-                                  child: ListView.builder(
-                                    controller: productDetailsController
-                                        .scrollController, // Attach the scroll controller
-                                    scrollDirection:
-                                        Axis.vertical, // Vertical scrolling
-                                    itemCount: productDetailsController
-                                            .getActiveProducts()
-                                            .isNotEmpty
-                                        ? productDetailsController
-                                                .getActiveProducts()
-                                                .length +
-                                            1
-                                        : 0, // Avoids index errors when the list is empty
-
-                                    itemBuilder: (context, index) {
-                                      final activeProducts =
-                                          productDetailsController
-                                              .getActiveProducts();
-                                      if (index >= activeProducts.length) {
-                                        // Show loader at the end
-                                        return Container(
-                                          alignment: Alignment.center,
-                                          padding: const EdgeInsets.all(10.0),
-                                          child: productDetailsController
-                                                  .isFetchingMore
-                                              ? CircularProgressIndicator(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface,
-                                                )
-                                              : const SizedBox.shrink(),
-                                        );
-                                      }
-
-                                      if (index >= activeProducts.length) {
-                                        return const SizedBox(); // Prevents accessing invalid indexes
-                                      }
-
-                                      final product = activeProducts[index];
-
-                                      List<String> imgList = [];
-                                      if (product['img'] != null) {
-                                        if (product['img'] is List<String>) {
-                                          imgList =
-                                              List<String>.from(product['img']);
-                                        } else if (product['img'] is String) {
-                                          imgList = [product['img']];
+                              : productDetailsController.products.isEmpty
+                                  ? CustomErrorMessage(
+                                      text:
+                                          'No products available at the moment.',
+                                      onPressed: () => productDetailsController
+                                          .fetchProducts(overwrite: true),
+                                    )
+                                  : NotificationListener<ScrollNotification>(
+                                      onNotification:
+                                          (ScrollNotification scrollInfo) {
+                                        if (!productDetailsController
+                                                .isFetchingMore &&
+                                            scrollInfo.metrics.pixels ==
+                                                scrollInfo
+                                                    .metrics.maxScrollExtent) {
+                                          // Trigger loading more products
+                                          //fetchMoreProducts();
+                                          return true;
                                         }
-                                      }
-                                      List<String> fullImgList =
-                                          imgList.map((img) {
-                                        return '$img/download?project=677181a60009f5d039dd';
-                                      }).toList();
+                                        return false;
+                                      },
+                                      child: ListView.builder(
+                                        controller: productDetailsController
+                                            .scrollController, // Attach the scroll controller
+                                        scrollDirection:
+                                            Axis.vertical, // Vertical scrolling
+                                        itemCount: productDetailsController
+                                                .getActiveProducts()
+                                                .isNotEmpty
+                                            ? productDetailsController
+                                                    .getActiveProducts()
+                                                    .length +
+                                                1
+                                            : 0, // Avoids index errors when the list is empty
 
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                            bottom:
-                                                20.0), // Add spacing between items
-                                        child: Container(
-                                          width: double
-                                              .infinity, // Full screen width
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            color: Theme.of(context)
-                                                .cardColor, // Optional: background color
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey
-                                                    .withOpacity(0.2),
-                                                blurRadius: 5,
-                                                offset: const Offset(0, 3),
+                                        itemBuilder: (context, index) {
+                                          final activeProducts =
+                                              productDetailsController
+                                                  .getActiveProducts();
+                                          if (index >= activeProducts.length) {
+                                            // Show loader at the end
+                                            return Container(
+                                              alignment: Alignment.center,
+                                              padding:
+                                                  const EdgeInsets.all(10.0),
+                                              child: productDetailsController
+                                                      .isFetchingMore
+                                                  ? CircularProgressIndicator(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface,
+                                                    )
+                                                  : const SizedBox.shrink(),
+                                            );
+                                          }
+
+                                          if (index >= activeProducts.length) {
+                                            return const SizedBox(); // Prevents accessing invalid indexes
+                                          }
+
+                                          final product = activeProducts[index];
+
+                                          List<String> imgList = [];
+                                          if (product['img'] != null) {
+                                            if (product['img']
+                                                is List<String>) {
+                                              imgList = List<String>.from(
+                                                  product['img']);
+                                            } else if (product['img']
+                                                is String) {
+                                              imgList = [product['img']];
+                                            }
+                                          }
+                                          List<String> fullImgList =
+                                              imgList.map((img) {
+                                            return '$img/download?project=677181a60009f5d039dd';
+                                          }).toList();
+
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom:
+                                                    20.0), // Add spacing between items
+                                            child: Container(
+                                              width: double
+                                                  .infinity, // Full screen width
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Theme.of(context)
+                                                    .cardColor, // Optional: background color
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.2),
+                                                    blurRadius: 5,
+                                                    offset: const Offset(0, 3),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                          padding: const EdgeInsets.all(
-                                              10.0), // Content padding
-                                          child: Product(
-                                            itemId: product['id'],
-                                            name: product['name']!,
-                                            img: fullImgList,
-                                            details: product['details']!,
-                                            amount: product['amount']!,
-                                            slashedPrice:
-                                                product['slashedPrice']!,
-                                            discount: product['discount']!,
-                                            starImg: product['starImg']!,
-                                            rating: product['rating']!,
-                                            rating2: product['rating2']!,
-                                            liked: product['isInFavorite'],
-                                            onToggleDarkMode:
-                                                widget.onToggleDarkMode,
-                                            isDarkMode: widget.isDarkMode,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
+                                              padding: const EdgeInsets.all(
+                                                  10.0), // Content padding
+                                              child: Product(
+                                                itemId: product['id'],
+                                                name: product['name']!,
+                                                img: fullImgList,
+                                                details: product['details']!,
+                                                amount: product['amount']!,
+                                                slashedPrice:
+                                                    product['slashedPrice']!,
+                                                discount: product['discount']!,
+                                                starImg: product['starImg']!,
+                                                rating: product['rating']!,
+                                                rating2: product['rating2']!,
+                                                liked: product['isInFavorite'],
+                                                onToggleDarkMode:
+                                                    widget.onToggleDarkMode,
+                                                isDarkMode: widget.isDarkMode,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
                         ),
                       ),
                     ],

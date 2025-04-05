@@ -205,7 +205,6 @@ class MainAppControllers extends ChangeNotifier {
         'You are not logged in.',
         isError: true,
       );
-      // await prefs.remove('user');
 
       Navigator.push(
         context,

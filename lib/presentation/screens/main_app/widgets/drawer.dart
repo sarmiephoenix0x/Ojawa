@@ -50,16 +50,22 @@ class MainAppDrawer extends StatelessWidget {
                 context,
                 title: 'Shop by Categories',
                 imagePath: 'images/ShopCategories.png',
-                onTap: () => goToCategoriesPage(
-                    context,
-                    Provider.of<MainAppControllers>(context, listen: false)
-                        .selectedImageIndex),
+                onTap: () {
+                  Navigator.pop(context);
+                  goToCategoriesPage(
+                      context,
+                      Provider.of<MainAppControllers>(context, listen: false)
+                          .selectedImageIndex);
+                },
               ),
               _buildListTile(
                 context,
                 title: 'My Orders',
                 imagePath: 'images/My Orders.png',
-                onTap: () => goToOrdersPage(context),
+                onTap: () {
+                  Navigator.pop(context);
+                  goToOrdersPage(context);
+                },
               ),
               _buildListTile(
                 context,
@@ -71,10 +77,13 @@ class MainAppDrawer extends StatelessWidget {
                 context,
                 title: 'FAQ',
                 imagePath: 'images/FAQ.png',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FaqPage()),
-                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FaqPage()),
+                  );
+                },
               ),
               _buildListTile(
                 context,
@@ -228,7 +237,7 @@ class MainAppDrawer extends StatelessWidget {
   Widget _buildListTile(BuildContext context,
       {required String title,
       required String imagePath,
-      required VoidCallback onTap}) {
+      required VoidCallback? onTap}) {
     return ListTile(
       leading: Image.asset(imagePath, height: 25),
       title: Text(
@@ -236,10 +245,7 @@ class MainAppDrawer extends StatelessWidget {
         style: const TextStyle(
             fontFamily: 'GolosText', fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
+      onTap: onTap,
     );
   }
 }
