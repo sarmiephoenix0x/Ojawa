@@ -34,10 +34,11 @@ class CustomBottomNav extends StatelessWidget {
           _buildNavItem('images/Profile.png', 'Profile', hasNotification[3]),
         ] else if (userRole == "Logistics") ...[
           _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
-          _buildNavItem('images/My Delivery.png', 'My Delivery', hasNotification[1]),
+          _buildNavItem(
+              'images/My Delivery.png', 'My Delivery', hasNotification[1]),
           _buildNavItem('images/Wallet3.png', 'Wallet', hasNotification[2]),
           _buildNavItem('images/CashNav.png', 'Cash', hasNotification[3]),
-                    _buildNavItem('images/Profile.png', 'Profile', hasNotification[4]),
+          _buildNavItem('images/Profile.png', 'Profile', hasNotification[4]),
         ] else ...[
           _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
           _buildNavItem(
@@ -49,8 +50,18 @@ class CustomBottomNav extends StatelessWidget {
       currentIndex: navController.selectedIndex,
       selectedItemColor: Colors.black,
       unselectedItemColor: Colors.grey,
-      onTap: (index) =>
-          navController.changeTab(index, context, onToggleDarkMode, isDarkMode),
+      onTap: (index) {
+        if (userRole == "Customer") {
+          navController.changeTab(
+              index, context, onToggleDarkMode, isDarkMode, 3);
+        } else if (userRole == "Vendor") {
+          navController.changeTab(
+              index, context, onToggleDarkMode, isDarkMode, 3);
+        } else if (userRole == "Logistics") {
+          navController.changeTab(
+              index, context, onToggleDarkMode, isDarkMode, 4);
+        }
+      },
     );
   }
 

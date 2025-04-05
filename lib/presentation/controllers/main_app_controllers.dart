@@ -144,22 +144,46 @@ class MainAppControllers extends ChangeNotifier {
     _selectedIndex = 1;
     _selectedImageIndex = selectedImageIndex;
     notifyListeners();
-    Provider.of<NavigationController>(context, listen: false)
-        .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode);
+    if (userRole == "Customer") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 3);
+    } else if (userRole == "Vendor") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 3);
+    } else if (userRole == "Logistics") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 5);
+    }
   }
 
   void goToOrdersPage(BuildContext context) {
     _selectedIndex = 2;
     notifyListeners();
-    Provider.of<NavigationController>(context, listen: false)
-        .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode);
+    if (userRole == "Customer") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 3);
+    } else if (userRole == "Vendor") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 3);
+    } else if (userRole == "Logistics") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 5);
+    }
   }
 
   void goToProfilePage(BuildContext context) {
     _selectedIndex = 3;
     notifyListeners();
-    Provider.of<NavigationController>(context, listen: false)
-        .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode);
+    if (userRole == "Customer") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 3);
+    } else if (userRole == "Vendor") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 3);
+    } else if (userRole == "Logistics") {
+      Provider.of<NavigationController>(context, listen: false)
+          .changeTab(_selectedIndex, context, onToggleDarkMode, isDarkMode, 5);
+    }
   }
 
   Future<void> logoutCall(BuildContext context,

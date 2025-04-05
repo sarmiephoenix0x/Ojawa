@@ -56,6 +56,7 @@ class HomePageController extends ChangeNotifier {
   bool _isFetchingMore = false;
   String _userRole = "";
   String _url = "";
+  bool _isMoved = false;
 
   HomePageController() {
     initialize();
@@ -75,6 +76,7 @@ class HomePageController extends ChangeNotifier {
   ValueNotifier<String?> get selectedFilter => _selectedFilter;
   int? get selectedRadioValue => _selectedRadioValue;
   String get userRole => _userRole;
+  bool get isMoved => _isMoved;
 
   TextEditingController get searchController => _searchController;
   CarouselController get controller => _controller;
@@ -99,6 +101,11 @@ class HomePageController extends ChangeNotifier {
 
   void setSelectedRadioValue(int value) {
     _selectedRadioValue = value;
+    notifyListeners();
+  }
+
+  void setIsMoved(bool value) {
+    _isMoved = value;
     notifyListeners();
   }
 

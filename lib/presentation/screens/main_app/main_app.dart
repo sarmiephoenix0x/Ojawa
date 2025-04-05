@@ -12,12 +12,15 @@ import '../categories_page/categories_page.dart';
 import '../home_page/home_page_customer.dart';
 import '../home_page/home_page_logistics.dart';
 import '../home_page/home_page_vendor.dart';
+import '../my_delivery/my_delivery.dart';
 import '../orders_page/orders_page_customer.dart';
 import '../orders_page/orders_page_vendor.dart';
 import '../products_page/products_page.dart';
 import '../profile_page/profile_page_customer.dart';
 import '../profile_page/profile_page_logistics.dart';
 import '../profile_page/profile_page_vendor.dart';
+import '../wallet_history/wallet_history.dart';
+import '../wallet_page/wallet_page.dart';
 import 'widgets/drawer.dart';
 
 class MainApp extends StatefulWidget {
@@ -148,6 +151,8 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                       goToProfilePage: mainAppController.goToProfilePage,
                       // scaffoldKey: scaffoldKey,
                     ),
+                    const MyDelivery(),
+                    const WalletPage(),
                     WalletHistory(),
                     ProfilePageLogistics(
                       goToCategoriesPage: mainAppController.goToCategoriesPage,

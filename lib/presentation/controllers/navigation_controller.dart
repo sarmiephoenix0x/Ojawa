@@ -9,10 +9,14 @@ class NavigationController extends ChangeNotifier {
 
   int get selectedIndex => _selectedIndex;
 
-  void changeTab(int index, BuildContext context,
-      dynamic Function(bool) onToggleDarkMode, bool isDarkMode) async {
+  void changeTab(
+      int index,
+      BuildContext context,
+      dynamic Function(bool) onToggleDarkMode,
+      bool isDarkMode,
+      int range) async {
     if (index != _selectedIndex) {
-      if (index != 3) {
+      if (index != range) {
         _selectedIndex = index;
         notifyListeners();
       } else {

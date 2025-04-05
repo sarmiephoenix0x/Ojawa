@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:provider/provider.dart';
 
+import '../../../core/widgets/custom_bg.dart';
 import '../../../core/widgets/product.dart';
 import '../../controllers/home_page_controller.dart';
 import '../../controllers/main_app_controllers.dart';
@@ -66,7 +67,32 @@ class _HomePageLogisticsState extends State<HomePageLogistics>
                   color: Theme.of(context).colorScheme.onSurface,
                   child: ListView(
                     children: [
-                      
+                      CustomBg(
+                        children: [
+                          Row(
+                            children: [
+                              const Expanded(
+                                flex: 6,
+                                child: Text(
+                                  'Accepting Pick-Ups',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                              Switch(
+                                value: homePageController.isMoved,
+                                onChanged: (value) {
+                                  homePageController.setIsMoved(value);
+                                }, // Toggle the dark mode
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                       const Gap(25),
                       Column(
                         children: [
@@ -94,308 +120,7 @@ class _HomePageLogisticsState extends State<HomePageLogistics>
                             img: 'images/Pending.png',
                             value: 5,
                           ),
-                          
                         ],
-                      ),
-                      const Gap(25),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total Earnings: \$0.00',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 18.0,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                            const Gap(10),
-                            Text(
-                              'Commission Given: \$0.00',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 18.0,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Gap(50),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 16.0, horizontal: 10.0),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEBEDEE),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(0.0),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Deal of the day',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16.0,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  InkWell(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              TopCategoriesDetails(
-                                                  key: UniqueKey(),
-                                                  discountOnly: true,
-                                                  onToggleDarkMode:
-                                                      widget.onToggleDarkMode,
-                                                  isDarkMode:
-                                                      widget.isDarkMode),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text(
-                                      'View All',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 14.0,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.02),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 6.0, horizontal: 10.0),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFEF4444),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(5.0),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Time(
-                                        hours: hours,
-                                        minutes: minutes,
-                                        seconds: seconds),
-                                  ],
-                                ),
-                              ),
-                              const Gap(25),
-                              Container(
-                                width: MediaQuery.of(context).size.width,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 16.0, horizontal: 10.0),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFFFFFF),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(5.0)),
-                                ),
-                                child: homePageController
-                                        .isLoading2 // Check if loading
-                                    ? Center(
-                                        child: CircularProgressIndicator(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface,
-                                        ),
-                                      ) // Show loader while loading
-                                    : Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: homePageController.products
-                                            .where((product) =>
-                                                product['hasDiscount'] ==
-                                                true) // Keep this line
-                                            .map((product) {
-                                          List<String> imgList = [];
-
-                                          // Check if product['img'] is not null
-                                          if (product['img'] != null) {
-                                            if (product['img']
-                                                is List<String>) {
-                                              // If it's already a List<String>, use it directly
-                                              imgList = List<String>.from(
-                                                  product['img']);
-                                            } else if (product['img']
-                                                is String) {
-                                              // If it's a String, convert it to a List<String>
-                                              imgList = [
-                                                product['img']
-                                              ]; // Create a list with the single image
-                                            }
-                                          }
-
-                                          // Append the download string to each image URL in imgList
-                                          List<String> fullImgList =
-                                              imgList.map((img) {
-                                            return '$img/download?project=677181a60009f5d039dd';
-                                          }).toList();
-                                          return Deal(
-                                            itemId: product['id'],
-                                            name: product['name']!,
-                                            img: fullImgList,
-                                            details: product['details']!,
-                                            amount: product['amount']!,
-                                            slashedPrice:
-                                                product['slashedPrice']!,
-                                            discount: product['discount']!,
-                                            starImg: product['starImg']!,
-                                            rating: product['rating']!,
-                                            rating2: product['rating2']!,
-                                            text2: product['uptoDiscount'],
-                                            onToggleDarkMode:
-                                                widget.onToggleDarkMode,
-                                            isDarkMode: widget
-                                                .isDarkMode, // Discount text
-                                          );
-                                        }).toList(),
-                                      ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Gap(50),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Top Selling Item',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18.0,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                            const Spacer(),
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TopCategoriesDetails(
-                                        key: UniqueKey(),
-                                        discountOnly: false,
-                                        onToggleDarkMode:
-                                            widget.onToggleDarkMode,
-                                        isDarkMode: widget.isDarkMode),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'View All',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16.0,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.03),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.62,
-                          child: homePageController.isLoading2
-                              ? Center(
-                                  child: CircularProgressIndicator(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
-                                  ),
-                                )
-                              : NotificationListener<ScrollNotification>(
-                                  onNotification:
-                                      (ScrollNotification scrollInfo) {
-                                    if (!homePageController.isFetchingMore &&
-                                        scrollInfo.metrics.pixels ==
-                                            scrollInfo
-                                                .metrics.maxScrollExtent) {
-                                      // Trigger loading more products
-                                      //fetchMoreProducts();
-                                      return true;
-                                    }
-                                    return false;
-                                  },
-                                  child: ListView.builder(
-                                    controller: homePageController
-                                        .scrollController, // Attach the scroll controller
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: homePageController.products
-                                        .length, // Set to products.length
-                                    itemBuilder: (context, index) {
-                                      final product =
-                                          homePageController.products[
-                                              index]; // Access product safely
-                                      List<String> imgList = [];
-                                      if (product['img'] != null) {
-                                        if (product['img'] is List<String>) {
-                                          imgList =
-                                              List<String>.from(product['img']);
-                                        } else if (product['img'] is String) {
-                                          imgList = [product['img']];
-                                        }
-                                      }
-                                      List<String> fullImgList =
-                                          imgList.map((img) {
-                                        return '$img/download?project=677181a60009f5d039dd';
-                                      }).toList();
-
-                                      return Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.6,
-                                        margin:
-                                            const EdgeInsets.only(right: 20.0),
-                                        child: Product(
-                                          itemId: product['id'],
-                                          name: product['name']!,
-                                          img: fullImgList,
-                                          details: product['details']!,
-                                          amount: product['amount']!,
-                                          slashedPrice:
-                                              product['slashedPrice']!,
-                                          discount: product['discount']!,
-                                          starImg: product['starImg']!,
-                                          rating: product['rating']!,
-                                          rating2: product['rating2']!,
-                                          liked: product['isInFavorite'],
-                                          onToggleDarkMode:
-                                              widget.onToggleDarkMode,
-                                          isDarkMode: widget.isDarkMode,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                        ),
                       ),
                     ],
                   ),

@@ -5,7 +5,7 @@ import '../../../core/widgets/custom_gap.dart';
 import '../../controllers/categories_page_controller.dart';
 import '../categories_details/categories_details.dart';
 import 'widgets/products_button.dart';
-import 'widgets/products_filter.dart';
+import '../../../core/widgets/custom_filter.dart';
 import 'widgets/products_page_products.dart';
 
 class ProductsPage extends StatefulWidget {
@@ -85,7 +85,7 @@ class _ProductsPageState extends State<ProductsPage> {
                             padding: EdgeInsets.symmetric(horizontal: 20.0),
                             child: Row(
                               children: [
-                                ProductsFilter(
+                                CustomFilter(
                                   text: 'All',
                                   isActive: true,
                                 ),
@@ -93,12 +93,12 @@ class _ProductsPageState extends State<ProductsPage> {
                                   15,
                                   isHorizontal: true,
                                 ),
-                                ProductsFilter(text: 'Sold Out'),
+                                CustomFilter(text: 'Sold Out'),
                                 Gap(
                                   15,
                                   isHorizontal: true,
                                 ),
-                                ProductsFilter(text: 'Low In Stock'),
+                                CustomFilter(text: 'Low In Stock'),
                               ],
                             )),
                         Gap(20),

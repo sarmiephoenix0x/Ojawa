@@ -29,6 +29,7 @@ import 'presentation/controllers/sucessful_order_page_controller.dart';
 import 'presentation/controllers/theme_controller.dart';
 import 'presentation/controllers/verify_email_controller.dart';
 import 'presentation/controllers/wallet_history_controllers.dart';
+import 'presentation/controllers/wallet_page_controller.dart';
 import 'presentation/screens/intro_page/intro_page.dart';
 import 'presentation/screens/main_app/main_app.dart';
 
