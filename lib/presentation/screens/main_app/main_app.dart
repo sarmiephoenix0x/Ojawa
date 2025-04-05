@@ -9,10 +9,15 @@ import '../../controllers/main_app_controllers.dart';
 import '../../controllers/navigation_controller.dart';
 import '../../controllers/notification_controller.dart';
 import '../categories_page/categories_page.dart';
-import '../home_page/home_page.dart';
-import '../orders_page/orders_page.dart';
+import '../home_page/home_page_customer.dart';
+import '../home_page/home_page_logistics.dart';
+import '../home_page/home_page_vendor.dart';
+import '../orders_page/orders_page_customer.dart';
+import '../orders_page/orders_page_vendor.dart';
 import '../products_page/products_page.dart';
-import '../profile_page/profile_page.dart';
+import '../profile_page/profile_page_customer.dart';
+import '../profile_page/profile_page_logistics.dart';
+import '../profile_page/profile_page_vendor.dart';
 import 'widgets/drawer.dart';
 
 class MainApp extends StatefulWidget {
@@ -41,74 +46,127 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
         return CustomBackHandler(
           child: Scaffold(
             key: scaffoldKey,
-            // drawer: MainAppDrawer(
-            //   goToCategoriesPage: mainAppController.goToCategoriesPage,
-            //   goToOrdersPage: mainAppController.goToOrdersPage,
-            //   showLogoutDialog: (context) => showLogoutDialog(
-            //       context,
-            //       (context) => mainAppController.logoutCall(
-            //           context, widget.onToggleDarkMode, widget.isDarkMode)),
-            //   profileImage: mainAppController.profileImage,
-            //   userName: mainAppController.userName,
-            //   phone: mainAppController.phone,
-            //   checkForToken: mainAppController.checkForToken,
-            //   goToProfilePage: mainAppController.goToProfilePage,
-            //   onToggleDarkMode: widget.onToggleDarkMode,
-            //   isDarkMode: widget.isDarkMode,
-            // ),
+            drawer: mainAppController.userRole == "Customer"
+                ? MainAppDrawer(
+                    goToCategoriesPage: mainAppController.goToCategoriesPage,
+                    goToOrdersPage: mainAppController.goToOrdersPage,
+                    showLogoutDialog: (context) => showLogoutDialog(
+                        context,
+                        (context) => mainAppController.logoutCall(context,
+                            widget.onToggleDarkMode, widget.isDarkMode)),
+                    profileImage: mainAppController.profileImage,
+                    userName: mainAppController.userName,
+                    phone: mainAppController.phone,
+                    checkForToken: mainAppController.checkForToken,
+                    goToProfilePage: mainAppController.goToProfilePage,
+                    onToggleDarkMode: widget.onToggleDarkMode,
+                    isDarkMode: widget.isDarkMode,
+                  )
+                : null,
             body: SafeArea(
               child: IndexedStack(
                 index: navController.selectedIndex,
                 children: [
-                  HomePage(
-                    selectedIndex: mainAppController.selectedIndex,
-                    onToggleDarkMode: widget.onToggleDarkMode,
-                    isDarkMode: widget.isDarkMode,
-                    goToCategoriesPage: mainAppController.goToCategoriesPage,
-                    goToOrdersPage: mainAppController.goToOrdersPage,
-                    goToProfilePage: mainAppController.goToProfilePage,
-                    // scaffoldKey: scaffoldKey,
-                  ),
-                  // CategoriesPage(
-                  //   goToCategoriesPage: mainAppController.goToCategoriesPage,
-                  //   goToOrdersPage: mainAppController.goToOrdersPage,
-                  //   goToProfilePage: mainAppController.goToProfilePage,
-                  //   // scaffoldKey: scaffoldKey,
-                  //   selectedImageIndex: mainAppController.selectedImageIndex,
-                  //   onToggleDarkMode: widget.onToggleDarkMode,
-                  //   isDarkMode: widget.isDarkMode,
-                  // ),
-                  OrdersPage(
+                  if (mainAppController.userRole == "Customer") ...[
+                    HomePageCustomer(
+                      selectedIndex: mainAppController.selectedIndex,
+                      onToggleDarkMode: widget.onToggleDarkMode,
+                      isDarkMode: widget.isDarkMode,
                       goToCategoriesPage: mainAppController.goToCategoriesPage,
                       goToOrdersPage: mainAppController.goToOrdersPage,
                       goToProfilePage: mainAppController.goToProfilePage,
                       // scaffoldKey: scaffoldKey,
+                    ),
+                    CategoriesPage(
+                      goToCategoriesPage: mainAppController.goToCategoriesPage,
+                      goToOrdersPage: mainAppController.goToOrdersPage,
+                      goToProfilePage: mainAppController.goToProfilePage,
+                      // scaffoldKey: scaffoldKey,
+                      selectedImageIndex: mainAppController.selectedImageIndex,
                       onToggleDarkMode: widget.onToggleDarkMode,
-                      isDarkMode: widget.isDarkMode),
-                  ProductsPage(
-                    goToCategoriesPage: mainAppController.goToCategoriesPage,
-                    goToOrdersPage: mainAppController.goToOrdersPage,
-                    goToProfilePage: mainAppController.goToProfilePage,
-                    // scaffoldKey: scaffoldKey,
-                    selectedImageIndex: mainAppController.selectedImageIndex,
-                    onToggleDarkMode: widget.onToggleDarkMode,
-                    isDarkMode: widget.isDarkMode,
-                  ),
-                  ProfilePage(
-                    goToCategoriesPage: mainAppController.goToCategoriesPage,
-                    goToOrdersPage: mainAppController.goToOrdersPage,
-                    goToProfilePage: mainAppController.goToProfilePage,
-                    onToggleDarkMode: widget.onToggleDarkMode,
-                    isDarkMode: widget.isDarkMode,
-                    // scaffoldKey: scaffoldKey,
-                  ),
+                      isDarkMode: widget.isDarkMode,
+                    ),
+                    OrdersPageCustomer(
+                        goToCategoriesPage:
+                            mainAppController.goToCategoriesPage,
+                        goToOrdersPage: mainAppController.goToOrdersPage,
+                        goToProfilePage: mainAppController.goToProfilePage,
+                        // scaffoldKey: scaffoldKey,
+                        onToggleDarkMode: widget.onToggleDarkMode,
+                        isDarkMode: widget.isDarkMode),
+                    ProfilePageCustomer(
+                        goToCategoriesPage:
+                            mainAppController.goToCategoriesPage,
+                        goToOrdersPage: mainAppController.goToOrdersPage,
+                        goToProfilePage: mainAppController.goToProfilePage,
+                        onToggleDarkMode: widget.onToggleDarkMode,
+                        isDarkMode: widget.isDarkMode
+                        // scaffoldKey: scaffoldKey,
+                        ),
+                  ] else if (mainAppController.userRole == "Vendor") ...[
+                    HomePageVendor(
+                      selectedIndex: mainAppController.selectedIndex,
+                      onToggleDarkMode: widget.onToggleDarkMode,
+                      isDarkMode: widget.isDarkMode,
+                      goToCategoriesPage: mainAppController.goToCategoriesPage,
+                      goToOrdersPage: mainAppController.goToOrdersPage,
+                      goToProfilePage: mainAppController.goToProfilePage,
+                      // scaffoldKey: scaffoldKey,
+                    ),
+                    OrdersPageVendor(
+                        goToCategoriesPage:
+                            mainAppController.goToCategoriesPage,
+                        goToOrdersPage: mainAppController.goToOrdersPage,
+                        goToProfilePage: mainAppController.goToProfilePage,
+                        // scaffoldKey: scaffoldKey,
+                        onToggleDarkMode: widget.onToggleDarkMode,
+                        isDarkMode: widget.isDarkMode),
+                    ProductsPage(
+                      goToCategoriesPage: mainAppController.goToCategoriesPage,
+                      goToOrdersPage: mainAppController.goToOrdersPage,
+                      goToProfilePage: mainAppController.goToProfilePage,
+                      // scaffoldKey: scaffoldKey,
+                      selectedImageIndex: mainAppController.selectedImageIndex,
+                      onToggleDarkMode: widget.onToggleDarkMode,
+                      isDarkMode: widget.isDarkMode,
+                    ),
+                    ProfilePageVendor(
+                      goToCategoriesPage: mainAppController.goToCategoriesPage,
+                      goToOrdersPage: mainAppController.goToOrdersPage,
+                      goToProfilePage: mainAppController.goToProfilePage,
+                      onToggleDarkMode: widget.onToggleDarkMode,
+                      isDarkMode: widget.isDarkMode,
+                      // scaffoldKey: scaffoldKey,
+                    ),
+                  ] else if (mainAppController.userRole == "Logistics") ...[
+                    HomePageLogistics(
+                      selectedIndex: mainAppController.selectedIndex,
+                      onToggleDarkMode: widget.onToggleDarkMode,
+                      isDarkMode: widget.isDarkMode,
+                      goToCategoriesPage: mainAppController.goToCategoriesPage,
+                      goToOrdersPage: mainAppController.goToOrdersPage,
+                      goToProfilePage: mainAppController.goToProfilePage,
+                      // scaffoldKey: scaffoldKey,
+                    ),
+                    WalletHistory(),
+                    ProfilePageLogistics(
+                      goToCategoriesPage: mainAppController.goToCategoriesPage,
+                      goToOrdersPage: mainAppController.goToOrdersPage,
+                      goToProfilePage: mainAppController.goToProfilePage,
+                      onToggleDarkMode: widget.onToggleDarkMode,
+                      isDarkMode: widget.isDarkMode,
+                      // scaffoldKey: scaffoldKey,
+                    ),
+                  ]
                 ],
               ),
             ),
             bottomNavigationBar: CustomBottomNav(
-                hasNotification: notificationController.hasNotificationList,
-                onToggleDarkMode: widget.onToggleDarkMode,
-                isDarkMode: widget.isDarkMode),
+              hasNotification: notificationController.hasNotificationList,
+              onToggleDarkMode: widget.onToggleDarkMode,
+              isDarkMode: widget.isDarkMode,
+              userRole: mainAppController.userRole,
+            ),
           ),
         );
       }),

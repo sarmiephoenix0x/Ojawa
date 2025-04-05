@@ -7,7 +7,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../core/widgets/custom_snackbar.dart';
 import '../../main.dart';
-import '../screens/order_details/order_details.dart';
+import '../screens/order_details/order_details_vendor.dart';
 import '../screens/orders_page/widgets/header_cell.dart';
 import '../screens/orders_page/widgets/order_actions.dart';
 import '../screens/orders_page/widgets/order_cell.dart';
@@ -92,7 +92,7 @@ class OrdersPageController extends ChangeNotifier {
           Navigator.push(
             navigatorKey.currentContext!,
             MaterialPageRoute(
-              builder: (context) => OrderDetails(
+              builder: (context) => OrderDetailsVendor(
                 key: UniqueKey(),
                 onToggleDarkMode: onToggleDarkMode,
                 isDarkMode: isDarkMode,

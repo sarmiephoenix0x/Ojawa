@@ -26,11 +26,14 @@ class MainAppControllers extends ChangeNotifier {
   bool _isLoading = false;
   StreamSubscription<ConnectivityResult>? connectivitySubscription;
   int _selectedImageIndex = 0;
+  String _userRole = "";
+
   final Function(bool) onToggleDarkMode;
   final bool isDarkMode;
 
   MainAppControllers(
       {required this.onToggleDarkMode, required this.isDarkMode}) {
+    initializePrefs();
     initialize();
   }
 
@@ -40,6 +43,7 @@ class MainAppControllers extends ChangeNotifier {
   int get selectedIndex => _selectedIndex;
   String? get profileImage => _profileImage;
   int get selectedImageIndex => _selectedImageIndex;
+  String get userRole => _userRole;
 
   void initialize() async {
     connectivitySubscription = Connectivity()
@@ -50,6 +54,25 @@ class MainAppControllers extends ChangeNotifier {
       }
     });
     // fetchUserProfile();
+  }
+
+  Future<void> initializePrefs() async {
+    String? savedRole = await storage.read(key: 'userRole');
+    if (savedRole != null) {
+      //_userRole = savedRole;
+      _userRole = "Logistics";
+      notifyListeners();
+      // print("From MainAppController: Done");
+      // CustomSnackbar.show(
+      //   'From MainAppController: Done',
+      // );
+    } else {
+      _userRole = "Customer";
+      notifyListeners();
+      // CustomSnackbar.show(
+      //   'From MainAppController: Not Done',
+      // );
+    }
   }
 
   Future<int?> getUserId() async {

@@ -1,0 +1,2 @@
+C:/Users/Philip Nzube/Desktop/ojawa/android/app/.cxx/RelWithDebInfo/495z5t4r/x86/CMakeFiles/edit_cache.dir
+C:/Users/Philip Nzube/Desktop/ojawa/android/app/.cxx/RelWithDebInfo/495z5t4r/x86/CMakeFiles/rebuild_cache.dir

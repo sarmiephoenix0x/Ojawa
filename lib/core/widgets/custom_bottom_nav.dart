@@ -6,12 +6,14 @@ class CustomBottomNav extends StatelessWidget {
   final List<bool> hasNotification;
   final Function(bool) onToggleDarkMode;
   final bool isDarkMode;
+  final String userRole;
 
   const CustomBottomNav(
       {super.key,
       required this.hasNotification,
       required this.onToggleDarkMode,
-      required this.isDarkMode});
+      required this.isDarkMode,
+      required this.userRole});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +21,30 @@ class CustomBottomNav extends StatelessWidget {
 
     return BottomNavigationBar(
       items: [
-        _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
-        _buildNavItem('images/Orders.png', 'Orders', hasNotification[1]),
-        _buildNavItem('images/Products.png', 'Products', hasNotification[2]),
-        _buildNavItem('images/Profile.png', 'Profile', hasNotification[3]),
+        if (userRole == "Customer") ...[
+          _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
+          _buildNavItem(
+              'images/Categories.png', 'Categories', hasNotification[1]),
+          _buildNavItem('images/Orders.png', 'Orders', hasNotification[2]),
+          _buildNavItem('images/Profile.png', 'Profile', hasNotification[3]),
+        ] else if (userRole == "Vendor") ...[
+          _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
+          _buildNavItem('images/Orders.png', 'Orders', hasNotification[1]),
+          _buildNavItem('images/Products.png', 'Products', hasNotification[2]),
+          _buildNavItem('images/Profile.png', 'Profile', hasNotification[3]),
+        ] else if (userRole == "Logistics") ...[
+          _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
+          _buildNavItem('images/My Delivery.png', 'My Delivery', hasNotification[1]),
+          _buildNavItem('images/Wallet3.png', 'Wallet', hasNotification[2]),
+          _buildNavItem('images/CashNav.png', 'Cash', hasNotification[3]),
+                    _buildNavItem('images/Profile.png', 'Profile', hasNotification[4]),
+        ] else ...[
+          _buildNavItem('images/Home_active.png', 'Home', hasNotification[0]),
+          _buildNavItem(
+              'images/Categories.png', 'Categories', hasNotification[1]),
+          _buildNavItem('images/Orders.png', 'Orders', hasNotification[2]),
+          _buildNavItem('images/Profile.png', 'Profile', hasNotification[3]),
+        ]
       ],
       currentIndex: navController.selectedIndex,
       selectedItemColor: Colors.black,

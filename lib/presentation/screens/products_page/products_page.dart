@@ -53,7 +53,6 @@ class _ProductsPageState extends State<ProductsPage> {
               // Main content
               Column(
                 children: [
-                  // Header
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     height: 60,
@@ -78,7 +77,6 @@ class _ProductsPageState extends State<ProductsPage> {
                       ],
                     ),
                   ),
-                  // Main content area
                   Expanded(
                     child: ListView(
                       children: const [
