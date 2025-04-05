@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_gap.dart';
 import '../../../core/widgets/tab.dart';
-import '../../controllers/wallet_page_controller.dart';
+import '../../controllers/cash_page_controller.dart';
 import '../../../core/widgets/wallet_card.dart';
 
-class WalletPage extends StatefulWidget {
-  const WalletPage({super.key});
+class CashPage extends StatefulWidget {
+  const CashPage({super.key});
 
   @override
-  _WalletPageState createState() => _WalletPageState();
+  _CashPageState createState() => _CashPageState();
 }
 
-class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
+class _CashPageState extends State<CashPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    //final walletPageController = Provider.of<WalletPageController>(context);
     return ChangeNotifierProvider(
-      create: (context) => WalletPageController(vsync: this),
-      child: Consumer<WalletPageController>(
-          builder: (context, walletPageController, child) {
+      create: (context) => CashPageController(vsync: this),
+      child: Consumer<CashPageController>(
+          builder: (context, cashPageController, child) {
         return Scaffold(
           body: SafeArea(
             child: Stack(
@@ -46,7 +44,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                         ),
                         child: const Row(
                           children: [
-                            Text('Wallet',
+                            Text('Cash',
                                 style: TextStyle(
                                   fontSize: 25,
                                   fontFamily: 'Poppins',
@@ -90,7 +88,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      "Current Balance",
+                                      "Total Amount",
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         fontFamily: 'Poppins',
@@ -125,23 +123,16 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                                         ),
                                       ],
                                     ),
-                                    const Gap(20),
-                                    const CustomButton(
-                                      width: double.infinity,
-                                      text: 'Withdraw Money',
-                                      bgColor: Colors.black,
-                                      borderColor: Colors.black,
-                                    ),
                                   ],
                                 ),
                               ),
                             ),
                             const Gap(20),
                             TabBar(
-                              controller: walletPageController.walletTab,
+                              controller: cashPageController.walletTab,
                               tabs: const [
-                                TabWidget(name: 'Fund Transfer'),
-                                TabWidget(name: 'Wallet Withdraw'),
+                                TabWidget(name: 'Rider Cash'),
+                                TabWidget(name: 'Rider Cash Collection'),
                               ],
                               labelColor:
                                   Theme.of(context).colorScheme.onSurface,
@@ -167,7 +158,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                                   (400 / MediaQuery.of(context).size.height) *
                                       MediaQuery.of(context).size.height,
                               child: TabBarView(
-                                controller: walletPageController.walletTab,
+                                controller: cashPageController.walletTab,
                                 children: const [
                                   SingleChildScrollView(
                                     child: Column(

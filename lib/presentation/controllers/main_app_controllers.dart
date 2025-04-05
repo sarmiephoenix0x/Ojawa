@@ -59,8 +59,8 @@ class MainAppControllers extends ChangeNotifier {
   Future<void> initializePrefs() async {
     String? savedRole = await storage.read(key: 'userRole');
     if (savedRole != null) {
-      //_userRole = savedRole;
-      _userRole = "Logistics";
+      _userRole = savedRole;
+      //_userRole = "Logistics";
       notifyListeners();
       // print("From MainAppController: Done");
       // CustomSnackbar.show(

@@ -4,10 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../core/widgets/custom_gap.dart';
 import '../../../core/widgets/logout_dialog.dart';
 import '../../controllers/profile_page_controller.dart';
-import '../add_new_product/add_new_product.dart';
+import '../edit_profile/edit_profile_logistics.dart';
 import '../edit_profile/edit_profile_vendor.dart';
-import '../manage_pickup_location/manage_pickup_location.dart';
-import '../wallet_history/wallet_history.dart';
 import 'widgets/profile_options.dart';
 import '../../../core/widgets/custom_bg.dart';
 
@@ -168,79 +166,79 @@ class _ProfilePageLogisticsState extends State<ProfilePageLogistics> {
                                           ),
                                         ),
                                         const Spacer(),
-                                        Expanded(
-                                          flex: 6,
-                                          child: Container(
-                                            padding: const EdgeInsets.only(
-                                                left: 6,
-                                                right: 6,
-                                                top: 10,
-                                                bottom: 10),
-                                            decoration: BoxDecoration(
-                                              color: isDarkMode
-                                                  ? Colors.grey[900]
-                                                  : Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      8), // Smoother corners
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.grey.withOpacity(
-                                                      0.2), // Softer shadow for a clean look
-                                                  spreadRadius: 2,
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0,
-                                                      2), // Position shadow for depth
-                                                ),
-                                              ],
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Image.asset(
-                                                    'images/Wallet2.png',
-                                                    height: 20),
-                                                const Gap(
-                                                  10,
-                                                  isHorizontal: true,
-                                                ),
-                                                Flexible(
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    children: [
-                                                      Image.asset(
-                                                        'images/Naira.png',
-                                                        height: 15,
-                                                      ),
-                                                      const Gap(2,
-                                                          isHorizontal: true),
-                                                      Flexible(
-                                                        child: Text(
-                                                          '6,000.00',
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Poppins',
-                                                            fontSize: 15.0,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .colorScheme
-                                                                .onSurface,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
+                                        // Expanded(
+                                        //   flex: 6,
+                                        //   child: Container(
+                                        //     padding: const EdgeInsets.only(
+                                        //         left: 6,
+                                        //         right: 6,
+                                        //         top: 10,
+                                        //         bottom: 10),
+                                        //     decoration: BoxDecoration(
+                                        //       color: isDarkMode
+                                        //           ? Colors.grey[900]
+                                        //           : Colors.white,
+                                        //       borderRadius:
+                                        //           BorderRadius.circular(
+                                        //               8), // Smoother corners
+                                        //       boxShadow: [
+                                        //         BoxShadow(
+                                        //           color: Colors.grey.withOpacity(
+                                        //               0.2), // Softer shadow for a clean look
+                                        //           spreadRadius: 2,
+                                        //           blurRadius: 8,
+                                        //           offset: const Offset(0,
+                                        //               2), // Position shadow for depth
+                                        //         ),
+                                        //       ],
+                                        //     ),
+                                        //     child: Row(
+                                        //       mainAxisAlignment:
+                                        //           MainAxisAlignment.center,
+                                        //       children: [
+                                        //         Image.asset(
+                                        //             'images/Wallet2.png',
+                                        //             height: 20),
+                                        //         const Gap(
+                                        //           10,
+                                        //           isHorizontal: true,
+                                        //         ),
+                                        //         Flexible(
+                                        //           child: Row(
+                                        //             mainAxisAlignment:
+                                        //                 MainAxisAlignment.start,
+                                        //             children: [
+                                        //               Image.asset(
+                                        //                 'images/Naira.png',
+                                        //                 height: 15,
+                                        //               ),
+                                        //               const Gap(2,
+                                        //                   isHorizontal: true),
+                                        //               Flexible(
+                                        //                 child: Text(
+                                        //                   '6,000.00',
+                                        //                   overflow: TextOverflow
+                                        //                       .ellipsis,
+                                        //                   style: TextStyle(
+                                        //                     fontFamily:
+                                        //                         'Poppins',
+                                        //                     fontSize: 15.0,
+                                        //                     fontWeight:
+                                        //                         FontWeight.bold,
+                                        //                     color: Theme.of(
+                                        //                             context)
+                                        //                         .colorScheme
+                                        //                         .onSurface,
+                                        //                   ),
+                                        //                 ),
+                                        //               ),
+                                        //             ],
+                                        //           ),
+                                        //         ),
+                                        //       ],
+                                        //     ),
+                                        //   ),
+                                        // ),
                                       ],
                                     ),
                                   ),
@@ -259,7 +257,8 @@ class _ProfilePageLogisticsState extends State<ProfilePageLogistics> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => EditProfileVendor(
+                                        builder: (context) =>
+                                            EditProfileLogistics(
                                           key: UniqueKey(),
                                         ),
                                       ),
@@ -273,61 +272,6 @@ class _ProfilePageLogisticsState extends State<ProfilePageLogistics> {
                                 const ProfileOptions(
                                   title: 'Chat',
                                   img: 'images/Chat.png',
-                                ),
-                              ],
-                            ),
-                            CustomBg(
-                              children: [
-                                ProfileOptions(
-                                  title: 'Wallet History',
-                                  img: 'images/Wallet History.png',
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => WalletHistory(
-                                          key: UniqueKey(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const ProfileOptions(
-                                  title: 'Products',
-                                  img: 'images/Products2.png',
-                                ),
-                                ProfileOptions(
-                                  title: 'Add New Products',
-                                  img: 'images/Add New Products.png',
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AddNewProduct(
-                                          key: UniqueKey(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                ProfileOptions(
-                                  title: 'Manage PickUp Location',
-                                  img: 'images/Manage PickUp Location.png',
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ManagePickupLocation(
-                                          key: UniqueKey(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const ProfileOptions(
-                                  title: 'Stock Management',
-                                  img: 'images/Stock Management.png',
                                 ),
                               ],
                             ),

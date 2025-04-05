@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/widgets/custom_gap.dart';
-import '../../../../core/widgets/custom_attribute.dart';
+import 'custom_gap.dart';
+import 'custom_attribute.dart';
 
 class WalletCard extends StatelessWidget {
   final String id;

@@ -8,6 +8,7 @@ import '../../../main.dart';
 import '../../controllers/main_app_controllers.dart';
 import '../../controllers/navigation_controller.dart';
 import '../../controllers/notification_controller.dart';
+import '../cash_page/cash_page.dart';
 import '../categories_page/categories_page.dart';
 import '../home_page/home_page_customer.dart';
 import '../home_page/home_page_logistics.dart';
@@ -153,7 +154,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                     ),
                     const MyDelivery(),
                     const WalletPage(),
-                    WalletHistory(),
+                    const CashPage(),
                     ProfilePageLogistics(
                       goToCategoriesPage: mainAppController.goToCategoriesPage,
                       goToOrdersPage: mainAppController.goToOrdersPage,
